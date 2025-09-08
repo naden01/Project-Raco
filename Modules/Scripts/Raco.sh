@@ -270,9 +270,6 @@ cpufreq_min_perf() {
 ###################################
 
 mediatek_performance() {
-	# Force off FPSGO
-	tweak 0 /sys/kernel/fpsgo/common/force_onoff
-
 	# MTK Power and CCI mode
 	tweak 1 /proc/cpufreq/cpufreq_cci_mode
 	tweak 3 /proc/cpufreq/cpufreq_power_mode
@@ -450,7 +447,6 @@ tensor_performance() {
 ###################################
 
 mediatek_normal() {
-	tweak 2 /sys/kernel/fpsgo/common/force_onoff
 	tweak 0 /proc/cpufreq/cpufreq_cci_mode
 	tweak 0 /proc/cpufreq/cpufreq_power_mode
 	tweak 0 /sys/devices/platform/boot_dramboost/dramboost/dramboost
