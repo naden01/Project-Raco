@@ -1,4 +1,8 @@
-[EnCorinVest Config]
+[Raco Installer Config]
+INCLUDE_ANYA=1
+INCLUDE_KOBO=1
+
+[Raco Config]
 
 DND=No
 ENABLE_BYPASS=No
