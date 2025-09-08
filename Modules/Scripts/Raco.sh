@@ -7,13 +7,13 @@
 ###############################
 
 # Config file path
-ENCORIN_CONFIG="/data/adb/modules/EnCorinVest/encorin.txt"
+RACO_CONFIG="/data/adb/modules/ProjectRaco/raco.txt"
 
 # Format: 1=MTK, 2=SD, 3=Exynos, 4=Unisoc, 5=Tensor, 6=Tegra, 7=Kirin
-SOC=$(grep '^SOC=' "$ENCORIN_CONFIG" | cut -d'=' -f2)
-LITE_MODE=$(grep '^LITE_MODE=' "$ENCORIN_CONFIG" | cut -d'=' -f2)
+SOC=$(grep '^SOC=' "$RACO_CONFIG" | cut -d'=' -f2)
+LITE_MODE=$(grep '^LITE_MODE=' "$RACO_CONFIG" | cut -d'=' -f2)
 
-DEFAULT_CPU_GOV=$(grep '^GOV=' "$ENCORIN_CONFIG" | cut -d'=' -f2)
+DEFAULT_CPU_GOV=$(grep '^GOV=' "$RACO_CONFIG" | cut -d'=' -f2)
 if [ -z "$DEFAULT_CPU_GOV" ]; then
     if [ -e /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors ] && grep -q "schedhorizon" /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors; then
         DEFAULT_CPU_GOV="schedhorizon"
@@ -22,8 +22,8 @@ if [ -z "$DEFAULT_CPU_GOV" ]; then
     fi
 fi
 
-DEVICE_MITIGATION=$(grep '^DEVICE_MITIGATION=' "$ENCORIN_CONFIG" | cut -d'=' -f2)
-DND=$(grep '^DND=' "$ENCORIN_CONFIG" | cut -d'=' -f2)
+DEVICE_MITIGATION=$(grep '^DEVICE_MITIGATION=' "$RACO_CONFIG" | cut -d'=' -f2)
+DND=$(grep '^DND=' "$RACO_CONFIG" | cut -d'=' -f2)
 
 ##############################
 # Path Variable
@@ -33,7 +33,7 @@ ipv4="/proc/sys/net/ipv4"
 ##############################
 # ADDED: Source External Script
 ##############################
-MODULE_PATH="/data/adb/modules/EnCorinVest"
+MODULE_PATH="/data/adb/modules/ProjectRaco"
 source "$MODULE_PATH/Scripts/corin.sh"
 
 ##############################
@@ -68,38 +68,38 @@ am kill-all
 # This is also external
 
 bypass_on() {
-    BYPASS=$(grep "^ENABLE_BYPASS=" /data/adb/modules/EnCorinVest/encorin.txt | cut -d'=' -f2 | tr -d ' ')
+    BYPASS=$(grep "^ENABLE_BYPASS=" "$RACO_CONFIG" | cut -d'=' -f2 | tr -d ' ')
     if [ "$BYPASS" = "Yes" ]; then
         sh $SCRIPT_PATH/encorin_bypass_controller.sh enable
     fi
 }
 
 bypass_off() {
-    BYPASS=$(grep "^ENABLE_BYPASS=" /data/adb/modules/EnCorinVest/encorin.txt | cut -d'=' -f2 | tr -d ' ')
+    BYPASS=$(grep "^ENABLE_BYPASS=" "$RACO_CONFIG" | cut -d'=' -f2 | tr -d ' ')
     if [ "$BYPASS" = "Yes" ]; then
         sh $SCRIPT_PATH/encorin_bypass_controller.sh disable
     fi
 }
 
 notification() {
-    local TITLE="EnCorinVest"
+    local TITLE="Raco"
     local MESSAGE="$1"
     local LOGO="/data/local/tmp/logo.png"
     
-    su -lp 2000 -c "cmd notification post -S bigtext -t '$TITLE' -i file://$LOGO -I file://$LOGO TagEncorin '$MESSAGE'"
+    su -lp 2000 -c "cmd notification post -S bigtext -t '$TITLE' -i file://$LOGO -I file://$LOGO TagRaco '$MESSAGE'"
 }
 
 # DND Function is treated as external, because overrided by ECV App
 
 dnd_off() {
-	DND=$(grep "^DND" /data/adb/modules/EnCorinVest/encorin.txt | cut -d'=' -f2 | tr -d ' ')
+	DND=$(grep "^DND" "$RACO_CONFIG" | cut -d'=' -f2 | tr -d ' ')
 	if [ "$DND" = "No" ]; then
 		cmd notification set_dnd off
 	fi
 }
 
 dnd_on() {
-	DND=$(grep "^DND" /data/adb/modules/EnCorinVest/encorin.txt | cut -d'=' -f2 | tr -d ' ')
+	DND=$(grep "^DND" "$RACO_CONFIG" | cut -d'=' -f2 | tr -d ' ')
 	if [ "$DND" = "Yes" ]; then
 		cmd notification set_dnd priority
 	fi
@@ -283,9 +283,6 @@ mediatek_performance() {
 	# EAS/HMP Switch
 	tweak 0 /sys/devices/system/cpu/eas/enable
 
-	# Disable GED KPI
-	tweak 0 /sys/module/sspm_v3/holders/ged/parameters/is_GED_KPI_enabled
-
 	# GPU Frequency
 	tweak 0 /proc/gpufreq/gpufreq_opp_freq
 	tweak -1 /proc/gpufreqv2/fix_target_opp_index
@@ -455,7 +452,6 @@ mediatek_normal() {
 	tweak 0 /proc/cpufreq/cpufreq_power_mode
 	tweak 0 /sys/devices/platform/boot_dramboost/dramboost/dramboost
 	tweak 2 /sys/devices/system/cpu/eas/enable
-	tweak 1 /sys/module/sspm_v3/holders/ged/parameters/is_GED_KPI_enabled
 	kakangkuh 0 /proc/gpufreq/gpufreq_opp_freq
 	kakangkuh -1 /proc/gpufreqv2/fix_target_opp_index
 
