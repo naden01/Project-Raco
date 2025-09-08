@@ -283,6 +283,9 @@ mediatek_performance() {
 	# EAS/HMP Switch
 	tweak 0 /sys/devices/system/cpu/eas/enable
 
+	# Disable GED KPI
+	tweak 0 /sys/module/sspm_v3/holders/ged/parameters/is_GED_KPI_enabled
+
 	# GPU Frequency
 	tweak 0 /proc/gpufreq/gpufreq_opp_freq
 	tweak -1 /proc/gpufreqv2/fix_target_opp_index
