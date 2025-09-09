@@ -967,8 +967,8 @@ case $MODE in
         powersave_basic
         ;;
     4)
-        kill_all
         performance_basic
+        kill_all
         ;;
     5)
         powersave_basic
