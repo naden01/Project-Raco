@@ -104,28 +104,6 @@ dnd_on() {
 ###################################
 
 mtkvest_perf() {
-    # Try to extract highest GPU frequency from available sources
-    HIGHEST_FREQ=""
-    if [[ -f "/proc/gpufreqv2/gpu_working_opp_table" ]]; then
-        HIGHEST_FREQ=$(awk -F '[: ]+' '/freq/ {gsub(",", "", $3); print $3}' /proc/gpufreqv2/gpu_working_opp_table 2>/dev/null | sort -nr | head -n 1)
-    elif [[ -f "/proc/gpufreq/gpufreq_opp_dump" ]]; then
-        HIGHEST_FREQ=$(awk -F '[: ]+' '/freq/ {gsub(",", "", $3); print $3}' /proc/gpufreq/gpufreq_opp_dump 2>/dev/null | sort -nr | head -n 1)
-    fi
-
-    # Apply highest frequency if found
-    if [[ -n "$HIGHEST_FREQ" ]]; then
-        tweak $HIGHEST_FREQ /sys/module/ged/parameters/gpu_bottom_freq
-        tweak $HIGHEST_FREQ /sys/module/ged/parameters/gpu_cust_boost_freq
-        tweak $HIGHEST_FREQ /sys/module/ged/parameters/gpu_cust_upbound_freq
-    fi
-
-    # Disable GPUFREQ Limit
-    if [[ -f "/proc/gpufreq/gpufreq_limit_table" ]]; then
-        for i in {0..8}; do
-            tweak "$i 0 0" "/proc/gpufreq/gpufreq_limit_table"
-        done
-    fi
-
     # Performance Manager - disable system limiter
     tweak 1 /proc/perfmgr/syslimiter/syslimiter_force_disable
 
@@ -167,29 +145,6 @@ mtkvest_perf() {
 }
 
 mtkvest_normal() {
-    # Reset GPU to auto frequency
-    if [[ -d "/proc/gpufreq" && -f "/proc/gpufreq/gpufreq_opp_freq" ]]; then
-        tweak 0 /proc/gpufreq/gpufreq_opp_freq
-    elif [[ -d "/proc/gpufreqv2" && -f "/proc/gpufreqv2/fix_target_opp_index" ]]; then
-        tweak -1 /proc/gpufreqv2/fix_target_opp_index
-    fi
-
-    # Reset GPU power limits to normal
-    if [[ -f "/proc/gpufreq/gpufreq_power_limited" ]]; then
-        chmod 644 "/proc/gpufreq/gpufreq_power_limited" 2>/dev/null
-        for setting in ignore_batt_oc ignore_batt_percent ignore_low_batt ignore_thermal_protect ignore_pbm_limited; do
-            echo "$setting 0" > /proc/gpufreq/gpufreq_power_limited 2>/dev/null
-        done
-        chmod 444 "/proc/gpufreq/gpufreq_power_limited" 2>/dev/null
-    fi
-
-    # Reset GPU frequency limits to normal
-    if [[ -f "/proc/gpufreq/gpufreq_limit_table" ]]; then
-        for id in {0..8}; do
-            tweak "$id 1 1" /proc/gpufreq/gpufreq_limit_table
-        done
-    fi
-
     # Performance manager settings for balanced operation
     tweak 0 /proc/perfmgr/syslimiter/syslimiter_force_disable
 
@@ -409,20 +364,44 @@ mediatek_performance() {
 	# Disable GED KPI
 	tweak 0 /sys/module/sspm_v3/holders/ged/parameters/is_GED_KPI_enabled
 
-	# GPU Frequency
-	tweak 0 /proc/gpufreq/gpufreq_opp_freq
-	tweak -1 /proc/gpufreqv2/fix_target_opp_index
-
-	if [ "$LITE_MODE" -eq 1 ]; then
-    if [ -d /proc/gpufreqv2 ]; then
-        opp_freq_index=$(mtk_gpufreq_midfreq_index /proc/gpufreqv2/gpu_working_opp_table)
-    else
-        opp_freq_index=$(mtk_gpufreq_midfreq_index /proc/gpufreq/gpufreq_opp_dump)
+	# NEW: Consolidated GPU Frequency Control Block
+    local GPU_FREQ_TABLE
+    if [[ -f "/proc/gpufreqv2/gpu_working_opp_table" ]]; then
+        GPU_FREQ_TABLE="/proc/gpufreqv2/gpu_working_opp_table"
+    elif [[ -f "/proc/gpufreq/gpufreq_opp_dump" ]]; then
+        GPU_FREQ_TABLE="/proc/gpufreq/gpufreq_opp_dump"
     fi
-	else
-		opp_freq_index=0
-	fi
-	tweak "$opp_freq_index" /sys/kernel/ged/hal/custom_boost_gpu_freq
+
+    if [[ -n "$GPU_FREQ_TABLE" ]]; then
+        local TARGET_FREQ
+        local opp_freq_index
+
+        if [ "$LITE_MODE" -eq 1 ]; then
+            # Lite Mode: Use middle frequency
+            TARGET_FREQ=$(which_midfreq "$GPU_FREQ_TABLE")
+            if [[ "$GPU_FREQ_TABLE" == *gpufreqv2* ]]; then
+                opp_freq_index=$(mtk_gpufreq_midfreq_index /proc/gpufreqv2/gpu_working_opp_table)
+            else
+                opp_freq_index=$(mtk_gpufreq_midfreq_index /proc/gpufreq/gpufreq_opp_dump)
+            fi
+        else
+            # Performance Mode: Use highest frequency
+            TARGET_FREQ=$(which_maxfreq "$GPU_FREQ_TABLE")
+            opp_freq_index=0
+        fi
+
+        # Apply index-based frequency setting
+        tweak 0 /proc/gpufreq/gpufreq_opp_freq
+        tweak -1 /proc/gpufreqv2/fix_target_opp_index
+        tweak "$opp_freq_index" /sys/kernel/ged/hal/custom_boost_gpu_freq
+
+        # Apply direct value-based frequency settings
+        if [[ -n "$TARGET_FREQ" ]]; then
+            tweak "$TARGET_FREQ" /sys/module/ged/parameters/gpu_bottom_freq
+            tweak "$TARGET_FREQ" /sys/module/ged/parameters/gpu_cust_boost_freq
+            tweak "$TARGET_FREQ" /sys/module/ged/parameters/gpu_cust_upbound_freq
+        fi
+    fi
 
 	# Disable GPU Power limiter
 	[ -f "/proc/gpufreq/gpufreq_power_limited" ] && {
@@ -448,6 +427,7 @@ mediatek_performance() {
 	# Eara Thermal
 	tweak 0 /sys/kernel/eara_thermal/enable
 
+    # Call the simplified function for other tweaks
     mtkvest_perf
 }
 
@@ -579,6 +559,8 @@ mediatek_normal() {
 	tweak 0 /proc/cpufreq/cpufreq_power_mode
 	tweak 0 /sys/devices/platform/boot_dramboost/dramboost/dramboost
 	tweak 2 /sys/devices/system/cpu/eas/enable
+	
+    # Consolidated GPU Frequency and Limiter Resets
 	kakangkuh 0 /proc/gpufreq/gpufreq_opp_freq
 	kakangkuh -1 /proc/gpufreqv2/fix_target_opp_index
 
@@ -589,6 +571,14 @@ mediatek_normal() {
 	fi
 	tweak $min_oppfreq /sys/kernel/ged/hal/custom_boost_gpu_freq
 
+    # Reset GPU frequency limits to normal
+    if [[ -f "/proc/gpufreq/gpufreq_limit_table" ]]; then
+        for id in {0..8}; do
+            tweak "$id 1 1" /proc/gpufreq/gpufreq_limit_table
+        done
+    fi
+
+	# Reset GPU power limiter
 	[ -f "/proc/gpufreq/gpufreq_power_limited" ] && {
 		for setting in ignore_batt_oc ignore_batt_percent ignore_low_batt ignore_thermal_protect ignore_pbm_limited; do
 			tweak "$setting 0" /proc/gpufreq/gpufreq_power_limited
@@ -601,6 +591,7 @@ mediatek_normal() {
 	devfreq_unlock /sys/class/devfreq/mtk-dvfsrc-devfreq
 	tweak 1 /sys/kernel/eara_thermal/enable
 
+    # Call the simplified function for other tweaks
     mtkvest_normal
 }
 
