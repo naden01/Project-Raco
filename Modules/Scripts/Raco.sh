@@ -1,7 +1,3 @@
-#!/system/bin/sh
-# This still have some Encore function 
-# However this is out of Encore, so don't expect easy SYNC
-
 ###############################
 # DEFINE CONFIG
 ###############################
@@ -88,8 +84,6 @@ notification() {
     
     su -lp 2000 -c "cmd notification post -S bigtext -t '$TITLE' -i file://$LOGO -I file://$LOGO TagRaco '$MESSAGE'"
 }
-
-# DND Function is treated as external, because overrided by ECV App
 
 dnd_off() {
 	DND=$(grep "^DND" "$RACO_CONFIG" | cut -d'=' -f2 | tr -d ' ')
@@ -756,8 +750,6 @@ tensor_powersave() {
 ##################################
 performance_basic() {
     sync
-    dnd_on
-
     # I/O Tweaks
     for dir in /sys/block/*; do
         tweak 0 "$dir/queue/iostats"
@@ -860,8 +852,10 @@ performance_basic() {
         5) tensor_performance ;;
         6) tegra_performance ;;
     esac
-    
+
+    dnd_on
     corin_perf
+    bypass_on
 }
 
 ##########################################
@@ -869,8 +863,6 @@ performance_basic() {
 ##########################################
 balanced_basic() {
     sync
-    dnd_off
-
     [ -f /sys/module/battery_saver/parameters/enabled ] && {
         if grep -qo '[0-9]\+' /sys/module/battery_saver/parameters/enabled; then
         kakangkuh 0 /sys/module/battery_saver/parameters/enabled
@@ -925,6 +917,8 @@ balanced_basic() {
     esac
     
     corin_balanced
+    dnd_off
+    bypass_off
 }
 
 ##########################################
@@ -932,8 +926,6 @@ balanced_basic() {
 ##########################################
 powersave_basic() {
     sync
-    dnd_off
-
     balanced_basic
 
     [ -f /sys/module/battery_saver/parameters/enabled ] && {
@@ -967,6 +959,8 @@ powersave_basic() {
     esac
     
     corin_powersave
+    dnd_off
+    bypass_off
 }
 
 ##########################################
