@@ -978,6 +978,9 @@ if [ -z "$1" ]; then
     echo "  1: Performance"
     echo "  2: Balanced"
     echo "  3: Powersave"
+    echo "  4: Gaming Pro"
+    echo "  5: Cool Down"
+    echo "  6: Clear All"
     exit 1
 fi
 
@@ -993,8 +996,20 @@ case $MODE in
     3)
         powersave_basic
         ;;
+    4)
+        kill_all
+        performance_basic
+        ;;
+    5)
+        powersave_basic
+        sleep 120
+        balanced_basic
+        ;;
+    6)
+        kill_all
+        ;;
     *)
-        echo "Error: Invalid mode '$MODE'. Please use 1, 2, or 3."
+        echo "Error: Invalid mode '$MODE'. Please use 1, 2, 3, 4, 5, or 6."
         exit 1
         ;;
 esac
