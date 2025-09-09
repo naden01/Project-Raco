@@ -66,14 +66,14 @@ am kill-all
 bypass_on() {
     BYPASS=$(grep "^ENABLE_BYPASS=" "$RACO_CONFIG" | cut -d'=' -f2 | tr -d ' ')
     if [ "$BYPASS" = "Yes" ]; then
-        sh $SCRIPT_PATH/encorin_bypass_controller.sh enable
+        sh $SCRIPT_PATH/raco_bypass_controller.sh enable
     fi
 }
 
 bypass_off() {
     BYPASS=$(grep "^ENABLE_BYPASS=" "$RACO_CONFIG" | cut -d'=' -f2 | tr -d ' ')
     if [ "$BYPASS" = "Yes" ]; then
-        sh $SCRIPT_PATH/encorin_bypass_controller.sh disable
+        sh $SCRIPT_PATH/raco_bypass_controller.sh disable
     fi
 }
 
