@@ -167,21 +167,6 @@ mtkvest_perf() {
 }
 
 mtkvest_normal() {
-    # Attempt to set GPU Freq to min
-    LOWEST_FREQ=""
-    if [[ -f "/proc/gpufreqv2/gpu_working_opp_table" ]]; then
-        LOWEST_FREQ=$(awk -F '[: ]+' '/freq/ {gsub(",", "", $3); print $3}' /proc/gpufreqv2/gpu_working_opp_table 2>/dev/null | sort -n | head -n 1)
-    elif [[ -f "/proc/gpufreq/gpufreq_opp_dump" ]]; then
-        LOWEST_FREQ=$(awk -F '[: ]+' '/freq/ {gsub(",", "", $3); print $3}' /proc/gpufreq/gpufreq_opp_dump 2>/dev/null | sort -n | head -n 1)
-    fi
-
-    # Apply lowest frequency if found
-    if [[ -n "$LOWEST_FREQ" ]]; then
-        tweak $LOWEST_FREQ /sys/module/ged/parameters/gpu_bottom_freq
-        tweak $LOWEST_FREQ /sys/module/ged/parameters/gpu_cust_boost_freq
-        tweak $LOWEST_FREQ /sys/module/ged/parameters/gpu_cust_upbound_freq
-    fi
-
     # Reset GPU to auto frequency
     if [[ -d "/proc/gpufreq" && -f "/proc/gpufreq/gpufreq_opp_freq" ]]; then
         tweak 0 /proc/gpufreq/gpufreq_opp_freq
