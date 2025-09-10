@@ -3,7 +3,7 @@ LATESTARTSERVICE=true
 SOC=0
 
 ui_print "------------------------------------"
-ui_print "             EnCorinVest            " 
+ui_print "             Project Raco           " 
 ui_print "------------------------------------"
 ui_print "         By: Kanagawa Yamada        "
 ui_print "------------------------------------"
@@ -100,40 +100,26 @@ soc_recognition_extra
 ui_print "------------------------------------"
 ui_print "            MODULE INFO             "
 ui_print "------------------------------------"
-ui_print "Name : EnCorinVest"
+ui_print "Name : Project Raco"
 ui_print "Version : 29.2"
-ui_print "Variant: Gaming"
-ui_print "Support Root : Magisk / KernelSU / APatch"
 ui_print " "
 sleep 1.5
 
-ui_print "       INSTALLING EnCorinVest       "
+ui_print "      INSTALLING Project Raco       "
 ui_print " "
 sleep 1.5
-
-# Ensure encorin.txt exists and update it with the detected SOC
-CONFIG_FILE="$MODPATH/encorin.txt"
-ui_print "- Extracting configuration file..."
-unzip -o "$ZIPFILE" 'encorin.txt' -d $MODPATH >&2
-if [ -f "$CONFIG_FILE" ]; then
-    ui_print "- Writing SOC Code ($SOC) to $CONFIG_FILE"
-    sed -i "s/^SOC=.*/SOC=$SOC/" "$CONFIG_FILE"
-else
-    ui_print "! encorin.txt not found, cannot write SOC value."
-fi
-ui_print " "
 
 # Check if game.txt exists in the new location, skip copy operations if it does
-if [ -f "/data/EnCorinVest/game.txt" ]; then
+if [ -f "/data/ProjectRaco/game.txt" ]; then
     ui_print "- game.txt found, skipping file copy operations"
     ui_print " "
 else
     ui_print "- game.txt not found, proceeding with file copy"
     # Create the target directory if it doesn't exist
-    mkdir -p /data/EnCorinVest
+    mkdir -p /data/ProjectRaco
     unzip -o "$ZIPFILE" 'Scripts/*' -d $MODPATH >&2
     # Copy game.txt to the new location
-    cp -r "$MODPATH"/game.txt /data/EnCorinVest/ >/dev/null 2>&1
+    cp -r "$MODPATH"/game.txt /data/ProjectRaco/ >/dev/null 2>&1
     cp -r "$MODPATH"/logo.png /data/local/tmp >/dev/null 2>&1
     cp -r "$MODPATH"/Anya.png /data/local/tmp >/dev/null 2>&1
 fi
@@ -162,23 +148,18 @@ choose() {
 }
 
 # Define config file paths
-RACO_PERSIST_CONFIG="/data/EnCorinVest/raco.txt"
+RACO_PERSIST_CONFIG="/data/ProjectRaco/raco.txt"
 RACO_MODULE_CONFIG="$MODPATH/raco.txt"
 
 ui_print "------------------------------------"
 ui_print "      OPTIONAL ADDON SELECTION      "
 ui_print "------------------------------------"
 
-# Ensure target directory for persistent config exists
-mkdir -p /data/EnCorinVest
-
 # Extract the template config file to the module path
+ui_print "- Extracting configuration file..."
 unzip -o "$ZIPFILE" 'raco.txt' -d $MODPATH >&2
 
 # Initialize default values
-INCLUDE_ANYA=0
-INCLUDE_KOBO=0
-INCLUDE_SANDEV=0
 USE_SAVED_CONFIG=false
 
 # Check for a saved configuration
@@ -278,11 +259,23 @@ if [ "$USE_SAVED_CONFIG" = false ]; then
   fi
 fi
 
+# =============================
+# Final Configuration
+# =============================
+ui_print " "
+ui_print "- Writing final configuration..."
+# Write the detected SOC code to the config file
+if [ -f "$RACO_MODULE_CONFIG" ]; then
+    ui_print "- Writing SOC Code ($SOC) to raco.txt"
+    sed -i "s/^SOC=.*/SOC=$SOC/" "$RACO_MODULE_CONFIG"
+else
+    ui_print "! raco.txt not found, cannot write SOC value."
+fi
 ui_print " "
 sleep 1.5
 
 ui_print " "
-ui_print "     INSTALLING EnCorinVest APK       "
+ui_print "     INSTALLING ProjectRaco App       "
 ui_print " "
 
 # Check if EnCorinVest is already installed
