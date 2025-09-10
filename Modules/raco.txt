@@ -1,6 +1,7 @@
 [Raco Installer Config]
-INCLUDE_ANYA=1
-INCLUDE_KOBO=1
+INCLUDE_ANYA=
+INCLUDE_KOBO=
+INCLUDE_SANDEV=
 
 [Raco Config]
 DND=No
