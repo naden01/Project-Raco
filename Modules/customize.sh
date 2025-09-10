@@ -275,7 +275,7 @@ ui_print " "
 sleep 1.5
 
 ui_print " "
-ui_print "     INSTALLING ProjectRaco App       "
+ui_print "     INSTALLING Project Raco App      "
 ui_print " "
 
 # Check if EnCorinVest is already installed
@@ -340,10 +340,3 @@ fi
 
 # Clean up temporary extraction directory
 rm -rf $TEMP_EXTRACT_DIR
-
-ui_print " "
-ui_print "There's A Wallpaper Souvenir In The Github    "
-ui_print "Go Check it Out!                              "
-ui_print " "
-
-sleep 2
