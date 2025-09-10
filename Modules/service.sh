@@ -31,7 +31,8 @@ tweak 0 /proc/sys/kernel/panic_on_oops
 tweak 0 /proc/sys/kernel/panic_on_warn
 tweak 0 /proc/sys/kernel/softlockup_panic
 
-if grep -q "INCLUDE_ANYA=1" "$CONFIG_FILE"; then
+# Run AnyaMelfissa.sh only if both INCLUDE_ANYA and ANYA are set to 1
+if grep -q "INCLUDE_ANYA=1" "$CONFIG_FILE" && grep -q "ANYA=1" "$CONFIG_FILE"; then
     sh /data/adb/modules/ProjectRaco/Scripts/AnyaMelfissa.sh
 fi
 
