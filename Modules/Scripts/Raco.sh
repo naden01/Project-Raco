@@ -564,13 +564,6 @@ mediatek_normal() {
 	kakangkuh 0 /proc/gpufreq/gpufreq_opp_freq
 	kakangkuh -1 /proc/gpufreqv2/fix_target_opp_index
 
-	if [ -d /proc/gpufreqv2 ]; then
-		min_oppfreq=$(mtk_gpufreq_minfreq_index /proc/gpufreqv2/gpu_working_opp_table)
-	else
-		min_oppfreq=$(mtk_gpufreq_minfreq_index /proc/gpufreq/gpufreq_opp_dump)
-	fi
-	tweak $min_oppfreq /sys/kernel/ged/hal/custom_boost_gpu_freq
-
     # Reset GPU frequency limits to normal
     if [[ -f "/proc/gpufreq/gpufreq_limit_table" ]]; then
         for id in {0..8}; do
