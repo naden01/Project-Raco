@@ -10,6 +10,7 @@ done
 
 mali_dir=$(ls -d /sys/devices/platform/soc/*mali*/scheduling 2>/dev/null | head -n 1)
 mali1_dir=$(ls -d /sys/devices/platform/soc/*mali* 2>/dev/null | head -n 1)
+CONFIG_FILE="/data/adb/modules/ProjectRaco/raco.txt"
 
 tweak() {
     if [ -e "$1" ]; then
@@ -30,7 +31,16 @@ tweak 0 /proc/sys/kernel/panic_on_oops
 tweak 0 /proc/sys/kernel/panic_on_warn
 tweak 0 /proc/sys/kernel/softlockup_panic
 
-sh /data/adb/modules/ProjectRaco/AnyaMelfissa.sh
-sh /data/adb/modules/ProjectRaco/KoboKanaeru.sh
+if grep -q "INCLUDE_ANYA=1" "$CONFIG_FILE"; then
+    sh /data/adb/modules/ProjectRaco/Scripts/AnyaMelfissa.sh
+fi
+
+if grep -q "INCLUDE_KOBO=1" "$CONFIG_FILE"; then
+    sh /data/adb/modules/ProjectRaco/Scripts/KoboKanaeru.sh
+fi
+
+if grep -q "INCLUDE_SANDEV=1" "$CONFIG_FILE"; then
+    sh /data/adb/modules/ProjectRaco/Scripts/SandevBoot.sh
+fi
 
 su -lp 2000 -c "cmd notification post -S bigtext -t 'EnCorinVest' -i file:///data/local/tmp/logo.png -I file:///data/local/tmp/logo.png TagEncorin 'EnCorinVest - オンライン'"
