@@ -6,7 +6,7 @@ change_cpu_gov() {
 
 change_cpu_gov performance
 
-sleep 25
+sleep 30
 
 RACO_CONFIG="/data/adb/modules/ProjectRaco/raco.txt"
 
