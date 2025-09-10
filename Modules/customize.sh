@@ -143,6 +143,144 @@ set_perm_recursive $MODPATH/Scripts 0 0 0777 0755
 
 sleep 1.5
 
+# =============================
+# Addon Selection by Volume Keys
+# =============================
+
+# Function to get key presses using getevent
+choose() {
+  while true; do
+    /system/bin/getevent -lc 1 2>&1 | /system/bin/grep VOLUME | /system/bin/grep " DOWN" > "$TMPDIR/events"
+    if [ -n "$(cat "$TMPDIR/events")" ]; then
+      if echo "$(cat "$TMPDIR/events")" | grep -q "KEY_VOLUMEUP"; then
+        return 0 # Return 0 for Vol+ (Yes)
+      else
+        return 1 # Return 1 for Vol- (No)
+      fi
+    fi
+  done
+}
+
+# Define config file paths
+RACO_PERSIST_CONFIG="/data/EnCorinVest/raco.txt"
+RACO_MODULE_CONFIG="$MODPATH/raco.txt"
+
+ui_print "------------------------------------"
+ui_print "      OPTIONAL ADDON SELECTION      "
+ui_print "------------------------------------"
+
+# Ensure target directory for persistent config exists
+mkdir -p /data/EnCorinVest
+
+# Extract the template config file to the module path
+unzip -o "$ZIPFILE" 'raco.txt' -d $MODPATH >&2
+
+# Initialize default values
+INCLUDE_ANYA=0
+INCLUDE_KOBO=0
+INCLUDE_SANDEV=0
+USE_SAVED_CONFIG=false
+
+# Check for a saved configuration
+if [ -f "$RACO_PERSIST_CONFIG" ]; then
+  ui_print " "
+  ui_print "- Saved configuration found."
+  ui_print "  Do you want to use it?"
+  ui_print " "
+  ui_print "  Vol+ = Yes, use saved config"
+  ui_print "  Vol- = No, choose again"
+  ui_print " "
+  if choose; then
+    ui_print "- Using saved configuration."
+    cp "$RACO_PERSIST_CONFIG" "$RACO_MODULE_CONFIG"
+    USE_SAVED_CONFIG=true
+  else
+    ui_print "- Re-configuring addons."
+    USE_SAVED_CONFIG=false
+  fi
+else
+  USE_SAVED_CONFIG=false
+fi
+
+# If not using saved config, ask the user for their choices
+if [ "$USE_SAVED_CONFIG" = false ]; then
+
+  # Prompt for Anya Thermal
+  ui_print " "
+  ui_print "- Include Anya Thermal?"
+  ui_print "  Optimizes thermal management."
+  ui_print " "
+  ui_print "  Vol+ = Yes"
+  ui_print "  Vol- = No"
+  ui_print " "
+  if choose; then
+    INCLUDE_ANYA=1
+    ui_print "  Anya Thermal will be included."
+  else
+    INCLUDE_ANYA=0
+    ui_print "  Anya Thermal will NOT be included."
+  fi
+
+  # Prompt for Kobo Fast Charge
+  ui_print " "
+  ui_print "- Include Kobo Fast Charge?"
+  ui_print "  Enables faster charging speeds."
+  ui_print " "
+  ui_print "  Vol+ = Yes"
+  ui_print "  Vol- = No"
+  ui_print " "
+  if choose; then
+    INCLUDE_KOBO=1
+    ui_print "  Kobo Fast Charge will be included."
+  else
+    INCLUDE_KOBO=0
+    ui_print "  Kobo Fast Charge will NOT be included."
+  fi
+
+  # Prompt for Sandevistan Boot
+  ui_print " "
+  ui_print "- Include Sandevistan Boot?"
+  ui_print "  Speeds up the device boot process."
+  ui_print " "
+  ui_print "  Vol+ = Yes"
+  ui_print "  Vol- = No"
+  ui_print " "
+  if choose; then
+    INCLUDE_SANDEV=1
+    ui_print "  Sandevistan Boot will be included."
+  else
+    INCLUDE_SANDEV=0
+    ui_print "  Sandevistan Boot will NOT be included."
+  fi
+  
+  # Update the module's config file with the new choices
+  ui_print " "
+  ui_print "- Updating module configuration..."
+  sed -i "s/^INCLUDE_ANYA=.*/INCLUDE_ANYA=$INCLUDE_ANYA/" "$RACO_MODULE_CONFIG"
+  sed -i "s/^INCLUDE_KOBO=.*/INCLUDE_KOBO=$INCLUDE_KOBO/" "$RACO_MODULE_CONFIG"
+  sed -i "s/^INCLUDE_SANDEV=.*/INCLUDE_SANDEV=$INCLUDE_SANDEV/" "$RACO_MODULE_CONFIG"
+
+  # Prompt to save choices for future installations
+  ui_print " "
+  ui_print "- Save these choices for future"
+  ui_print "  installations?"
+  ui_print " "
+  ui_print "  Vol+ = Yes"
+  ui_print "  Vol- = No"
+  ui_print " "
+  if choose; then
+    ui_print "- Saving configuration for next time."
+    cp "$RACO_MODULE_CONFIG" "$RACO_PERSIST_CONFIG"
+  else
+    ui_print "- Choices will not be saved."
+    # Remove old saved config if user declines to save new choices
+    [ -f "$RACO_PERSIST_CONFIG" ] && rm "$RACO_PERSIST_CONFIG"
+  fi
+fi
+
+ui_print " "
+sleep 1.5
+
 ui_print " "
 ui_print "     INSTALLING EnCorinVest APK       "
 ui_print " "
