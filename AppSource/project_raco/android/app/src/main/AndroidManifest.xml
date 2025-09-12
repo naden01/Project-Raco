@@ -2,7 +2,7 @@
     <application
         android:label="project_raco"
         android:name="${applicationName}"
-        android:icon="@mipmap/Logo">
+        android:icon="@mipmap/logo">
         <activity
             android:name=".MainActivity"
             android:exported="true"
