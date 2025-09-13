@@ -68,7 +68,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get about_title =>
-      'Terima kasih kepada orang-orang hebat yang membantu memperbaiki EnCorinVest:';
+      'Terima kasih kepada orang-orang hebat yang membantu memperbaiki Project Raco:';
 
   @override
   String get about_quote =>
@@ -76,31 +76,25 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get about_note =>
-      'EnCorinVest Selalu Gratis, Sumber Terbuka, dan Terbuka untuk Peningkatan';
+      'Project Raco Selalu Gratis, Sumber Terbuka, dan Terbuka untuk Peningkatan';
 
   @override
   String get credits_1 => 'Rem01 Gaming';
 
   @override
-  String get credits_2 => 'VelocityFox22';
+  String get credits_2 => 'MiAzami';
 
   @override
-  String get credits_3 => 'MiAzami';
+  String get credits_3 => 'Kazuyoo';
 
   @override
-  String get credits_4 => 'Kazuyoo';
+  String get credits_4 => 'RiProG';
 
   @override
-  String get credits_5 => 'RiProG';
+  String get credits_5 => 'KanaDev_IS';
 
   @override
-  String get credits_6 => 'Lieudahbelajar';
-
-  @override
-  String get credits_7 => 'KanaDev_IS';
-
-  @override
-  String get credits_8 =>
+  String get credits_6 =>
       'Dan Semua Penguji yang Tidak Bisa Disebutkan Satu per Satu';
 
   @override

@@ -558,8 +558,9 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
             ),
             IconButton(
               icon: Icon(Icons.code, color: colorScheme.primary),
-              onPressed: () =>
-                  _launchURL('https://github.com/LoggingNewMemory/EnCorinVest'),
+              onPressed: () => _launchURL(
+                'https://github.com/LoggingNewMemory/Project-Raco',
+              ),
               tooltip: 'GitHub',
             ),
           ],

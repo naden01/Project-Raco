@@ -66,37 +66,31 @@ class AppLocalizationsJa extends AppLocalizations {
   String get gaming_pro => 'ゲーミングプロ';
 
   @override
-  String get about_title => 'エンコリンベストの改善に協力してくれた素晴らしい人々に感謝します:';
+  String get about_title => 'Project Racoの改善に協力してくれた素晴らしい人々に感謝します:';
 
   @override
   String get about_quote => '\"偉大なコラボレーションは偉大なイノベーションにつながる\"\n~ 神奈川山田 (メイン開発者)';
 
   @override
-  String get about_note => 'エンコリンベストは常に無料、オープンソース、そして改善に開かれています';
+  String get about_note => 'Project Racoは常に無料、オープンソース、そして改善に開かれています';
 
   @override
   String get credits_1 => 'Rem01 Gaming';
 
   @override
-  String get credits_2 => 'VelocityFox22';
+  String get credits_2 => 'MiAzami';
 
   @override
-  String get credits_3 => 'MiAzami';
+  String get credits_3 => 'Kazuyoo';
 
   @override
-  String get credits_4 => 'Kazuyoo';
+  String get credits_4 => 'RiProG';
 
   @override
-  String get credits_5 => 'RiProG';
+  String get credits_5 => 'KanaDev_IS';
 
   @override
-  String get credits_6 => 'Lieudahbelajar';
-
-  @override
-  String get credits_7 => 'KanaDev_IS';
-
-  @override
-  String get credits_8 => '名前を挙げられなかったすべてのテスター';
+  String get credits_6 => '名前を挙げられなかったすべてのテスター';
 
   @override
   String get yes => 'はい';

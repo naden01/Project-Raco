@@ -27,10 +27,7 @@ class _AboutPageState extends State<AboutPage> {
   }
 
   Future<void> _loadAllData() async {
-    await Future.wait([
-      _loadBackgroundSettings(),
-      _loadDeviceInfo(),
-    ]);
+    await Future.wait([_loadBackgroundSettings(), _loadDeviceInfo()]);
 
     if (mounted) {
       setState(() {
@@ -76,8 +73,10 @@ class _AboutPageState extends State<AboutPage> {
           run('su', ['-c', 'getprop ro.product.model'], verbose: false),
           run('su', ['-c', 'getprop ro.board.platform'], verbose: false),
           run('su', ['-c', 'getprop ro.hardware'], verbose: false),
-          run('su', ['-c', 'cat /proc/cpuinfo | grep Hardware | cut -d: -f2'],
-              verbose: false),
+          run('su', [
+            '-c',
+            'cat /proc/cpuinfo | grep Hardware | cut -d: -f2',
+          ], verbose: false),
           run('su', ['-c', 'getprop ro.build.version.release'], verbose: false),
         ]);
 
@@ -120,8 +119,6 @@ class _AboutPageState extends State<AboutPage> {
       localization.credits_4,
       localization.credits_5,
       localization.credits_6,
-      localization.credits_7,
-      localization.credits_8,
     ];
   }
 
@@ -132,10 +129,7 @@ class _AboutPageState extends State<AboutPage> {
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
+      appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
       body: Stack(
         fit: StackFit.expand,
         children: [
@@ -151,14 +145,17 @@ class _AboutPageState extends State<AboutPage> {
               ),
             ),
           Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 20.0,
+              vertical: 10.0,
+            ),
             child: _isLoading
                 ? Center(
                     child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 32.0),
-                    child: LinearProgressIndicator(),
-                  ))
+                      padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                      child: LinearProgressIndicator(),
+                    ),
+                  )
                 : AnimatedOpacity(
                     opacity: _isLoading ? 0.0 : 1.0,
                     duration: Duration(milliseconds: 500),
@@ -168,18 +165,21 @@ class _AboutPageState extends State<AboutPage> {
                         children: [
                           Card(
                             elevation: 0,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .surfaceContainerHighest,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.surfaceContainerHighest,
                             shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12)),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                             child: Padding(
                               padding: const EdgeInsets.all(16.0),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   _buildInfoRow(
-                                      localization.device, _deviceModel),
+                                    localization.device,
+                                    _deviceModel,
+                                  ),
                                   _buildInfoRow(localization.cpu, _cpuInfo),
                                   _buildInfoRow(localization.os, _osVersion),
                                 ],
@@ -189,40 +189,38 @@ class _AboutPageState extends State<AboutPage> {
                           SizedBox(height: 20),
                           Text(
                             localization.about_title,
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleLarge
+                            style: Theme.of(context).textTheme.titleLarge
                                 ?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    decoration: TextDecoration.underline),
+                                  fontWeight: FontWeight.bold,
+                                  decoration: TextDecoration.underline,
+                                ),
                           ),
                           SizedBox(height: 15),
-                          ...credits.map((creditText) => Padding(
-                                padding: EdgeInsets.symmetric(vertical: 3),
-                                child: Text(
-                                  '• $creditText',
-                                  style: Theme.of(context).textTheme.bodyMedium,
-                                ),
-                              )),
+                          ...credits.map(
+                            (creditText) => Padding(
+                              padding: EdgeInsets.symmetric(vertical: 3),
+                              child: Text(
+                                '• $creditText',
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                            ),
+                          ),
                           SizedBox(height: 20),
                           Text(
                             localization.about_note,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium
+                            style: Theme.of(context).textTheme.bodyMedium
                                 ?.copyWith(fontStyle: FontStyle.italic),
                           ),
                           SizedBox(height: 20),
                           Center(
                             child: Text(
                               localization.about_quote,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium
+                              style: Theme.of(context).textTheme.bodyMedium
                                   ?.copyWith(
                                     fontStyle: FontStyle.italic,
-                                    color:
-                                        Theme.of(context).colorScheme.primary,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
                                   ),
                               textAlign: TextAlign.center,
                             ),
@@ -245,19 +243,17 @@ class _AboutPageState extends State<AboutPage> {
         children: [
           Text(
             label,
-            style: Theme.of(context)
-                .textTheme
-                .bodyMedium
-                ?.copyWith(fontWeight: FontWeight.bold),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
           SizedBox(width: 8),
           Expanded(
             child: Text(
               value,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium
-                  ?.copyWith(color: Theme.of(context).colorScheme.primary),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.primary,
+              ),
               overflow: TextOverflow.ellipsis,
             ),
           ),

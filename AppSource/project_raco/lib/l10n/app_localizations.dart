@@ -217,7 +217,7 @@ abstract class AppLocalizations {
   /// No description provided for @about_title.
   ///
   /// In en, this message translates to:
-  /// **'Thank you for the great people who helped improve EnCorinVest:'**
+  /// **'Thank you for the great people who helped improve Project Raco:'**
   String get about_title;
 
   /// No description provided for @about_quote.
@@ -229,7 +229,7 @@ abstract class AppLocalizations {
   /// No description provided for @about_note.
   ///
   /// In en, this message translates to:
-  /// **'EnCorinVest Is Always Free, Open Source, and Open For Improvement'**
+  /// **'Project Raco Is Always Free, Open Source, and Open For Improvement'**
   String get about_note;
 
   /// No description provided for @credits_1.
@@ -241,44 +241,32 @@ abstract class AppLocalizations {
   /// No description provided for @credits_2.
   ///
   /// In en, this message translates to:
-  /// **'VelocityFox22'**
+  /// **'MiAzami'**
   String get credits_2;
 
   /// No description provided for @credits_3.
   ///
   /// In en, this message translates to:
-  /// **'MiAzami'**
+  /// **'Kazuyoo'**
   String get credits_3;
 
   /// No description provided for @credits_4.
   ///
   /// In en, this message translates to:
-  /// **'Kazuyoo'**
+  /// **'RiProG'**
   String get credits_4;
 
   /// No description provided for @credits_5.
   ///
   /// In en, this message translates to:
-  /// **'RiProG'**
+  /// **'KanaDev_IS'**
   String get credits_5;
 
   /// No description provided for @credits_6.
   ///
   /// In en, this message translates to:
-  /// **'Lieudahbelajar'**
-  String get credits_6;
-
-  /// No description provided for @credits_7.
-  ///
-  /// In en, this message translates to:
-  /// **'KanaDev_IS'**
-  String get credits_7;
-
-  /// No description provided for @credits_8.
-  ///
-  /// In en, this message translates to:
   /// **'And All Testers That I Can\'t Mentioned One by One'**
-  String get credits_8;
+  String get credits_6;
 
   /// No description provided for @yes.
   ///
