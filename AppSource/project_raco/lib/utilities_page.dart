@@ -449,7 +449,7 @@ class _DeviceMitigationCardState extends State<DeviceMitigationCard> {
                   height: 20,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Icon(Icons.security_update_warning),
+              : const Icon(Icons.security_update_warning_outlined),
           activeColor: colorScheme.primary,
           contentPadding: EdgeInsets.zero,
         ),
@@ -530,7 +530,7 @@ class _LiteModeCardState extends State<LiteModeCard> {
                   height: 20,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Icon(Icons.flourescent),
+              : const Icon(Icons.energy_savings_leaf_outlined),
           activeColor: colorScheme.primary,
           contentPadding: EdgeInsets.zero,
         ),
@@ -743,7 +743,7 @@ class _DndCardState extends State<DndCard> {
                       height: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Icon(Icons.bedtime),
+                  : const Icon(Icons.do_not_disturb_on_outlined),
               activeColor: colorScheme.primary,
               contentPadding: EdgeInsets.zero,
             ),
@@ -909,7 +909,7 @@ class _HamadaAiCardState extends State<HamadaAiCard> {
                       height: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Icon(Icons.psychology_alt),
+                  : const Icon(Icons.smart_toy_outlined),
               activeColor: colorScheme.primary,
               contentPadding: EdgeInsets.zero,
             ),
@@ -923,7 +923,7 @@ class _HamadaAiCardState extends State<HamadaAiCard> {
                       height: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Icon(Icons.rocket_launch),
+                  : const Icon(Icons.power_settings_new),
               activeColor: colorScheme.primary,
               contentPadding: EdgeInsets.zero,
             ),
@@ -1054,7 +1054,7 @@ class _ResolutionCardState extends State<ResolutionCard> {
               Row(
                 children: [
                   Icon(
-                    Icons.screen_rotation,
+                    Icons.aspect_ratio_outlined,
                     color: colorScheme.onSurfaceVariant,
                   ),
                   const SizedBox(width: 8),
@@ -1204,7 +1204,7 @@ class _GameTxtCardState extends State<GameTxtCard> {
                         height: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Icon(Icons.save),
+                    : const Icon(Icons.save_outlined),
                 label: Text(localization.save_button),
               ),
             ),
@@ -1307,7 +1307,7 @@ class _BypassChargingCardState extends State<BypassChargingCard> {
                       height: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Icon(Icons.battery_charging_full),
+                  : const Icon(Icons.bolt_outlined),
               activeColor: colorScheme.primary,
               contentPadding: EdgeInsets.zero,
             ),
@@ -1449,7 +1449,7 @@ class _BackgroundSettingsCardState extends State<BackgroundSettingsCard> {
                 Expanded(
                   child: ElevatedButton(
                     onPressed: _pickAndSetImage,
-                    child: const Icon(Icons.image),
+                    child: const Icon(Icons.image_outlined),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -1460,7 +1460,7 @@ class _BackgroundSettingsCardState extends State<BackgroundSettingsCard> {
                       backgroundColor: colorScheme.errorContainer,
                       foregroundColor: colorScheme.onErrorContainer,
                     ),
-                    child: const Icon(Icons.refresh),
+                    child: const Icon(Icons.delete_outline),
                   ),
                 ),
               ],

@@ -9,6 +9,7 @@ import 'utilities_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import '/l10n/app_localizations.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 /// Manages reading and writing configuration settings using SharedPreferences.
 /// The app will remember the last selected mode locally.
@@ -467,42 +468,42 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
                           localization.power_save_desc,
                           '3',
                           localization.power_save,
-                          Icons.battery_saver,
+                          Icons.battery_saver_outlined,
                           'POWER_SAVE',
                         ),
                         _buildControlRow(
                           localization.balanced_desc,
                           '2',
                           localization.balanced,
-                          Icons.balance,
+                          Icons.balance_outlined,
                           'BALANCED',
                         ),
                         _buildControlRow(
                           localization.performance_desc,
                           '1',
                           localization.performance,
-                          Icons.speed,
+                          Icons.speed_outlined,
                           'PERFORMANCE',
                         ),
                         _buildControlRow(
                           localization.gaming_desc,
                           '4',
                           localization.gaming_pro,
-                          Icons.sports_esports,
+                          Icons.sports_esports_outlined,
                           'GAMING_PRO',
                         ),
                         _buildControlRow(
                           localization.cooldown_desc,
                           '5',
                           localization.cooldown,
-                          Icons.ac_unit,
+                          Icons.ac_unit_outlined,
                           'COOLDOWN',
                         ),
                         _buildControlRow(
                           localization.clear_desc,
                           '6',
                           localization.clear,
-                          Icons.clear_all,
+                          Icons.clear_all_outlined,
                           'CLEAR',
                         ),
                         SizedBox(height: 5),
@@ -552,12 +553,15 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
         Row(
           children: [
             IconButton(
-              icon: Icon(Icons.telegram, color: colorScheme.primary),
+              icon: FaIcon(
+                FontAwesomeIcons.telegram,
+                color: colorScheme.primary,
+              ),
               onPressed: () => _launchURL('https://t.me/KLAGen2'),
               tooltip: 'Telegram',
             ),
             IconButton(
-              icon: Icon(Icons.code, color: colorScheme.primary),
+              icon: FaIcon(FontAwesomeIcons.github, color: colorScheme.primary),
               onPressed: () => _launchURL(
                 'https://github.com/LoggingNewMemory/Project-Raco',
               ),
@@ -684,7 +688,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Icon(Icons.construction, size: 30, color: colorScheme.primary),
+              Icon(Icons.tune, size: 30, color: colorScheme.primary),
               SizedBox(height: 10),
               Text(
                 localization.app_title,

@@ -19,6 +19,7 @@ dependencies:
   url_launcher: ^6.3.1
   shared_preferences: ^2.2.2
   image_picker: ^1.0.7
+  font_awesome_flutter: ^10.10.0
 
 dev_dependencies:
   flutter_test:
