@@ -462,7 +462,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
                       children: [
                         _buildTitleHeader(colorScheme, localization),
                         SizedBox(height: 16),
-                        _buildHeaderRow(localization),
+                        _buildStatusGrid(localization),
                         SizedBox(height: 10),
                         _buildControlRow(
                           localization.power_save_desc,
@@ -506,6 +506,8 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
                           Icons.clear_all_outlined,
                           'CLEAR',
                         ),
+                        SizedBox(height: 5),
+                        _buildUtilitiesCard(localization),
                         SizedBox(height: 5),
                         _buildLanguageSelector(localization),
                         SizedBox(height: 3),
@@ -573,65 +575,81 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     );
   }
 
-  Widget _buildHeaderRow(AppLocalizations localization) {
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(flex: 3, child: _buildStatusInfo(localization)),
-          SizedBox(width: 10),
-          Expanded(
-            flex: 2,
-            child: InkWell(
-              onTap: _navigateToUtilitiesPage,
-              borderRadius: BorderRadius.circular(12),
-              child: _buildUtilitiesBox(localization),
-            ),
-          ),
-        ],
-      ),
+  Widget _buildStatusGrid(AppLocalizations localization) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return GridView.count(
+      crossAxisCount: 2,
+      shrinkWrap: true,
+      physics: NeverScrollableScrollPhysics(),
+      mainAxisSpacing: 10,
+      crossAxisSpacing: 10,
+      childAspectRatio: 1.5,
+      children: [
+        _buildStatusCard(
+          localization.root_access,
+          _hasRootAccess ? localization.yes : localization.no,
+          Icons.security_outlined,
+          _hasRootAccess ? Colors.green : colorScheme.error,
+        ),
+        _buildStatusCard(
+          localization.module_installed,
+          _moduleInstalled ? localization.yes : localization.no,
+          Icons.extension_outlined,
+          _moduleInstalled ? Colors.green : colorScheme.error,
+        ),
+        _buildStatusCard(
+          localization.module_version,
+          _moduleVersion,
+          Icons.info_outline,
+          colorScheme.primary,
+        ),
+        _buildStatusCard(
+          localization.mode_status_label,
+          _isHamadaAiRunning
+              ? localization.mode_hamada_ai
+              : localization.mode_manual,
+          Icons.settings_input_component_outlined,
+          colorScheme.primary,
+        ),
+      ],
     );
   }
 
-  Widget _buildStatusInfo(AppLocalizations localization) {
-    ColorScheme colorScheme = Theme.of(context).colorScheme;
+  Widget _buildStatusCard(
+    String label,
+    String value,
+    IconData icon,
+    Color valueColor,
+  ) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Card(
       elevation: 0,
       color: colorScheme.surfaceContainerHighest,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
-        padding: EdgeInsets.all(12),
+        padding: const EdgeInsets.all(12.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
           children: [
-            _buildStatusRow(
-              localization.root_access,
-              _hasRootAccess ? localization.yes : localization.no,
-              isBold: true,
-              _hasRootAccess ? Colors.green : colorScheme.error,
+            Icon(icon, color: colorScheme.primary, size: 24),
+            SizedBox(height: 8),
+            Text(
+              label,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
-            _buildStatusRow(
-              localization.module_installed,
-              _moduleInstalled ? localization.yes : localization.no,
-              isBold: true,
-              _moduleInstalled ? Colors.green : colorScheme.error,
-            ),
-            _buildStatusRow(
-              localization.module_version,
-              _moduleVersion,
-              colorScheme.primary,
-              isBold: true,
-              isVersion: true,
-            ),
-            _buildStatusRow(
-              localization.mode_status_label,
-              _isHamadaAiRunning
-                  ? localization.mode_hamada_ai
-                  : localization.mode_manual,
-              colorScheme.primary,
-              isBold: true,
+            Text(
+              value,
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                color: valueColor,
+                fontWeight: FontWeight.bold,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),
@@ -639,73 +657,49 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     );
   }
 
-  Widget _buildStatusRow(
-    String label,
-    String value,
-    Color valueColor, {
-    bool isBold = false,
-    bool isVersion = false,
-  }) {
-    ColorScheme colorScheme = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2.0),
-      child: Row(
-        children: [
-          Text(
-            label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-            ),
-          ),
-          SizedBox(width: 5),
-          Expanded(
-            child: Text(
-              value,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: valueColor,
-                fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-              ),
-              overflow: isVersion ? TextOverflow.ellipsis : TextOverflow.fade,
-              softWrap: !isVersion,
-              maxLines: 1,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildUtilitiesBox(AppLocalizations localization) {
-    ColorScheme colorScheme = Theme.of(context).colorScheme;
+  Widget _buildUtilitiesCard(AppLocalizations localization) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Card(
       elevation: 0,
       color: colorScheme.surfaceContainerHighest,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Center(
+      margin: EdgeInsets.only(bottom: 10),
+      child: InkWell(
+        onTap: _navigateToUtilitiesPage,
+        borderRadius: BorderRadius.circular(12),
         child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
             children: [
-              Icon(Icons.tune, size: 30, color: colorScheme.primary),
-              SizedBox(height: 10),
-              Text(
-                localization.app_title,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                  fontWeight: FontWeight.bold,
+              Icon(Icons.tune, size: 24, color: colorScheme.onSurface),
+              SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      localization.utilities,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      localization.app_title,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant.withOpacity(0.8),
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                 ),
               ),
-              SizedBox(height: 4),
-              Text(
-                localization.utilities,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                  fontWeight: FontWeight.bold,
-                ),
+              SizedBox(width: 10),
+              Icon(
+                Icons.arrow_forward_ios,
+                color: colorScheme.onSurface,
+                size: 16,
               ),
             ],
           ),
