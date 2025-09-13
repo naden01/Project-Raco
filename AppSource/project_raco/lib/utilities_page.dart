@@ -459,10 +459,17 @@ class _FixAndTweakCardState extends State<FixAndTweakCard> {
                 fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(height: 8),
             SwitchListTile(
-              title: Text(localization.device_mitigation_title),
-              subtitle: Text(localization.device_mitigation_description),
+              title: Text(
+                localization.device_mitigation_title,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text(
+                localization.device_mitigation_description,
+                style: textTheme.bodySmall?.copyWith(
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
               value: _deviceMitigationEnabled,
               onChanged: isBusy
                   ? null
@@ -484,8 +491,16 @@ class _FixAndTweakCardState extends State<FixAndTweakCard> {
               contentPadding: EdgeInsets.zero,
             ),
             SwitchListTile(
-              title: Text(localization.lite_mode_title),
-              subtitle: Text(localization.lite_mode_description),
+              title: Text(
+                localization.lite_mode_title,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text(
+                localization.lite_mode_description,
+                style: textTheme.bodySmall?.copyWith(
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
               value: _liteModeEnabled,
               onChanged: isBusy
                   ? null
