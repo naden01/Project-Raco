@@ -202,6 +202,22 @@ class _AboutPageState extends State<AboutPage> {
     final localization = AppLocalizations.of(context)!;
     final credits = _getCredits(localization);
 
+    // Define text styles for consistency
+    final valueStyle = Theme.of(
+      context,
+    ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold);
+    final labelStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
+      color: Theme.of(context).colorScheme.onSurfaceVariant,
+    );
+    final separator = Text(
+      '|',
+      style: TextStyle(
+        color: Theme.of(context).colorScheme.primary,
+        fontSize: 18,
+        fontWeight: FontWeight.w200,
+      ),
+    );
+
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
@@ -238,62 +254,100 @@ class _AboutPageState extends State<AboutPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Card(
-                            elevation: 0,
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.surfaceContainerHighest,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  _buildInfoBlock(
-                                    _deviceModel,
-                                    localization.device_name,
-                                    isFirst: true,
-                                  ),
-                                  SizedBox(height: 16),
-                                  _buildInfoBlock(
-                                    _cpuInfo,
-                                    localization.processor,
-                                  ),
-                                  SizedBox(height: 16),
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: _buildInfoBlock(
-                                          _ramInfo,
-                                          localization.ram,
-                                        ),
-                                      ),
-                                      SizedBox(width: 16),
-                                      Expanded(
-                                        child: _buildInfoBlock(
-                                          _storageInfo,
-                                          localization.phone_storage,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  SizedBox(height: 16),
-                                  _buildInfoBlock(
-                                    _batteryInfo,
-                                    localization.battery_capacity,
-                                  ),
-                                ],
-                              ),
+                          // --- Start of layout changes ---
+                          // Wrap the Column in an Align widget to push it to the edge
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.baseline,
+                                  textBaseline: TextBaseline.alphabetic,
+                                  children: [
+                                    Text(_deviceModel, style: valueStyle),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      localization.device_name,
+                                      style: labelStyle,
+                                    ),
+                                    SizedBox(width: 4),
+                                    Icon(
+                                      Icons.chevron_right,
+                                      size: 18,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: 24),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.baseline,
+                                  textBaseline: TextBaseline.alphabetic,
+                                  children: [
+                                    Text(_cpuInfo, style: valueStyle),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      localization.processor,
+                                      style: labelStyle,
+                                    ),
+                                    SizedBox(width: 8),
+                                    separator,
+                                  ],
+                                ),
+                                SizedBox(height: 24),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.baseline,
+                                  textBaseline: TextBaseline.alphabetic,
+                                  children: [
+                                    Text(_ramInfo, style: valueStyle),
+                                    SizedBox(width: 8),
+                                    Text(localization.ram, style: labelStyle),
+                                    SizedBox(width: 8),
+                                    separator,
+                                    SizedBox(width: 16),
+                                    Text(_storageInfo, style: valueStyle),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      localization.phone_storage,
+                                      style: labelStyle,
+                                    ),
+                                    SizedBox(width: 8),
+                                    separator,
+                                  ],
+                                ),
+                                SizedBox(height: 24),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.baseline,
+                                  textBaseline: TextBaseline.alphabetic,
+                                  children: [
+                                    Text(_batteryInfo, style: valueStyle),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      localization.battery_capacity,
+                                      style: labelStyle,
+                                    ),
+                                    SizedBox(width: 8),
+                                    separator,
+                                  ],
+                                ),
+                              ],
                             ),
                           ),
-                          SizedBox(height: 20),
+                          // --- End of layout changes ---
+                          SizedBox(height: 40),
                           Text(
                             localization.about_title,
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium // Reduced size from titleLarge
+                            style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(
                                   fontWeight: FontWeight.bold,
                                   decoration: TextDecoration.underline,
@@ -337,42 +391,6 @@ class _AboutPageState extends State<AboutPage> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildInfoBlock(String value, String label, {bool isFirst = false}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Flexible(
-              child: Text(
-                value,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            if (isFirst) ...[
-              SizedBox(width: 8),
-              Icon(
-                Icons.chevron_right,
-                size: 20,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ],
-          ],
-        ),
-        SizedBox(height: 2),
-        Text(
-          label,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
-        ),
-      ],
     );
   }
 }
