@@ -243,6 +243,16 @@ class AppLocalizationsJa extends AppLocalizations {
   String get opacity_slider_label => '背景の不透明度';
 
   @override
+  String get banner_settings_title => 'バナー設定';
+
+  @override
+  String get banner_settings_description =>
+      'メイン画面のバナー画像（アスペクト比16:9）をカスタマイズします。';
+
+  @override
+  String get change_banner_button => 'バナーを変更';
+
+  @override
   String get select_theme => 'テーマを選択:';
 
   @override

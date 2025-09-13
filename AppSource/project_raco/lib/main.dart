@@ -52,6 +52,7 @@ class _MyAppState extends State<MyApp> {
   Locale? _locale;
   String? _backgroundImagePath;
   double _backgroundOpacity = 0.2;
+  String? _bannerImagePath; // Added banner image path state
   String _currentTheme = 'Classic'; // Default theme
 
   static final _defaultLightColorScheme = ColorScheme.fromSeed(
@@ -75,12 +76,14 @@ class _MyAppState extends State<MyApp> {
     final languageCode = prefs.getString('language_code') ?? 'en';
     final path = prefs.getString('background_image_path');
     final opacity = prefs.getDouble('background_opacity') ?? 0.2;
+    final bannerPath = prefs.getString('banner_image_path'); // Load banner path
     final theme = prefs.getString('theme_preference') ?? 'Classic';
 
     setState(() {
       _locale = Locale(languageCode);
       _backgroundImagePath = path;
       _backgroundOpacity = opacity;
+      _bannerImagePath = bannerPath; // Set banner path state
       _currentTheme = theme;
     });
   }
@@ -146,6 +149,7 @@ class _MyAppState extends State<MyApp> {
                 MainScreen(
                   onLocaleChange: _updateLocale,
                   onUtilitiesClosed: _loadAllPreferences,
+                  bannerImagePath: _bannerImagePath, // Pass banner path
                   currentTheme: _currentTheme,
                   onThemeChange: _updateTheme,
                 ),
@@ -167,12 +171,14 @@ class _MyAppState extends State<MyApp> {
 class MainScreen extends StatefulWidget {
   final Function(Locale) onLocaleChange;
   final VoidCallback onUtilitiesClosed;
+  final String? bannerImagePath; // Receive banner path
   final String currentTheme;
   final Function(String) onThemeChange;
 
   MainScreen({
     required this.onLocaleChange,
     required this.onUtilitiesClosed,
+    required this.bannerImagePath, // Updated constructor
     required this.currentTheme,
     required this.onThemeChange,
   });
@@ -577,6 +583,41 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
 
   // ADDED: New widget for banner and status cards
   Widget _buildBannerAndStatus(AppLocalizations localization) {
+    // Conditional widget for the banner image
+    Widget bannerImage;
+    if (widget.bannerImagePath != null && widget.bannerImagePath!.isNotEmpty) {
+      bannerImage = Image.file(
+        File(widget.bannerImagePath!),
+        fit: BoxFit.cover,
+        width: double.infinity,
+        errorBuilder: (context, error, stackTrace) {
+          // Fallback to asset if file is not found or has an error
+          return Image.asset(
+            'assets/Raco.jpg',
+            fit: BoxFit.cover,
+            width: double.infinity,
+          );
+        },
+      );
+    } else {
+      bannerImage = Image.asset(
+        'assets/Raco.jpg',
+        fit: BoxFit.cover,
+        width: double.infinity,
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            color: Theme.of(context).colorScheme.surfaceContainerHighest,
+            child: Center(
+              child: Icon(
+                Icons.image_not_supported_outlined,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          );
+        },
+      );
+    }
+
     return Column(
       children: [
         // Banner Card
@@ -591,25 +632,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
             child: Stack(
               alignment: Alignment.bottomLeft,
               children: [
-                Image.asset(
-                  'assets/Raco.jpg', // Your image asset
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  // Optional: add an error builder
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.surfaceContainerHighest,
-                      child: Center(
-                        child: Icon(
-                          Icons.image_not_supported_outlined,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    );
-                  },
-                ),
+                bannerImage, // Use the dynamic banner widget
                 Container(
                   margin: EdgeInsets.all(12.0),
                   padding: EdgeInsets.symmetric(

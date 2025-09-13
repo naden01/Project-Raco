@@ -562,6 +562,24 @@ abstract class AppLocalizations {
   /// **'Background Opacity'**
   String get opacity_slider_label;
 
+  /// No description provided for @banner_settings_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Banner Settings'**
+  String get banner_settings_title;
+
+  /// No description provided for @banner_settings_description.
+  ///
+  /// In en, this message translates to:
+  /// **'Customize the main screen\'s banner image (16:9 aspect ratio).'**
+  String get banner_settings_description;
+
+  /// No description provided for @change_banner_button.
+  ///
+  /// In en, this message translates to:
+  /// **'Change Banner'**
+  String get change_banner_button;
+
   /// No description provided for @select_theme.
   ///
   /// In en, this message translates to:

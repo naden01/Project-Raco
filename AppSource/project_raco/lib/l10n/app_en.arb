@@ -25,8 +25,7 @@
     "credits_2": "MiAzami",
     "credits_3": "Kazuyoo",
     "credits_4": "RiProG",
- 
-   "credits_5": "KanaDev_IS",
+    "credits_5": "KanaDev_IS",
     "credits_6": "And All Testers That I Can't Mentioned One by One",
     "yes": "Yes",
     "no": "No",
@@ -38,8 +37,7 @@
     "lite_mode_title": "LITE Mode",
     "lite_mode_description": "Using Lite mode (Requested by Fans)",
     "hamada_ai": "HAMADA AI",
- 
-   "hamada_ai_description": "Automatically Switch to Performance When Entering Game",
+    "hamada_ai_description": "Automatically Switch to Performance When Entering Game",
     "downscale_resolution": "Downscale Resolution",
     "selected_resolution": "Selected: {resolution}",
     "@selected_resolution": {
@@ -50,8 +48,7 @@
         }
     },
     "reset_resolution": "Reset to Original",
-   
- "hamada_ai_toggle_title": "Enable HAMADA AI",
+    "hamada_ai_toggle_title": "Enable HAMADA AI",
     "hamada_ai_start_on_boot": "Start on Boot",
     "edit_game_txt_title": "Edit game.txt",
     "save_button": "Save",
@@ -66,8 +63,7 @@
     "writing_service_file": "Updating boot script...",
     "service_file_updated": "Boot script updated.",
     "service_file_update_failed": "Failed to update boot script.",
-    "error_no_root": 
-"Root access required.",
+    "error_no_root": "Root access required.",
     "error_file_not_found": "File not found.",
     "game_txt_hint": "Enter game package names, one per line...",
     "resolution_unavailable_message": "Resolution control is not available on this device.",
@@ -87,6 +83,9 @@
     "background_settings_title": "Background Settings",
     "background_settings_description": "Customize the app's background image and opacity.",
     "opacity_slider_label": "Background Opacity",
+    "banner_settings_title": "Banner Settings",
+    "banner_settings_description": "Customize the main screen's banner image (16:9 aspect ratio).",
+    "change_banner_button": "Change Banner",
     "select_theme": "Select Theme:",
     "theme_classic": "Classic",
     "theme_modern": "Modern",
@@ -97,7 +96,6 @@
     "battery_capacity": "Battery capacity",
     "custom_governor_title": "Custom Governor",
     "custom_governor_description": "Set custom CPU governor, This will set the governor in balanced mode",
-  
-  "loading_governors": "Loading governors...",
+    "loading_governors": "Loading governors...",
     "no_governor_selected": "None"
 }

@@ -256,6 +256,16 @@ class AppLocalizationsId extends AppLocalizations {
   String get opacity_slider_label => 'Opasitas Latar Belakang';
 
   @override
+  String get banner_settings_title => 'Pengaturan Banner';
+
+  @override
+  String get banner_settings_description =>
+      'Sesuaikan gambar banner layar utama (rasio aspek 16:9).';
+
+  @override
+  String get change_banner_button => 'Ubah Banner';
+
+  @override
   String get select_theme => 'Pilih Tema:';
 
   @override

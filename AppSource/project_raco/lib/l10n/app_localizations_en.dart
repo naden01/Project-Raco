@@ -253,6 +253,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get opacity_slider_label => 'Background Opacity';
 
   @override
+  String get banner_settings_title => 'Banner Settings';
+
+  @override
+  String get banner_settings_description =>
+      'Customize the main screen\'s banner image (16:9 aspect ratio).';
+
+  @override
+  String get change_banner_button => 'Change Banner';
+
+  @override
   String get select_theme => 'Select Theme:';
 
   @override

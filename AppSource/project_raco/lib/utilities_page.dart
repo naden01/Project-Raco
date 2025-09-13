@@ -5,6 +5,9 @@ import 'package:process_run/process_run.dart';
 import '/l10n/app_localizations.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:image_cropper/image_cropper.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
 
 //region Helper Functions
 Future<ProcessResult> _runRootCommandAndWait(String command) async {
@@ -48,6 +51,7 @@ class UtilitiesPage extends StatefulWidget {
 class _UtilitiesPageState extends State<UtilitiesPage> {
   String? _backgroundImagePath;
   double _backgroundOpacity = 0.2;
+  String? _bannerImagePath;
   bool _isLoading = true;
 
   // Data for child widgets
@@ -71,6 +75,7 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
     // Start all data fetching processes and the artificial delay concurrently.
     final dataFutures = [
       _loadBackgroundSettings(),
+      _loadBannerSettings(), // Added banner settings loader
       if (hasRoot) ...[
         _loadEncoreSwitchState(),
         _loadGovernorState(),
@@ -97,6 +102,8 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
       _backgroundImagePath = bgSettings['path'];
       _backgroundOpacity = bgSettings['opacity'];
 
+      _bannerImagePath = results[resultIndex++] as String?;
+
       if (hasRoot) {
         _encoreState = results[resultIndex++] as Map<String, dynamic>;
         _governorState = results[resultIndex++] as Map<String, dynamic>;
@@ -120,6 +127,16 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
       return {'path': path, 'opacity': opacity};
     } catch (e) {
       return {'path': null, 'opacity': 0.2};
+    }
+  }
+
+  // Added: Loader for banner settings
+  Future<String?> _loadBannerSettings() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString('banner_image_path');
+    } catch (e) {
+      return null;
     }
   }
 
@@ -361,6 +378,16 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
                         setState(() {
                           _backgroundImagePath = path;
                           _backgroundOpacity = opacity;
+                        });
+                      },
+                    ),
+                    // Added: Banner Settings Card
+                    BannerSettingsCard(
+                      initialPath: _bannerImagePath,
+                      onSettingsChanged: (path) {
+                        if (!mounted) return;
+                        setState(() {
+                          _bannerImagePath = path;
                         });
                       },
                     ),
@@ -1460,4 +1487,157 @@ class _BackgroundSettingsCardState extends State<BackgroundSettingsCard> {
     );
   }
 }
-//endregion
+
+// Added: New BannerSettingsCard widget
+class BannerSettingsCard extends StatefulWidget {
+  final String? initialPath;
+  final Function(String?) onSettingsChanged;
+
+  const BannerSettingsCard({
+    Key? key,
+    required this.initialPath,
+    required this.onSettingsChanged,
+  }) : super(key: key);
+
+  @override
+  _BannerSettingsCardState createState() => _BannerSettingsCardState();
+}
+
+class _BannerSettingsCardState extends State<BannerSettingsCard> {
+  late String? _path;
+
+  @override
+  void initState() {
+    super.initState();
+    _path = widget.initialPath;
+  }
+
+  @override
+  void didUpdateWidget(BannerSettingsCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialPath != oldWidget.initialPath) {
+      setState(() {
+        _path = widget.initialPath;
+      });
+    }
+  }
+
+  Future<void> _pickAndCropImage() async {
+    try {
+      final pickedFile = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+      );
+      if (pickedFile == null || !mounted) return;
+
+      final croppedFile = await ImageCropper().cropImage(
+        sourcePath: pickedFile.path,
+        aspectRatio: const CropAspectRatio(ratioX: 16, ratioY: 9),
+        uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle: 'Crop Banner',
+            toolbarColor: Theme.of(context).colorScheme.primary,
+            toolbarWidgetColor: Theme.of(context).colorScheme.onPrimary,
+            initAspectRatio: CropAspectRatioPreset.ratio16x9,
+            lockAspectRatio: true,
+          ),
+          IOSUiSettings(
+            title: 'Crop Banner',
+            aspectRatioLockEnabled: true,
+            resetAspectRatioEnabled: false,
+            aspectRatioPickerButtonHidden: true,
+            rectX: 1.0,
+            rectY: 1.0,
+            rectWidth: 1280,
+            rectHeight: 720,
+          ),
+        ],
+      );
+
+      if (croppedFile != null && mounted) {
+        // Save the cropped image to the app's document directory for persistence
+        final appDir = await getApplicationDocumentsDirectory();
+        final fileName = 'banner_${DateTime.now().millisecondsSinceEpoch}.jpg';
+        final savedImage = await File(
+          croppedFile.path,
+        ).copy(p.join(appDir.path, fileName));
+
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('banner_image_path', savedImage.path);
+        setState(() => _path = savedImage.path);
+        widget.onSettingsChanged(_path);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to pick or crop image: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _resetBanner() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('banner_image_path');
+    if (mounted) {
+      setState(() {
+        _path = null;
+      });
+    }
+    widget.onSettingsChanged(null);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final localization = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Card(
+      elevation: 2.0,
+      margin: const EdgeInsets.only(bottom: 16),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      color: colorScheme.surfaceContainerHighest,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              localization.banner_settings_title,
+              style: textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              localization.banner_settings_description,
+              style: textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: _pickAndCropImage,
+                    icon: const Icon(Icons.image_search_outlined),
+                    label: Text(localization.change_banner_button),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: _resetBanner,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: colorScheme.errorContainer,
+                    foregroundColor: colorScheme.onErrorContainer,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                  ),
+                  child: const Icon(Icons.delete_outline),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
