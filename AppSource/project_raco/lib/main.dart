@@ -506,11 +506,10 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
                           Icons.clear_all_outlined,
                           'CLEAR',
                         ),
-                        SizedBox(height: 5),
                         _buildUtilitiesCard(localization),
-                        SizedBox(height: 5),
+                        SizedBox(height: 10),
                         _buildLanguageSelector(localization),
-                        SizedBox(height: 3),
+                        SizedBox(height: 10),
                         _buildThemeSelector(localization),
                         SizedBox(height: 20),
                       ],
@@ -661,44 +660,25 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     final colorScheme = Theme.of(context).colorScheme;
     return Card(
       elevation: 0,
+      margin: EdgeInsets.zero,
       color: colorScheme.surfaceContainerHighest,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      margin: EdgeInsets.only(bottom: 10),
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: _navigateToUtilitiesPage,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Container(
+          height: 56.0,
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
           child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(Icons.tune, size: 24, color: colorScheme.onSurface),
-              SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      localization.utilities,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: colorScheme.onSurface,
-                      ),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      localization.app_title,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onSurfaceVariant.withOpacity(0.8),
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
+              Text(
+                localization.utilities,
+                style: Theme.of(context).textTheme.bodyMedium,
               ),
-              SizedBox(width: 10),
               Icon(
                 Icons.arrow_forward_ios,
-                color: colorScheme.onSurface,
+                color: colorScheme.onSurfaceVariant,
                 size: 16,
               ),
             ],
@@ -709,12 +689,15 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   }
 
   Widget _buildLanguageSelector(AppLocalizations localization) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Card(
       elevation: 0,
-      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+      margin: EdgeInsets.zero,
+      color: colorScheme.surfaceContainerHighest,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+      child: Container(
+        height: 56.0,
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -733,14 +716,12 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
               onChanged: (String? newValue) {
                 if (newValue != null) _changeLanguage(newValue);
               },
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              dropdownColor: Theme.of(
+              style: Theme.of(
                 context,
-              ).colorScheme.surfaceContainerHighest,
+              ).textTheme.bodyMedium?.copyWith(color: colorScheme.primary),
+              dropdownColor: colorScheme.surfaceContainerHighest,
               underline: Container(),
-              iconEnabledColor: Theme.of(context).colorScheme.primary,
+              iconEnabledColor: colorScheme.primary,
             ),
           ],
         ),
@@ -752,10 +733,12 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     final colorScheme = Theme.of(context).colorScheme;
     return Card(
       elevation: 0,
+      margin: EdgeInsets.zero,
       color: colorScheme.surfaceContainerHighest,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: Container(
+        height: 56.0,
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -775,7 +758,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
               selectedColor: colorScheme.onPrimary,
               fillColor: colorScheme.primary,
               color: colorScheme.onSurfaceVariant,
-              constraints: BoxConstraints(minHeight: 32.0, minWidth: 80.0),
+              constraints: BoxConstraints(minHeight: 36.0, minWidth: 80.0),
               children: <Widget>[
                 Text(localization.theme_classic),
                 Text(localization.theme_modern),
