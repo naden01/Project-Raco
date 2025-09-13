@@ -131,7 +131,8 @@ class _AboutPageState extends State<AboutPage> {
         String totalRamKb = results[5].stdout.toString().trim();
         if (totalRamKb.isNotEmpty && int.tryParse(totalRamKb) != null) {
           double totalRamGb = int.parse(totalRamKb) / (1024 * 1024);
-          ramInfo = '${totalRamGb.round()} GB';
+          // --- FIX: Changed .round() to .ceil() to always round up ---
+          ramInfo = '${totalRamGb.ceil()} GB';
         }
 
         // Storage Info
@@ -254,8 +255,7 @@ class _AboutPageState extends State<AboutPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // --- Start of layout changes ---
-                          // Wrap the Column in an Align widget to push it to the edge
+                          // Device spec layout
                           Align(
                             alignment: Alignment.centerRight,
                             child: Column(
@@ -343,7 +343,7 @@ class _AboutPageState extends State<AboutPage> {
                               ],
                             ),
                           ),
-                          // --- End of layout changes ---
+                          // End of device spec layout
                           SizedBox(height: 40),
                           Text(
                             localization.about_title,
