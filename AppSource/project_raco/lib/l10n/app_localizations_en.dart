@@ -124,12 +124,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get utilities_title => 'Utilities';
 
   @override
-  String get encore_switch_title => 'Encore Switch';
-
-  @override
-  String get encore_switch_description => 'Controls How Encore Works';
-
-  @override
   String get device_mitigation_title => 'Device Mitigation';
 
   @override

@@ -120,12 +120,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get utilities_title => 'ユーティリティ';
 
   @override
-  String get encore_switch_title => 'アンコールスイッチ';
-
-  @override
-  String get encore_switch_description => 'アンコールの動作を制御します';
-
-  @override
   String get device_mitigation_title => 'デバイスの緩和';
 
   @override

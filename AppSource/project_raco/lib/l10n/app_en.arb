@@ -36,8 +36,6 @@
     "os": "OS:",
     "utilities": "Utilities",
     "utilities_title": "Utilities",
-    "encore_switch_title": "Encore Switch",
-    "encore_switch_description": "Controls How Encore Works",
     "device_mitigation_title": "Device Mitigation",
     "device_mitigation_description": "Turn on if you experience screen freeze",
     "lite_mode_title": "LITE Mode",

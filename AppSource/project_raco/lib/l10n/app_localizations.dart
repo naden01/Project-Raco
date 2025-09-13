@@ -322,18 +322,6 @@ abstract class AppLocalizations {
   /// **'Utilities'**
   String get utilities_title;
 
-  /// No description provided for @encore_switch_title.
-  ///
-  /// In en, this message translates to:
-  /// **'Encore Switch'**
-  String get encore_switch_title;
-
-  /// No description provided for @encore_switch_description.
-  ///
-  /// In en, this message translates to:
-  /// **'Controls How Encore Works'**
-  String get encore_switch_description;
-
   /// No description provided for @device_mitigation_title.
   ///
   /// In en, this message translates to:

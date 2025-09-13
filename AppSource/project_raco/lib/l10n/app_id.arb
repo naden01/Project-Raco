@@ -36,8 +36,6 @@
     "os": "OS:",
     "utilities": "Utilitas",
     "utilities_title": "Utilitas",
-    "encore_switch_title": "Saklar Encore",
-    "encore_switch_description": "Mengontrol Cara Kerja Encore",
     "device_mitigation_title": "Mitigasi Perangkat",
     "device_mitigation_description": "Nyalakan jika Anda mengalami layar beku",
     "lite_mode_title": "Mode LITE",

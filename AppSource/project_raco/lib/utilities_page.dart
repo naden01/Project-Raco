@@ -321,10 +321,11 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    EncoreSwitchCard(
-                      initialDeviceMitigation:
-                          _encoreState?['deviceMitigation'] ?? false,
-                      initialLiteMode: _encoreState?['liteMode'] ?? false,
+                    DeviceMitigationCard(
+                      initialValue: _encoreState?['deviceMitigation'] ?? false,
+                    ),
+                    LiteModeCard(
+                      initialValue: _encoreState?['liteMode'] ?? false,
                     ),
                     GovernorCard(
                       initialAvailableGovernors:
@@ -375,52 +376,41 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
 }
 
 //region Card Widgets
-class EncoreSwitchCard extends StatefulWidget {
-  final bool initialDeviceMitigation;
-  final bool initialLiteMode;
+class DeviceMitigationCard extends StatefulWidget {
+  final bool initialValue;
 
-  const EncoreSwitchCard({
-    Key? key,
-    required this.initialDeviceMitigation,
-    required this.initialLiteMode,
-  }) : super(key: key);
+  const DeviceMitigationCard({Key? key, required this.initialValue})
+    : super(key: key);
 
   @override
-  _EncoreSwitchCardState createState() => _EncoreSwitchCardState();
+  _DeviceMitigationCardState createState() => _DeviceMitigationCardState();
 }
 
-class _EncoreSwitchCardState extends State<EncoreSwitchCard> {
-  late bool _deviceMitigationEnabled;
-  late bool _liteModeEnabled;
+class _DeviceMitigationCardState extends State<DeviceMitigationCard> {
+  late bool _isEnabled;
   bool _isUpdating = false;
-
   final String _racoConfigFilePath = '/data/adb/modules/ProjectRaco/raco.txt';
 
   @override
   void initState() {
     super.initState();
-    _deviceMitigationEnabled = widget.initialDeviceMitigation;
-    _liteModeEnabled = widget.initialLiteMode;
+    _isEnabled = widget.initialValue;
   }
 
-  Future<void> _updateEncoreTweak(String key, bool enable) async {
+  Future<void> _updateTweak(bool enable) async {
     if (!await _checkRootAccess()) return;
     if (mounted) setState(() => _isUpdating = true);
 
     try {
       final value = enable ? '1' : '0';
+      const key = 'DEVICE_MITIGATION';
       final sedCommand =
           "sed -i 's|^$key=.*|$key=$value|' $_racoConfigFilePath";
 
       final result = await _runRootCommandAndWait(sedCommand);
 
       if (result.exitCode == 0) {
-        if (mounted) {
-          setState(() {
-            if (key == 'DEVICE_MITIGATION') _deviceMitigationEnabled = enable;
-            if (key == 'LITE_MODE') _liteModeEnabled = enable;
-          });
-        }
+        if (mounted) setState(() => _isEnabled = enable);
       } else {
         throw Exception('Failed to write to the config file.');
       }
@@ -429,11 +419,7 @@ class _EncoreSwitchCardState extends State<EncoreSwitchCard> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to update settings: $e')),
         );
-        setState(() {
-          // Revert on failure
-          _deviceMitigationEnabled = widget.initialDeviceMitigation;
-          _liteModeEnabled = widget.initialLiteMode;
-        });
+        setState(() => _isEnabled = widget.initialValue);
       }
     } finally {
       if (mounted) setState(() => _isUpdating = false);
@@ -444,7 +430,6 @@ class _EncoreSwitchCardState extends State<EncoreSwitchCard> {
   Widget build(BuildContext context) {
     final localization = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
 
     return Card(
       elevation: 2.0,
@@ -452,57 +437,102 @@ class _EncoreSwitchCardState extends State<EncoreSwitchCard> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       color: colorScheme.surfaceContainerHighest,
       child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              localization.encore_switch_title,
-              style: textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              localization.encore_switch_description,
-              style: textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),
-            ),
-            const SizedBox(height: 8),
-            SwitchListTile(
-              title: Text(localization.device_mitigation_title),
-              subtitle: Text(localization.device_mitigation_description),
-              value: _deviceMitigationEnabled,
-              onChanged: _isUpdating
-                  ? null
-                  : (value) => _updateEncoreTweak('DEVICE_MITIGATION', value),
-              secondary: _isUpdating
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.security_update_warning),
-              activeColor: colorScheme.primary,
-              contentPadding: EdgeInsets.zero,
-            ),
-            SwitchListTile(
-              title: Text(localization.lite_mode_title),
-              subtitle: Text(localization.lite_mode_description),
-              value: _liteModeEnabled,
-              onChanged: _isUpdating
-                  ? null
-                  : (value) => _updateEncoreTweak('LITE_MODE', value),
-              secondary: _isUpdating
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.flourescent),
-              activeColor: colorScheme.primary,
-              contentPadding: EdgeInsets.zero,
-            ),
-          ],
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        child: SwitchListTile(
+          title: Text(localization.device_mitigation_title),
+          subtitle: Text(localization.device_mitigation_description),
+          value: _isEnabled,
+          onChanged: _isUpdating ? null : _updateTweak,
+          secondary: _isUpdating
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.security_update_warning),
+          activeColor: colorScheme.primary,
+          contentPadding: EdgeInsets.zero,
+        ),
+      ),
+    );
+  }
+}
+
+class LiteModeCard extends StatefulWidget {
+  final bool initialValue;
+
+  const LiteModeCard({Key? key, required this.initialValue}) : super(key: key);
+
+  @override
+  _LiteModeCardState createState() => _LiteModeCardState();
+}
+
+class _LiteModeCardState extends State<LiteModeCard> {
+  late bool _isEnabled;
+  bool _isUpdating = false;
+  final String _racoConfigFilePath = '/data/adb/modules/ProjectRaco/raco.txt';
+
+  @override
+  void initState() {
+    super.initState();
+    _isEnabled = widget.initialValue;
+  }
+
+  Future<void> _updateTweak(bool enable) async {
+    if (!await _checkRootAccess()) return;
+    if (mounted) setState(() => _isUpdating = true);
+
+    try {
+      final value = enable ? '1' : '0';
+      const key = 'LITE_MODE';
+      final sedCommand =
+          "sed -i 's|^$key=.*|$key=$value|' $_racoConfigFilePath";
+
+      final result = await _runRootCommandAndWait(sedCommand);
+
+      if (result.exitCode == 0) {
+        if (mounted) setState(() => _isEnabled = enable);
+      } else {
+        throw Exception('Failed to write to the config file.');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update settings: $e')),
+        );
+        setState(() => _isEnabled = widget.initialValue);
+      }
+    } finally {
+      if (mounted) setState(() => _isUpdating = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final localization = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Card(
+      elevation: 2.0,
+      margin: const EdgeInsets.only(bottom: 16),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      color: colorScheme.surfaceContainerHighest,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        child: SwitchListTile(
+          title: Text(localization.lite_mode_title),
+          subtitle: Text(localization.lite_mode_description),
+          value: _isEnabled,
+          onChanged: _isUpdating ? null : _updateTweak,
+          secondary: _isUpdating
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.flourescent),
+          activeColor: colorScheme.primary,
+          contentPadding: EdgeInsets.zero,
         ),
       ),
     );

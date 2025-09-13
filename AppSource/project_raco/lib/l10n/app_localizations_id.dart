@@ -125,12 +125,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get utilities_title => 'Utilitas';
 
   @override
-  String get encore_switch_title => 'Saklar Encore';
-
-  @override
-  String get encore_switch_description => 'Mengontrol Cara Kerja Encore';
-
-  @override
   String get device_mitigation_title => 'Mitigasi Perangkat';
 
   @override
