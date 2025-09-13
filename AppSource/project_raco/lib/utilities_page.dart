@@ -17,8 +17,12 @@ Future<ProcessResult> _runRootCommandAndWait(String command) async {
 
 Future<void> _runRootCommandFireAndForget(String command) async {
   try {
-    await Process.start('su', ['-c', '$command &'],
-        runInShell: true, mode: ProcessStartMode.detached);
+    await Process.start(
+      'su',
+      ['-c', '$command &'],
+      runInShell: true,
+      mode: ProcessStartMode.detached,
+    );
   } catch (e) {
     // Error starting root command
   }
@@ -75,7 +79,7 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
         _loadResolutionState(),
         _loadGameTxtState(),
         _loadBypassChargingState(),
-      ]
+      ],
     ];
 
     final delayFuture = Future.delayed(const Duration(seconds: 1));
@@ -121,17 +125,22 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
 
   Future<Map<String, dynamic>> _loadEncoreSwitchState() async {
     final result = await _runRootCommandAndWait(
-        'cat /data/adb/modules/EnCorinVest/Scripts/encorinFunctions.sh');
+      'cat /data/adb/modules/ProjectRaco/raco.txt',
+    );
     if (result.exitCode == 0) {
       final content = result.stdout.toString();
       return {
-        'deviceMitigation': RegExp(r'^DEVICE_MITIGATION=(\d)', multiLine: true)
-                .firstMatch(content)
-                ?.group(1) ==
+        'deviceMitigation':
+            RegExp(
+              r'^DEVICE_MITIGATION=(\d)',
+              multiLine: true,
+            ).firstMatch(content)?.group(1) ==
             '1',
-        'liteMode': RegExp(r'^LITE_MODE=(\d)', multiLine: true)
-                .firstMatch(content)
-                ?.group(1) ==
+        'liteMode':
+            RegExp(
+              r'^LITE_MODE=(\d)',
+              multiLine: true,
+            ).firstMatch(content)?.group(1) ==
             '1',
       };
     }
@@ -141,33 +150,38 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
   Future<Map<String, dynamic>> _loadGovernorState() async {
     final results = await Future.wait([
       _runRootCommandAndWait(
-          'cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors'),
-      _runRootCommandAndWait('cat /data/adb/modules/EnCorinVest/encorin.txt'),
+        'cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors',
+      ),
+      _runRootCommandAndWait('cat /data/adb/modules/ProjectRaco/raco.txt'),
     ]);
     final governorsResult = results[0];
     final configResult = results[1];
 
-    List<String> available = (governorsResult.exitCode == 0 &&
+    List<String> available =
+        (governorsResult.exitCode == 0 &&
             governorsResult.stdout.toString().isNotEmpty)
         ? governorsResult.stdout.toString().trim().split(' ')
         : [];
 
     String? selected;
     if (configResult.exitCode == 0) {
-      selected = RegExp(r'^GOV=(.*)$', multiLine: true)
-          .firstMatch(configResult.stdout.toString())
-          ?.group(1)
-          ?.trim();
+      selected = RegExp(
+        r'^GOV=(.*)$',
+        multiLine: true,
+      ).firstMatch(configResult.stdout.toString())?.group(1)?.trim();
     }
     return {'available': available, 'selected': selected};
   }
 
   Future<bool> _loadDndState() async {
     final result = await _runRootCommandAndWait(
-        'cat /data/adb/modules/EnCorinVest/encorin.txt');
+      'cat /data/adb/modules/ProjectRaco/raco.txt',
+    );
     if (result.exitCode == 0) {
-      final match = RegExp(r'^DND=(.*)$', multiLine: true)
-          .firstMatch(result.stdout.toString());
+      final match = RegExp(
+        r'^DND=(.*)$',
+        multiLine: true,
+      ).firstMatch(result.stdout.toString());
       return match?.group(1)?.trim().toLowerCase() == 'yes';
     }
     return false;
@@ -176,7 +190,7 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
   Future<Map<String, bool>> _loadHamadaAiState() async {
     final results = await Future.wait([
       _runRootCommandAndWait('pgrep -x HamadaAI'),
-      _runRootCommandAndWait('cat /data/adb/modules/EnCorinVest/service.sh'),
+      _runRootCommandAndWait('cat /data/adb/modules/ProjectRaco/service.sh'),
     ]);
     return {
       'enabled': results[0].exitCode == 0,
@@ -187,12 +201,13 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
   Future<Map<String, dynamic>> _loadResolutionState() async {
     final results = await Future.wait([
       _runRootCommandAndWait('wm size'),
-      _runRootCommandAndWait('wm density')
+      _runRootCommandAndWait('wm density'),
     ]);
     final sr = results[0];
     final dr = results[1];
 
-    bool available = sr.exitCode == 0 &&
+    bool available =
+        sr.exitCode == 0 &&
         sr.stdout.toString().contains('Physical size:') &&
         dr.exitCode == 0 &&
         (dr.stdout.toString().contains('Physical density:') ||
@@ -202,28 +217,32 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
     int originalDensity = 0;
 
     if (available) {
-      originalSize = RegExp(r'Physical size:\s*([0-9]+x[0-9]+)')
-              .firstMatch(sr.stdout.toString())
-              ?.group(1) ??
+      originalSize =
+          RegExp(
+            r'Physical size:\s*([0-9]+x[0-9]+)',
+          ).firstMatch(sr.stdout.toString())?.group(1) ??
           '';
-      originalDensity = int.tryParse(
-              RegExp(r'(?:Physical|Override) density:\s*([0-9]+)')
-                      .firstMatch(dr.stdout.toString())
-                      ?.group(1) ??
-                  '') ??
+      originalDensity =
+          int.tryParse(
+            RegExp(
+                  r'(?:Physical|Override) density:\s*([0-9]+)',
+                ).firstMatch(dr.stdout.toString())?.group(1) ??
+                '',
+          ) ??
           0;
       if (originalSize.isEmpty || originalDensity == 0) available = false;
     }
     return {
       'isAvailable': available,
       'originalSize': originalSize,
-      'originalDensity': originalDensity
+      'originalDensity': originalDensity,
     };
   }
 
   Future<String> _loadGameTxtState() async {
-    final result =
-        await _runRootCommandAndWait('cat /data/EnCorinVest/game.txt');
+    final result = await _runRootCommandAndWait(
+      'cat /data/ProjectRaco/game.txt',
+    );
     return result.exitCode == 0 ? result.stdout.toString() : '';
   }
 
@@ -231,21 +250,24 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
     final localization = AppLocalizations.of(context)!;
     final results = await Future.wait([
       _runRootCommandAndWait(
-          '/data/adb/modules/EnCorinVest/Scripts/encorin_bypass_controller.sh test'),
-      _runRootCommandAndWait('cat /data/adb/modules/EnCorinVest/encorin.txt'),
+        '/data/adb/modules/ProjectRaco/Scripts/raco_bypass_controller.sh test',
+      ),
+      _runRootCommandAndWait('cat /data/adb/modules/ProjectRaco/raco.txt'),
     ]);
     final supportResult = results[0];
     final configResult = results[1];
 
-    bool isSupported =
-        supportResult.stdout.toString().toLowerCase().contains('supported');
+    bool isSupported = supportResult.stdout.toString().toLowerCase().contains(
+      'supported',
+    );
     String statusMsg = isSupported
         ? localization.bypass_charging_supported
         : localization.bypass_charging_unsupported;
 
     bool isEnabled = false;
     if (configResult.exitCode == 0) {
-      isEnabled = RegExp(r'^ENABLE_BYPASS=(Yes|No)', multiLine: true)
+      isEnabled =
+          RegExp(r'^ENABLE_BYPASS=(Yes|No)', multiLine: true)
               .firstMatch(configResult.stdout.toString())
               ?.group(1)
               ?.toLowerCase() ==
@@ -254,7 +276,7 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
     return {
       'isSupported': isSupported,
       'statusMsg': statusMsg,
-      'isEnabled': isEnabled
+      'isEnabled': isEnabled,
     };
   }
   //endregion
@@ -285,10 +307,11 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
             ),
           if (_isLoading)
             const Center(
-                child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 32.0),
-              child: LinearProgressIndicator(),
-            ))
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 32.0),
+                child: LinearProgressIndicator(),
+              ),
+            )
           else
             AnimatedOpacity(
               opacity: _isLoading ? 0.0 : 1.0,
@@ -326,7 +349,8 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
                       isSupported:
                           _bypassChargingState?['isSupported'] ?? false,
                       isEnabled: _bypassChargingState?['isEnabled'] ?? false,
-                      supportStatus: _bypassChargingState?['statusMsg'] ??
+                      supportStatus:
+                          _bypassChargingState?['statusMsg'] ??
                           localization.bypass_charging_unsupported,
                     ),
                     BackgroundSettingsCard(
@@ -355,11 +379,11 @@ class EncoreSwitchCard extends StatefulWidget {
   final bool initialDeviceMitigation;
   final bool initialLiteMode;
 
-  const EncoreSwitchCard(
-      {Key? key,
-      required this.initialDeviceMitigation,
-      required this.initialLiteMode})
-      : super(key: key);
+  const EncoreSwitchCard({
+    Key? key,
+    required this.initialDeviceMitigation,
+    required this.initialLiteMode,
+  }) : super(key: key);
 
   @override
   _EncoreSwitchCardState createState() => _EncoreSwitchCardState();
@@ -370,8 +394,7 @@ class _EncoreSwitchCardState extends State<EncoreSwitchCard> {
   late bool _liteModeEnabled;
   bool _isUpdating = false;
 
-  final String _encorinFunctionFilePath =
-      '/data/adb/modules/EnCorinVest/Scripts/encorinFunctions.sh';
+  final String _racoConfigFilePath = '/data/adb/modules/ProjectRaco/raco.txt';
 
   @override
   void initState() {
@@ -387,7 +410,7 @@ class _EncoreSwitchCardState extends State<EncoreSwitchCard> {
     try {
       final value = enable ? '1' : '0';
       final sedCommand =
-          "sed -i 's|^$key=.*|$key=$value|' $_encorinFunctionFilePath";
+          "sed -i 's|^$key=.*|$key=$value|' $_racoConfigFilePath";
 
       final result = await _runRootCommandAndWait(sedCommand);
 
@@ -399,12 +422,13 @@ class _EncoreSwitchCardState extends State<EncoreSwitchCard> {
           });
         }
       } else {
-        throw Exception('Failed to write to the script file.');
+        throw Exception('Failed to write to the config file.');
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to update settings: $e')));
+          SnackBar(content: Text('Failed to update settings: $e')),
+        );
         setState(() {
           // Revert on failure
           _deviceMitigationEnabled = widget.initialDeviceMitigation;
@@ -432,13 +456,17 @@ class _EncoreSwitchCardState extends State<EncoreSwitchCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(localization.encore_switch_title,
-                style: textTheme.titleLarge
-                    ?.copyWith(fontWeight: FontWeight.w600)),
+            Text(
+              localization.encore_switch_title,
+              style: textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             const SizedBox(height: 8),
-            Text(localization.encore_switch_description,
-                style:
-                    textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic)),
+            Text(
+              localization.encore_switch_description,
+              style: textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),
+            ),
             const SizedBox(height: 8),
             SwitchListTile(
               title: Text(localization.device_mitigation_title),
@@ -451,7 +479,8 @@ class _EncoreSwitchCardState extends State<EncoreSwitchCard> {
                   ? const SizedBox(
                       width: 20,
                       height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2))
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
                   : const Icon(Icons.security_update_warning),
               activeColor: colorScheme.primary,
               contentPadding: EdgeInsets.zero,
@@ -467,7 +496,8 @@ class _EncoreSwitchCardState extends State<EncoreSwitchCard> {
                   ? const SizedBox(
                       width: 20,
                       height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2))
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
                   : const Icon(Icons.flourescent),
               activeColor: colorScheme.primary,
               contentPadding: EdgeInsets.zero,
@@ -483,11 +513,11 @@ class GovernorCard extends StatefulWidget {
   final List<String> initialAvailableGovernors;
   final String? initialSelectedGovernor;
 
-  const GovernorCard(
-      {Key? key,
-      required this.initialAvailableGovernors,
-      this.initialSelectedGovernor})
-      : super(key: key);
+  const GovernorCard({
+    Key? key,
+    required this.initialAvailableGovernors,
+    this.initialSelectedGovernor,
+  }) : super(key: key);
   @override
   _GovernorCardState createState() => _GovernorCardState();
 }
@@ -496,7 +526,7 @@ class _GovernorCardState extends State<GovernorCard> {
   late List<String> _availableGovernors;
   String? _selectedGovernor;
   bool _isSaving = false;
-  final String _configFilePath = '/data/adb/modules/EnCorinVest/encorin.txt';
+  final String _configFilePath = '/data/adb/modules/ProjectRaco/raco.txt';
 
   @override
   void initState() {
@@ -522,8 +552,9 @@ class _GovernorCardState extends State<GovernorCard> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to save governor: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to save governor: $e')));
         setState(() => _selectedGovernor = widget.initialSelectedGovernor);
       }
     } finally {
@@ -547,18 +578,25 @@ class _GovernorCardState extends State<GovernorCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(localization.custom_governor_title,
-                style: textTheme.titleLarge
-                    ?.copyWith(fontWeight: FontWeight.w600)),
+            Text(
+              localization.custom_governor_title,
+              style: textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             const SizedBox(height: 8),
-            Text(localization.custom_governor_description,
-                style:
-                    textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic)),
+            Text(
+              localization.custom_governor_description,
+              style: textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),
+            ),
             const SizedBox(height: 16),
             if (_availableGovernors.isEmpty)
               Center(
-                  child: Text('No governors found or root access denied.',
-                      style: TextStyle(color: colorScheme.error)))
+                child: Text(
+                  'No governors found or root access denied.',
+                  style: TextStyle(color: colorScheme.error),
+                ),
+              )
             else
               DropdownButtonFormField<String>(
                 value: _availableGovernors.contains(_selectedGovernor)
@@ -567,17 +605,23 @@ class _GovernorCardState extends State<GovernorCard> {
                 hint: Text(localization.no_governor_selected),
                 isExpanded: true,
                 decoration: InputDecoration(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8))),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
                 onChanged: _isSaving ? null : _saveGovernor,
                 items: [
                   DropdownMenuItem<String>(
-                      value: null,
-                      child: Text(localization.no_governor_selected)),
+                    value: null,
+                    child: Text(localization.no_governor_selected),
+                  ),
                   ..._availableGovernors.map<DropdownMenuItem<String>>(
-                      (String value) => DropdownMenuItem<String>(
-                          value: value, child: Text(value)))
+                    (String value) => DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    ),
+                  ),
                 ],
               ),
           ],
@@ -597,7 +641,7 @@ class DndCard extends StatefulWidget {
 class _DndCardState extends State<DndCard> {
   late bool _dndEnabled;
   bool _isUpdating = false;
-  final String _configFilePath = '/data/adb/modules/EnCorinVest/encorin.txt';
+  final String _configFilePath = '/data/adb/modules/ProjectRaco/raco.txt';
 
   @override
   void initState() {
@@ -622,7 +666,8 @@ class _DndCardState extends State<DndCard> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to update DND setting: $e')));
+          SnackBar(content: Text('Failed to update DND setting: $e')),
+        );
         setState(() => _dndEnabled = widget.initialDndEnabled);
       }
     } finally {
@@ -646,13 +691,17 @@ class _DndCardState extends State<DndCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(localization.dnd_title,
-                style: textTheme.titleLarge
-                    ?.copyWith(fontWeight: FontWeight.w600)),
+            Text(
+              localization.dnd_title,
+              style: textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             const SizedBox(height: 8),
-            Text(localization.dnd_description,
-                style:
-                    textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic)),
+            Text(
+              localization.dnd_description,
+              style: textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),
+            ),
             const SizedBox(height: 8),
             SwitchListTile(
               title: Text(localization.dnd_toggle_title),
@@ -662,7 +711,8 @@ class _DndCardState extends State<DndCard> {
                   ? const SizedBox(
                       width: 20,
                       height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2))
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
                   : const Icon(Icons.bedtime),
               activeColor: colorScheme.primary,
               contentPadding: EdgeInsets.zero,
@@ -678,11 +728,11 @@ class HamadaAiCard extends StatefulWidget {
   final bool initialHamadaAiEnabled;
   final bool initialHamadaStartOnBoot;
 
-  const HamadaAiCard(
-      {Key? key,
-      required this.initialHamadaAiEnabled,
-      required this.initialHamadaStartOnBoot})
-      : super(key: key);
+  const HamadaAiCard({
+    Key? key,
+    required this.initialHamadaAiEnabled,
+    required this.initialHamadaStartOnBoot,
+  }) : super(key: key);
   @override
   _HamadaAiCardState createState() => _HamadaAiCardState();
 }
@@ -693,7 +743,7 @@ class _HamadaAiCardState extends State<HamadaAiCard> {
   bool _isTogglingProcess = false;
   bool _isTogglingBoot = false;
 
-  final String _serviceFilePath = '/data/adb/modules/EnCorinVest/service.sh';
+  final String _serviceFilePath = '/data/adb/modules/ProjectRaco/service.sh';
   final String _hamadaStartCommand = 'HamadaAI';
 
   @override
@@ -749,9 +799,9 @@ class _HamadaAiCardState extends State<HamadaAiCard> {
     if (!await _checkRootAccess()) return;
     if (mounted) setState(() => _isTogglingBoot = true);
     try {
-      String content = (await _runRootCommandAndWait('cat $_serviceFilePath'))
-          .stdout
-          .toString();
+      String content = (await _runRootCommandAndWait(
+        'cat $_serviceFilePath',
+      )).stdout.toString();
       List<String> lines = content.replaceAll('\r\n', '\n').split('\n');
       lines.removeWhere((line) => line.trim() == _hamadaStartCommand);
 
@@ -781,7 +831,8 @@ class _HamadaAiCardState extends State<HamadaAiCard> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to update boot setting: $e')));
+          SnackBar(content: Text('Failed to update boot setting: $e')),
+        );
         await _refreshState();
       }
     } finally {
@@ -806,13 +857,17 @@ class _HamadaAiCardState extends State<HamadaAiCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(localization.hamada_ai,
-                style: textTheme.titleLarge
-                    ?.copyWith(fontWeight: FontWeight.w600)),
+            Text(
+              localization.hamada_ai,
+              style: textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             const SizedBox(height: 8),
-            Text(localization.hamada_ai_description,
-                style:
-                    textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic)),
+            Text(
+              localization.hamada_ai_description,
+              style: textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),
+            ),
             const SizedBox(height: 8),
             SwitchListTile(
               title: Text(localization.hamada_ai_toggle_title),
@@ -822,7 +877,8 @@ class _HamadaAiCardState extends State<HamadaAiCard> {
                   ? const SizedBox(
                       width: 20,
                       height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2))
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
                   : const Icon(Icons.psychology_alt),
               activeColor: colorScheme.primary,
               contentPadding: EdgeInsets.zero,
@@ -835,7 +891,8 @@ class _HamadaAiCardState extends State<HamadaAiCard> {
                   ? const SizedBox(
                       width: 20,
                       height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2))
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
                   : const Icon(Icons.rocket_launch),
               activeColor: colorScheme.primary,
               contentPadding: EdgeInsets.zero,
@@ -851,12 +908,12 @@ class ResolutionCard extends StatefulWidget {
   final bool isAvailable;
   final String originalSize;
   final int originalDensity;
-  const ResolutionCard(
-      {Key? key,
-      required this.isAvailable,
-      required this.originalSize,
-      required this.originalDensity})
-      : super(key: key);
+  const ResolutionCard({
+    Key? key,
+    required this.isAvailable,
+    required this.originalSize,
+    required this.originalDensity,
+  }) : super(key: key);
   @override
   _ResolutionCardState createState() => _ResolutionCardState();
 }
@@ -889,7 +946,8 @@ class _ResolutionCardState extends State<ResolutionCard> {
   Future<void> _applyResolution(double value) async {
     if (!widget.isAvailable ||
         widget.originalSize.isEmpty ||
-        widget.originalDensity <= 0) return;
+        widget.originalDensity <= 0)
+      return;
     if (mounted) setState(() => _isChanging = true);
 
     final idx = value.round().clamp(0, _percentages.length - 1);
@@ -944,22 +1002,31 @@ class _ResolutionCardState extends State<ResolutionCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(localization.downscale_resolution,
-                style: textTheme.titleLarge
-                    ?.copyWith(fontWeight: FontWeight.w600)),
+            Text(
+              localization.downscale_resolution,
+              style: textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             const SizedBox(height: 8),
             if (!widget.isAvailable)
               Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                  child: Text(localization.resolution_unavailable_message,
-                      style: textTheme.bodyMedium
-                          ?.copyWith(color: colorScheme.error),
-                      textAlign: TextAlign.center))
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: Text(
+                  localization.resolution_unavailable_message,
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.error,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              )
             else ...[
               Row(
                 children: [
-                  Icon(Icons.screen_rotation,
-                      color: colorScheme.onSurfaceVariant),
+                  Icon(
+                    Icons.screen_rotation,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Slider(
@@ -978,9 +1045,12 @@ class _ResolutionCardState extends State<ResolutionCard> {
                       onChangeEnd: _isChanging ? null : _applyResolution,
                     ),
                   ),
-                  Text(_getCurrentPercentageLabel(),
-                      style: textTheme.bodyLarge
-                          ?.copyWith(color: colorScheme.onSurface)),
+                  Text(
+                    _getCurrentPercentageLabel(),
+                    style: textTheme.bodyLarge?.copyWith(
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 8),
@@ -992,7 +1062,8 @@ class _ResolutionCardState extends State<ResolutionCard> {
                       ? const SizedBox(
                           width: 20,
                           height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2))
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
                       : const Icon(Icons.refresh),
                   label: Text(localization.reset_resolution),
                 ),
@@ -1015,7 +1086,7 @@ class GameTxtCard extends StatefulWidget {
 class _GameTxtCardState extends State<GameTxtCard> {
   final _controller = TextEditingController();
   bool _isSaving = false;
-  final String _gameTxtPath = '/data/EnCorinVest/game.txt';
+  final String _gameTxtPath = '/data/ProjectRaco/game.txt';
 
   @override
   void initState() {
@@ -1038,13 +1109,15 @@ class _GameTxtCardState extends State<GameTxtCard> {
       final writeCmd = '''echo '$base64Content' | base64 -d > $_gameTxtPath''';
       await _runRootCommandAndWait(writeCmd);
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('Saved successfully!')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Saved successfully!')));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Error saving game.txt')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Error saving game.txt')));
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -1067,9 +1140,12 @@ class _GameTxtCardState extends State<GameTxtCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(localization.edit_game_txt_title,
-                style: textTheme.titleLarge
-                    ?.copyWith(fontWeight: FontWeight.w600)),
+            Text(
+              localization.edit_game_txt_title,
+              style: textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             const SizedBox(height: 8),
             TextField(
               controller: _controller,
@@ -1078,8 +1154,9 @@ class _GameTxtCardState extends State<GameTxtCard> {
               enabled: !_isSaving,
               decoration: InputDecoration(
                 hintText: localization.game_txt_hint,
-                border:
-                    OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
                 filled: true,
                 fillColor: colorScheme.surfaceContainerLow,
                 contentPadding: const EdgeInsets.all(12),
@@ -1095,7 +1172,8 @@ class _GameTxtCardState extends State<GameTxtCard> {
                     ? const SizedBox(
                         width: 20,
                         height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2))
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
                     : const Icon(Icons.save),
                 label: Text(localization.save_button),
               ),
@@ -1111,12 +1189,12 @@ class BypassChargingCard extends StatefulWidget {
   final bool isSupported;
   final bool isEnabled;
   final String supportStatus;
-  const BypassChargingCard(
-      {Key? key,
-      required this.isSupported,
-      required this.isEnabled,
-      required this.supportStatus})
-      : super(key: key);
+  const BypassChargingCard({
+    Key? key,
+    required this.isSupported,
+    required this.isEnabled,
+    required this.supportStatus,
+  }) : super(key: key);
   @override
   _BypassChargingCardState createState() => _BypassChargingCardState();
 }
@@ -1125,7 +1203,7 @@ class _BypassChargingCardState extends State<BypassChargingCard> {
   late bool _isEnabled;
   bool _isToggling = false;
 
-  final String _configFilePath = '/data/adb/modules/EnCorinVest/encorin.txt';
+  final String _configFilePath = '/data/adb/modules/ProjectRaco/raco.txt';
 
   @override
   void initState() {
@@ -1165,32 +1243,40 @@ class _BypassChargingCardState extends State<BypassChargingCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(localization.bypass_charging_title,
-                style: textTheme.titleLarge
-                    ?.copyWith(fontWeight: FontWeight.w600)),
+            Text(
+              localization.bypass_charging_title,
+              style: textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             const SizedBox(height: 8),
-            Text(localization.bypass_charging_description,
-                style:
-                    textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic)),
+            Text(
+              localization.bypass_charging_description,
+              style: textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),
+            ),
             const SizedBox(height: 16),
             Center(
-                child: Text(widget.supportStatus,
-                    style: textTheme.bodyMedium?.copyWith(
-                        color: widget.isSupported
-                            ? Colors.green
-                            : colorScheme.error,
-                        fontWeight: FontWeight.bold))),
+              child: Text(
+                widget.supportStatus,
+                style: textTheme.bodyMedium?.copyWith(
+                  color: widget.isSupported ? Colors.green : colorScheme.error,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
             const SizedBox(height: 16),
             SwitchListTile(
               title: Text(localization.bypass_charging_toggle),
               value: _isEnabled,
-              onChanged:
-                  (_isToggling || !widget.isSupported) ? null : _toggleBypass,
+              onChanged: (_isToggling || !widget.isSupported)
+                  ? null
+                  : _toggleBypass,
               secondary: _isToggling
                   ? const SizedBox(
                       width: 20,
                       height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2))
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
                   : const Icon(Icons.battery_charging_full),
               activeColor: colorScheme.primary,
               contentPadding: EdgeInsets.zero,
@@ -1244,8 +1330,9 @@ class _BackgroundSettingsCardState extends State<BackgroundSettingsCard> {
 
   Future<void> _pickAndSetImage() async {
     try {
-      final pickedFile =
-          await ImagePicker().pickImage(source: ImageSource.gallery);
+      final pickedFile = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+      );
       if (pickedFile != null && mounted) {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('background_image_path', pickedFile.path);
@@ -1254,8 +1341,9 @@ class _BackgroundSettingsCardState extends State<BackgroundSettingsCard> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Failed to pick image: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to pick image: $e')));
       }
     }
   }
@@ -1295,16 +1383,22 @@ class _BackgroundSettingsCardState extends State<BackgroundSettingsCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(localization.background_settings_title,
-                style: textTheme.titleLarge
-                    ?.copyWith(fontWeight: FontWeight.w600)),
+            Text(
+              localization.background_settings_title,
+              style: textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             const SizedBox(height: 8),
-            Text(localization.background_settings_description,
-                style:
-                    textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic)),
+            Text(
+              localization.background_settings_description,
+              style: textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),
+            ),
             const SizedBox(height: 16),
-            Text(localization.opacity_slider_label,
-                style: textTheme.bodyMedium),
+            Text(
+              localization.opacity_slider_label,
+              style: textTheme.bodyMedium,
+            ),
             Slider(
               value: _opacity,
               min: 0.0,
@@ -1333,8 +1427,9 @@ class _BackgroundSettingsCardState extends State<BackgroundSettingsCard> {
                   child: ElevatedButton(
                     onPressed: _resetBackground,
                     style: ElevatedButton.styleFrom(
-                        backgroundColor: colorScheme.errorContainer,
-                        foregroundColor: colorScheme.onErrorContainer),
+                      backgroundColor: colorScheme.errorContainer,
+                      foregroundColor: colorScheme.onErrorContainer,
+                    ),
                     child: const Icon(Icons.refresh),
                   ),
                 ),
@@ -1346,4 +1441,3 @@ class _BackgroundSettingsCardState extends State<BackgroundSettingsCard> {
     );
   }
 }
-//endregion

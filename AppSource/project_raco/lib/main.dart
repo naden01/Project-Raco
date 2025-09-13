@@ -53,10 +53,13 @@ class _MyAppState extends State<MyApp> {
   double _backgroundOpacity = 0.2;
   String _currentTheme = 'Classic'; // Default theme
 
-  static final _defaultLightColorScheme =
-      ColorScheme.fromSeed(seedColor: Colors.blue);
-  static final _defaultDarkColorScheme =
-      ColorScheme.fromSeed(seedColor: Colors.blue, brightness: Brightness.dark);
+  static final _defaultLightColorScheme = ColorScheme.fromSeed(
+    seedColor: Colors.blue,
+  );
+  static final _defaultDarkColorScheme = ColorScheme.fromSeed(
+    seedColor: Colors.blue,
+    brightness: Brightness.dark,
+  );
 
   @override
   void initState() {
@@ -103,55 +106,60 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return DynamicColorBuilder(
-        builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
-      ColorScheme lightColorScheme =
-          lightDynamic?.harmonized() ?? _defaultLightColorScheme;
-      ColorScheme darkColorScheme =
-          darkDynamic?.harmonized() ?? _defaultDarkColorScheme;
+      builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
+        ColorScheme lightColorScheme =
+            lightDynamic?.harmonized() ?? _defaultLightColorScheme;
+        ColorScheme darkColorScheme =
+            darkDynamic?.harmonized() ?? _defaultDarkColorScheme;
 
-      return MaterialApp(
-        debugShowCheckedModeBanner: false,
-        locale: _locale,
-        supportedLocales: AppLocalizations.supportedLocales,
-        localizationsDelegates: [
-          AppLocalizations.delegate,
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        home: Scaffold(
-          // Conditional background color based on the selected theme
-          backgroundColor:
-              _currentTheme == 'Classic' ? Colors.transparent : null,
-          body: Stack(
-            fit: StackFit.expand,
-            children: [
-              if (_backgroundImagePath != null &&
-                  _backgroundImagePath!.isNotEmpty)
-                Opacity(
-                  opacity: _backgroundOpacity,
-                  child: Image.file(
-                    File(_backgroundImagePath!),
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(color: Colors.transparent);
-                    },
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          locale: _locale,
+          supportedLocales: AppLocalizations.supportedLocales,
+          localizationsDelegates: [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          home: Scaffold(
+            // Conditional background color based on the selected theme
+            backgroundColor: _currentTheme == 'Classic'
+                ? Colors.transparent
+                : null,
+            body: Stack(
+              fit: StackFit.expand,
+              children: [
+                if (_backgroundImagePath != null &&
+                    _backgroundImagePath!.isNotEmpty)
+                  Opacity(
+                    opacity: _backgroundOpacity,
+                    child: Image.file(
+                      File(_backgroundImagePath!),
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(color: Colors.transparent);
+                      },
+                    ),
                   ),
+                MainScreen(
+                  onLocaleChange: _updateLocale,
+                  onUtilitiesClosed: _loadAllPreferences,
+                  currentTheme: _currentTheme,
+                  onThemeChange: _updateTheme,
                 ),
-              MainScreen(
-                onLocaleChange: _updateLocale,
-                onUtilitiesClosed: _loadAllPreferences,
-                currentTheme: _currentTheme,
-                onThemeChange: _updateTheme,
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-        theme: ThemeData(useMaterial3: true, colorScheme: lightColorScheme),
-        darkTheme: ThemeData(useMaterial3: true, colorScheme: darkColorScheme),
-        themeMode: ThemeMode.system,
-      );
-    });
+          theme: ThemeData(useMaterial3: true, colorScheme: lightColorScheme),
+          darkTheme: ThemeData(
+            useMaterial3: true,
+            colorScheme: darkColorScheme,
+          ),
+          themeMode: ThemeMode.system,
+        );
+      },
+    );
   }
 }
 
@@ -281,8 +289,10 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   Future<void> _checkHamadaProcessStatus() async {
     if (!_hasRootAccess) return;
     try {
-      final result =
-          await run('su', ['-c', 'pgrep -x HamadaAI'], verbose: false);
+      final result = await run('su', [
+        '-c',
+        'pgrep -x HamadaAI',
+      ], verbose: false);
       bool isRunning = result.exitCode == 0;
       if (mounted && _isHamadaAiRunning != isRunning) {
         setState(() => _isHamadaAiRunning = isRunning);
@@ -297,12 +307,14 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   Future<void> _checkModuleInstalled() async {
     if (!_hasRootAccess) return;
     try {
-      var result = await run(
-          'su', ['-c', 'test -d /data/adb/modules/EnCorinVest && echo "yes"'],
-          verbose: false);
+      var result = await run('su', [
+        '-c',
+        'test -d /data/adb/modules/ProjectRaco && echo "yes"',
+      ], verbose: false);
       if (mounted) {
         setState(
-            () => _moduleInstalled = result.stdout.toString().trim() == 'yes');
+          () => _moduleInstalled = result.stdout.toString().trim() == 'yes',
+        );
       }
     } catch (e) {
       if (mounted) setState(() => _moduleInstalled = false);
@@ -312,42 +324,48 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   Future<void> _getModuleVersion() async {
     if (!_hasRootAccess || !_moduleInstalled) return;
     try {
-      var result = await run('su',
-          ['-c', 'grep "^version=" /data/adb/modules/EnCorinVest/module.prop'],
-          verbose: false);
+      var result = await run('su', [
+        '-c',
+        'grep "^version=" /data/adb/modules/ProjectRaco/module.prop',
+      ], verbose: false);
       String line = result.stdout.toString().trim();
-      String version =
-          line.contains('=') ? line.split('=')[1].trim() : 'Unknown';
+      String version = line.contains('=')
+          ? line.split('=')[1].trim()
+          : 'Unknown';
       if (mounted) {
         setState(
-            () => _moduleVersion = version.isNotEmpty ? version : 'Unknown');
+          () => _moduleVersion = version.isNotEmpty ? version : 'Unknown',
+        );
       }
     } catch (e) {
       if (mounted) setState(() => _moduleVersion = 'Error');
     }
   }
 
-  Future<void> executeScript(String scriptName, String modeKey) async {
+  Future<void> executeScript(String scriptArg, String modeKey) async {
     if (!_hasRootAccess ||
         !_moduleInstalled ||
         _executingScript.isNotEmpty ||
-        _isHamadaAiRunning) return;
+        _isHamadaAiRunning)
+      return;
 
-    String targetMode =
-        (modeKey == 'CLEAR' || modeKey == 'COOLDOWN') ? 'NONE' : modeKey;
+    String targetMode = (modeKey == 'CLEAR' || modeKey == 'COOLDOWN')
+        ? 'NONE'
+        : modeKey;
 
     if (mounted) {
       setState(() {
-        _executingScript = scriptName;
+        _executingScript = scriptArg;
         _currentMode = targetMode;
       });
     }
 
     try {
       await ConfigManager.saveMode(targetMode);
-      var result = await run(
-          'su', ['-c', '/data/adb/modules/EnCorinVest/Scripts/$scriptName'],
-          verbose: false);
+      var result = await run('su', [
+        '-c',
+        '/data/adb/modules/ProjectRaco/Raco.sh $scriptArg',
+      ], verbose: false);
 
       if (result.exitCode != 0) {
         await _refreshStateFromConfig();
@@ -380,11 +398,14 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _launchURL(String url) async {
-    if (!await launchUrl(Uri.parse(url),
-        mode: LaunchMode.externalApplication)) {
+    if (!await launchUrl(
+      Uri.parse(url),
+      mode: LaunchMode.externalApplication,
+    )) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Could not launch $url')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Could not launch $url')));
       }
     }
   }
@@ -427,9 +448,10 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
           child: _isLoading
               ? Center(
                   child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 32.0),
-                  child: LinearProgressIndicator(),
-                ))
+                    padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                    child: LinearProgressIndicator(),
+                  ),
+                )
               : AnimatedOpacity(
                   opacity: _isContentVisible ? 1.0 : 0.0,
                   duration: Duration(milliseconds: 500),
@@ -442,33 +464,47 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
                         _buildHeaderRow(localization),
                         SizedBox(height: 10),
                         _buildControlRow(
-                            localization.power_save_desc,
-                            'powersafe.sh',
-                            localization.power_save,
-                            Icons.battery_saver,
-                            'POWER_SAVE'),
+                          localization.power_save_desc,
+                          '3',
+                          localization.power_save,
+                          Icons.battery_saver,
+                          'POWER_SAVE',
+                        ),
                         _buildControlRow(
-                            localization.balanced_desc,
-                            'balanced.sh',
-                            localization.balanced,
-                            Icons.balance,
-                            'BALANCED'),
+                          localization.balanced_desc,
+                          '2',
+                          localization.balanced,
+                          Icons.balance,
+                          'BALANCED',
+                        ),
                         _buildControlRow(
-                            localization.performance_desc,
-                            'performance.sh',
-                            localization.performance,
-                            Icons.speed,
-                            'PERFORMANCE'),
+                          localization.performance_desc,
+                          '1',
+                          localization.performance,
+                          Icons.speed,
+                          'PERFORMANCE',
+                        ),
                         _buildControlRow(
-                            localization.gaming_desc,
-                            'game.sh',
-                            localization.gaming_pro,
-                            Icons.sports_esports,
-                            'GAMING_PRO'),
-                        _buildControlRow(localization.cooldown_desc, 'cool.sh',
-                            localization.cooldown, Icons.ac_unit, 'COOLDOWN'),
-                        _buildControlRow(localization.clear_desc, 'kill.sh',
-                            localization.clear, Icons.clear_all, 'CLEAR'),
+                          localization.gaming_desc,
+                          '4',
+                          localization.gaming_pro,
+                          Icons.sports_esports,
+                          'GAMING_PRO',
+                        ),
+                        _buildControlRow(
+                          localization.cooldown_desc,
+                          '5',
+                          localization.cooldown,
+                          Icons.ac_unit,
+                          'COOLDOWN',
+                        ),
+                        _buildControlRow(
+                          localization.clear_desc,
+                          '6',
+                          localization.clear,
+                          Icons.clear_all,
+                          'CLEAR',
+                        ),
                         SizedBox(height: 5),
                         _buildLanguageSelector(localization),
                         SizedBox(height: 3),
@@ -484,7 +520,9 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   }
 
   Widget _buildTitleHeader(
-      ColorScheme colorScheme, AppLocalizations localization) {
+    ColorScheme colorScheme,
+    AppLocalizations localization,
+  ) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -497,16 +535,16 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
                 child: Text(
                   localization.app_title,
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: colorScheme.primary,
-                      ),
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.primary,
+                  ),
                 ),
               ),
               Text(
                 localization.by,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
+                  color: colorScheme.onSurfaceVariant,
+                ),
               ),
             ],
           ),
@@ -564,51 +602,64 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
           mainAxisSize: MainAxisSize.min,
           children: [
             _buildStatusRow(
-                localization.root_access,
-                _hasRootAccess ? localization.yes : localization.no,
-                isBold: true,
-                _hasRootAccess ? Colors.green : colorScheme.error),
+              localization.root_access,
+              _hasRootAccess ? localization.yes : localization.no,
+              isBold: true,
+              _hasRootAccess ? Colors.green : colorScheme.error,
+            ),
             _buildStatusRow(
-                localization.module_installed,
-                _moduleInstalled ? localization.yes : localization.no,
-                isBold: true,
-                _moduleInstalled ? Colors.green : colorScheme.error),
-            _buildStatusRow(localization.module_version, _moduleVersion,
-                colorScheme.primary,
-                isBold: true, isVersion: true),
+              localization.module_installed,
+              _moduleInstalled ? localization.yes : localization.no,
+              isBold: true,
+              _moduleInstalled ? Colors.green : colorScheme.error,
+            ),
             _buildStatusRow(
-                localization.mode_status_label,
-                _isHamadaAiRunning
-                    ? localization.mode_hamada_ai
-                    : localization.mode_manual,
-                colorScheme.primary,
-                isBold: true),
+              localization.module_version,
+              _moduleVersion,
+              colorScheme.primary,
+              isBold: true,
+              isVersion: true,
+            ),
+            _buildStatusRow(
+              localization.mode_status_label,
+              _isHamadaAiRunning
+                  ? localization.mode_hamada_ai
+                  : localization.mode_manual,
+              colorScheme.primary,
+              isBold: true,
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildStatusRow(String label, String value, Color valueColor,
-      {bool isBold = false, bool isVersion = false}) {
+  Widget _buildStatusRow(
+    String label,
+    String value,
+    Color valueColor, {
+    bool isBold = false,
+    bool isVersion = false,
+  }) {
     ColorScheme colorScheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2.0),
       child: Row(
         children: [
-          Text(label,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmall
-                  ?.copyWith(color: colorScheme.onSurfaceVariant)),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ),
           SizedBox(width: 5),
           Expanded(
             child: Text(
               value,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: valueColor,
-                    fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-                  ),
+                color: valueColor,
+                fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+              ),
               overflow: isVersion ? TextOverflow.ellipsis : TextOverflow.fade,
               softWrap: !isVersion,
               maxLines: 1,
@@ -638,16 +689,18 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
                 localization.app_title,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                    fontWeight: FontWeight.bold),
+                  color: colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               SizedBox(height: 4),
               Text(
                 localization.utilities,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                    fontWeight: FontWeight.bold),
+                  color: colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ],
           ),
@@ -666,8 +719,10 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(localization.select_language,
-                style: Theme.of(context).textTheme.bodyMedium),
+            Text(
+              localization.select_language,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
             DropdownButton<String>(
               value: _selectedLanguage,
               items: <String>['EN', 'ID', 'JP'].map((String value) {
@@ -679,12 +734,12 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
               onChanged: (String? newValue) {
                 if (newValue != null) _changeLanguage(newValue);
               },
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium
-                  ?.copyWith(color: Theme.of(context).colorScheme.primary),
-              dropdownColor:
-                  Theme.of(context).colorScheme.surfaceContainerHighest,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              dropdownColor: Theme.of(
+                context,
+              ).colorScheme.surfaceContainerHighest,
               underline: Container(),
               iconEnabledColor: Theme.of(context).colorScheme.primary,
             ),
@@ -705,8 +760,10 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(localization.select_theme,
-                style: Theme.of(context).textTheme.bodyMedium),
+            Text(
+              localization.select_theme,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
             ToggleButtons(
               isSelected: [
                 widget.currentTheme == 'Classic',
@@ -731,10 +788,15 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     );
   }
 
-  Widget _buildControlRow(String description, String scriptName,
-      String buttonText, IconData modeIcon, String modeKey) {
+  Widget _buildControlRow(
+    String description,
+    String scriptArg,
+    String buttonText,
+    IconData modeIcon,
+    String modeKey,
+  ) {
     final isCurrentMode = _currentMode == modeKey;
-    final isExecutingThis = _executingScript == scriptName;
+    final isExecutingThis = _executingScript == scriptArg;
     final isHamadaMode = _isHamadaAiRunning;
     final isInteractable = _hasRootAccess && _moduleInstalled;
     final colorScheme = Theme.of(context).colorScheme;
@@ -753,11 +815,17 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
               ? null
               : () {
                   if (isHamadaMode) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                        content: Text(AppLocalizations.of(context)!
-                            .please_disable_hamada_ai_first)));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          AppLocalizations.of(
+                            context,
+                          )!.please_disable_hamada_ai_first,
+                        ),
+                      ),
+                    );
                   } else if (_executingScript.isEmpty) {
-                    executeScript(scriptName, modeKey);
+                    executeScript(scriptArg, modeKey);
                   }
                 },
           borderRadius: BorderRadius.circular(12),
@@ -779,29 +847,27 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
                     children: [
                       Text(
                         buttonText,
-                        style:
-                            Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontWeight: isCurrentMode && !isHamadaMode
-                                      ? FontWeight.bold
-                                      : FontWeight.normal,
-                                  fontStyle: isCurrentMode && !isHamadaMode
-                                      ? FontStyle.italic
-                                      : FontStyle.normal,
-                                  color: isCurrentMode && !isHamadaMode
-                                      ? colorScheme.onPrimaryContainer
-                                      : colorScheme.onSurface,
-                                ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
+                              fontWeight: isCurrentMode && !isHamadaMode
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                              fontStyle: isCurrentMode && !isHamadaMode
+                                  ? FontStyle.italic
+                                  : FontStyle.normal,
+                              color: isCurrentMode && !isHamadaMode
+                                  ? colorScheme.onPrimaryContainer
+                                  : colorScheme.onSurface,
+                            ),
                       ),
                       SizedBox(height: 4),
                       Text(
                         description,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: isCurrentMode && !isHamadaMode
-                                  ? colorScheme.onPrimaryContainer
-                                      .withOpacity(0.8)
-                                  : colorScheme.onSurfaceVariant
-                                      .withOpacity(0.8),
-                            ),
+                          color: isCurrentMode && !isHamadaMode
+                              ? colorScheme.onPrimaryContainer.withOpacity(0.8)
+                              : colorScheme.onSurfaceVariant.withOpacity(0.8),
+                        ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -816,17 +882,24 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
                       valueColor: AlwaysStoppedAnimation<Color>(
-                          isCurrentMode && !isHamadaMode
-                              ? colorScheme.onPrimaryContainer
-                              : colorScheme.primary),
+                        isCurrentMode && !isHamadaMode
+                            ? colorScheme.onPrimaryContainer
+                            : colorScheme.primary,
+                      ),
                     ),
                   )
                 else if (isCurrentMode && !isHamadaMode)
-                  Icon(Icons.check_circle,
-                      color: colorScheme.onPrimaryContainer, size: 20)
+                  Icon(
+                    Icons.check_circle,
+                    color: colorScheme.onPrimaryContainer,
+                    size: 20,
+                  )
                 else
-                  Icon(Icons.arrow_forward_ios,
-                      color: colorScheme.onSurface, size: 16),
+                  Icon(
+                    Icons.arrow_forward_ios,
+                    color: colorScheme.onSurface,
+                    size: 16,
+                  ),
               ],
             ),
           ),
