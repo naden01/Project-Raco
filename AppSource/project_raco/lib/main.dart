@@ -462,7 +462,6 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
                       children: [
                         _buildTitleHeader(colorScheme, localization),
                         SizedBox(height: 16),
-                        // MODIFIED: Replaced status grid with new banner/status layout
                         _buildBannerAndStatus(localization),
                         SizedBox(height: 10),
                         _buildControlRow(
@@ -582,6 +581,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
         // Banner Card
         Card(
           elevation: 0,
+          color: Theme.of(context).colorScheme.surfaceContainerHighest,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
@@ -630,29 +630,25 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
           ),
         ),
         SizedBox(height: 10),
-        // Status Row
-        Row(
+        // MODIFIED: Changed Row to Column to make status cards full-width.
+        Column(
           children: [
-            Expanded(
-              child: _buildStatusCard(
-                localization.root_access,
-                _hasRootAccess ? localization.yes : localization.no,
-                Icons.security_outlined,
-                _hasRootAccess
-                    ? Colors.green
-                    : Theme.of(context).colorScheme.error,
-              ),
+            _buildStatusCard(
+              localization.root_access,
+              _hasRootAccess ? localization.yes : localization.no,
+              Icons.security_outlined,
+              _hasRootAccess
+                  ? Colors.green
+                  : Theme.of(context).colorScheme.error,
             ),
-            SizedBox(width: 10),
-            Expanded(
-              child: _buildStatusCard(
-                localization.mode_status_label,
-                _isHamadaAiRunning
-                    ? localization.mode_hamada_ai
-                    : localization.mode_manual,
-                Icons.settings_input_component_outlined,
-                Theme.of(context).colorScheme.primary,
-              ),
+            SizedBox(height: 10),
+            _buildStatusCard(
+              localization.mode_status_label,
+              _isHamadaAiRunning
+                  ? localization.mode_hamada_ai
+                  : localization.mode_manual,
+              Icons.settings_input_component_outlined,
+              Theme.of(context).colorScheme.primary,
             ),
           ],
         ),
@@ -671,32 +667,39 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     final colorScheme = Theme.of(context).colorScheme;
     return Card(
       elevation: 0,
+      margin: EdgeInsets.zero, // Added to align with buttons below
       color: colorScheme.surfaceContainerHighest,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
           children: [
-            Icon(icon, color: colorScheme.primary, size: 24),
-            SizedBox(height: 8),
-            Text(
-              label,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: colorScheme.onSurfaceVariant,
+            Icon(icon, size: 24, color: colorScheme.onSurface),
+            SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: colorScheme.onSurface,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    value,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: valueColor,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            Text(
-              value,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                color: valueColor,
-                fontWeight: FontWeight.bold,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),

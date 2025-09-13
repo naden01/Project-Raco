@@ -88,7 +88,8 @@ class _AboutPageState extends State<AboutPage> {
           // 4: CPU Max Freq
           run('su', [
             '-c',
-            'cat /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq',
+            // --- FIX: Check all cores and get the highest frequency ---
+            'cat /sys/devices/system/cpu/cpu*/cpufreq/cpuinfo_max_freq | sort -nr | head -n 1',
           ], verbose: false),
           // 5: Total RAM
           run('su', [
@@ -131,7 +132,6 @@ class _AboutPageState extends State<AboutPage> {
         String totalRamKb = results[5].stdout.toString().trim();
         if (totalRamKb.isNotEmpty && int.tryParse(totalRamKb) != null) {
           double totalRamGb = int.parse(totalRamKb) / (1024 * 1024);
-          // --- FIX: Changed .round() to .ceil() to always round up ---
           ramInfo = '${totalRamGb.ceil()} GB';
         }
 
