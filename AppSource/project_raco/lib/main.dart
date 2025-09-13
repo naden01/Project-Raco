@@ -586,47 +586,51 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
             borderRadius: BorderRadius.circular(12),
           ),
           clipBehavior: Clip.antiAlias,
-          child: Stack(
-            alignment: Alignment.bottomLeft,
-            children: [
-              Image.asset(
-                'assets/Raco.jpg', // Your image asset
-                fit: BoxFit.cover,
-                height: 150,
-                width: double.infinity,
-                // Optional: add an error builder
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    height: 150,
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.surfaceContainerHighest,
-                    child: Center(
-                      child: Icon(
-                        Icons.image_not_supported_outlined,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+          child: AspectRatio(
+            aspectRatio: 16 / 9,
+            child: Stack(
+              alignment: Alignment.bottomLeft,
+              children: [
+                Image.asset(
+                  'assets/Raco.jpg', // Your image asset
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  // Optional: add an error builder
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHighest,
+                      child: Center(
+                        child: Icon(
+                          Icons.image_not_supported_outlined,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                       ),
-                    ),
-                  );
-                },
-              ),
-              Container(
-                margin: EdgeInsets.all(12.0),
-                padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-                decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.5),
-                  borderRadius: BorderRadius.circular(20.0),
+                    );
+                  },
                 ),
-                child: Text(
-                  'Project Raco $_moduleVersion',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
+                Container(
+                  margin: EdgeInsets.all(12.0),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 12.0,
+                    vertical: 6.0,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(20.0),
+                  ),
+                  child: Text(
+                    'Project Raco $_moduleVersion',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
         SizedBox(height: 10),
