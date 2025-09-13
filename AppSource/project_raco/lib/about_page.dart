@@ -14,7 +14,9 @@ class AboutPage extends StatefulWidget {
 class _AboutPageState extends State<AboutPage> {
   String _deviceModel = 'Loading...';
   String _cpuInfo = 'Loading...';
-  String _osVersion = 'Loading...';
+  String _ramInfo = 'Loading...';
+  String _storageInfo = 'Loading...';
+  String _batteryInfo = 'Loading...';
   bool _isLoading = true;
 
   String? _backgroundImagePath;
@@ -65,48 +67,121 @@ class _AboutPageState extends State<AboutPage> {
 
     String deviceModel = 'N/A';
     String cpuInfo = 'N/A';
-    String osVersion = 'N/A';
+    String ramInfo = 'N/A';
+    String storageInfo = 'N/A';
+    String batteryInfo = 'N/A';
 
     if (rootGranted) {
       try {
         final results = await Future.wait([
+          // 0: Device Model
           run('su', ['-c', 'getprop ro.product.model'], verbose: false),
+          // 1: CPU Platform
           run('su', ['-c', 'getprop ro.board.platform'], verbose: false),
+          // 2: CPU Hardware
           run('su', ['-c', 'getprop ro.hardware'], verbose: false),
+          // 3: CPU Hardware from /proc/cpuinfo
           run('su', [
             '-c',
             'cat /proc/cpuinfo | grep Hardware | cut -d: -f2',
           ], verbose: false),
-          run('su', ['-c', 'getprop ro.build.version.release'], verbose: false),
+          // 4: CPU Max Freq
+          run('su', [
+            '-c',
+            'cat /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq',
+          ], verbose: false),
+          // 5: Total RAM
+          run('su', [
+            '-c',
+            r"cat /proc/meminfo | grep MemTotal | awk '{print $2}'",
+          ], verbose: false),
+          // 6: Total Storage
+          run('su', [
+            '-c',
+            r"df /data | tail -n 1 | awk '{print $2}'",
+          ], verbose: false),
+          // 7: Battery Capacity
+          run('su', [
+            '-c',
+            'cat /sys/class/power_supply/battery/charge_full_design',
+          ], verbose: false),
         ]);
 
+        // Device Model
         deviceModel = results[0].stdout.toString().trim();
-        cpuInfo = results[1].stdout.toString().trim();
 
-        if (cpuInfo.isEmpty || cpuInfo.toLowerCase() == 'unknown') {
-          cpuInfo = results[2].stdout.toString().trim();
+        // CPU Info
+        String cpuName = results[1].stdout.toString().trim();
+        if (cpuName.isEmpty || cpuName.toLowerCase() == 'unknown') {
+          cpuName = results[2].stdout.toString().trim();
         }
-        if (cpuInfo.isEmpty || cpuInfo.toLowerCase() == 'unknown') {
-          cpuInfo = results[3].stdout.toString().trim();
+        if (cpuName.isEmpty || cpuName.toLowerCase() == 'unknown') {
+          cpuName = results[3].stdout.toString().trim();
         }
 
-        osVersion = 'Android ' + results[4].stdout.toString().trim();
+        String cpuFreq = results[4].stdout.toString().trim();
+        if (cpuFreq.isNotEmpty && int.tryParse(cpuFreq) != null) {
+          double freqGhz = int.parse(cpuFreq) / 1000000;
+          cpuInfo = '${freqGhz.toStringAsFixed(2)}GHz $cpuName';
+        } else {
+          cpuInfo = cpuName;
+        }
+
+        // RAM Info
+        String totalRamKb = results[5].stdout.toString().trim();
+        if (totalRamKb.isNotEmpty && int.tryParse(totalRamKb) != null) {
+          double totalRamGb = int.parse(totalRamKb) / (1024 * 1024);
+          ramInfo = '${totalRamGb.round()} GB';
+        }
+
+        // Storage Info
+        String totalStorageKb = results[6].stdout.toString().trim();
+        if (totalStorageKb.isNotEmpty && int.tryParse(totalStorageKb) != null) {
+          double totalStorageGb = int.parse(totalStorageKb) / (1024 * 1024);
+          // Use powers of 1000 for storage as is common marketing practice
+          if (totalStorageGb > 500) {
+            storageInfo = '1 TB';
+          } else if (totalStorageGb > 240) {
+            storageInfo = '512 GB';
+          } else if (totalStorageGb > 200) {
+            storageInfo = '256 GB';
+          } else if (totalStorageGb > 100) {
+            storageInfo = '128 GB';
+          } else if (totalStorageGb > 50) {
+            storageInfo = '64 GB';
+          } else {
+            storageInfo = '${totalStorageGb.round()} GB';
+          }
+        }
+
+        // Battery Info
+        String batteryUah = results[7].stdout.toString().trim();
+        if (batteryUah.isNotEmpty && int.tryParse(batteryUah) != null) {
+          int mah = (int.parse(batteryUah) / 1000).round();
+          batteryInfo = '${mah}mAh';
+        }
       } catch (e) {
         deviceModel = 'Error';
         cpuInfo = 'Error';
-        osVersion = 'Error';
+        ramInfo = 'Error';
+        storageInfo = 'Error';
+        batteryInfo = 'Error';
       }
     } else {
       deviceModel = 'Root Required';
       cpuInfo = 'Root Required';
-      osVersion = 'Root Required';
+      ramInfo = 'Root Required';
+      storageInfo = 'Root Required';
+      batteryInfo = 'Root Required';
     }
 
     if (mounted) {
       setState(() {
         _deviceModel = deviceModel.isEmpty ? 'N/A' : deviceModel;
         _cpuInfo = cpuInfo.isEmpty ? 'N/A' : cpuInfo;
-        _osVersion = osVersion.isEmpty ? 'N/A' : osVersion;
+        _ramInfo = ramInfo.isEmpty ? 'N/A' : ramInfo;
+        _storageInfo = storageInfo.isEmpty ? 'N/A' : storageInfo;
+        _batteryInfo = batteryInfo.isEmpty ? 'N/A' : batteryInfo;
       });
     }
   }
@@ -174,14 +249,41 @@ class _AboutPageState extends State<AboutPage> {
                             child: Padding(
                               padding: const EdgeInsets.all(16.0),
                               child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
-                                  _buildInfoRow(
-                                    localization.device,
+                                  _buildInfoBlock(
                                     _deviceModel,
+                                    localization.device_name,
+                                    isFirst: true,
                                   ),
-                                  _buildInfoRow(localization.cpu, _cpuInfo),
-                                  _buildInfoRow(localization.os, _osVersion),
+                                  SizedBox(height: 16),
+                                  _buildInfoBlock(
+                                    _cpuInfo,
+                                    localization.processor,
+                                  ),
+                                  SizedBox(height: 16),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: _buildInfoBlock(
+                                          _ramInfo,
+                                          localization.ram,
+                                        ),
+                                      ),
+                                      SizedBox(width: 16),
+                                      Expanded(
+                                        child: _buildInfoBlock(
+                                          _storageInfo,
+                                          localization.phone_storage,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  SizedBox(height: 16),
+                                  _buildInfoBlock(
+                                    _batteryInfo,
+                                    localization.battery_capacity,
+                                  ),
                                 ],
                               ),
                             ),
@@ -189,7 +291,9 @@ class _AboutPageState extends State<AboutPage> {
                           SizedBox(height: 20),
                           Text(
                             localization.about_title,
-                            style: Theme.of(context).textTheme.titleLarge
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium // Reduced size from titleLarge
                                 ?.copyWith(
                                   fontWeight: FontWeight.bold,
                                   decoration: TextDecoration.underline,
@@ -236,29 +340,39 @@ class _AboutPageState extends State<AboutPage> {
     );
   }
 
-  Widget _buildInfoRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Row(
-        children: [
-          Text(
-            label,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
-          ),
-          SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              value,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.primary,
+  Widget _buildInfoBlock(String value, String label, {bool isFirst = false}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Flexible(
+              child: Text(
+                value,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                overflow: TextOverflow.ellipsis,
               ),
-              overflow: TextOverflow.ellipsis,
             ),
+            if (isFirst) ...[
+              SizedBox(width: 8),
+              Icon(
+                Icons.chevron_right,
+                size: 20,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ],
+          ],
+        ),
+        SizedBox(height: 2),
+        Text(
+          label,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

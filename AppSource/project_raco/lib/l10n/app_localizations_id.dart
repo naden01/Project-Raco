@@ -104,15 +104,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get no => 'Tidak';
 
   @override
-  String get device => 'Perangkat:';
-
-  @override
-  String get cpu => 'CPU:';
-
-  @override
-  String get os => 'OS:';
-
-  @override
   String get utilities => 'Utilitas';
 
   @override
@@ -272,6 +263,21 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get theme_modern => 'Modern';
+
+  @override
+  String get device_name => 'Nama perangkat';
+
+  @override
+  String get processor => 'Prosesor';
+
+  @override
+  String get ram => 'RAM';
+
+  @override
+  String get phone_storage => 'Penyimpanan telepon';
+
+  @override
+  String get battery_capacity => 'Kapasitas baterai';
 
   @override
   String get custom_governor_title => 'Gubernur Kustom';

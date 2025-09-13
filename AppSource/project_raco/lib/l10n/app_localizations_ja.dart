@@ -99,15 +99,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get no => 'いいえ';
 
   @override
-  String get device => 'デバイス:';
-
-  @override
-  String get cpu => 'CPU:';
-
-  @override
-  String get os => 'OS:';
-
-  @override
   String get utilities => 'ユーティリティ';
 
   @override
@@ -259,6 +250,21 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get theme_modern => 'モダン';
+
+  @override
+  String get device_name => 'デバイス名';
+
+  @override
+  String get processor => 'プロセッサ';
+
+  @override
+  String get ram => 'RAM';
+
+  @override
+  String get phone_storage => 'ストレージ';
+
+  @override
+  String get battery_capacity => 'バッテリー容量';
 
   @override
   String get custom_governor_title => 'カスタムガバナー';

@@ -462,7 +462,8 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
                       children: [
                         _buildTitleHeader(colorScheme, localization),
                         SizedBox(height: 16),
-                        _buildStatusGrid(localization),
+                        // MODIFIED: Replaced status grid with new banner/status layout
+                        _buildBannerAndStatus(localization),
                         SizedBox(height: 10),
                         _buildControlRow(
                           localization.power_save_desc,
@@ -574,45 +575,92 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     );
   }
 
-  Widget _buildStatusGrid(AppLocalizations localization) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return GridView.count(
-      crossAxisCount: 2,
-      shrinkWrap: true,
-      physics: NeverScrollableScrollPhysics(),
-      mainAxisSpacing: 10,
-      crossAxisSpacing: 10,
-      childAspectRatio: 1.5,
+  // ADDED: New widget for banner and status cards
+  Widget _buildBannerAndStatus(AppLocalizations localization) {
+    return Column(
       children: [
-        _buildStatusCard(
-          localization.root_access,
-          _hasRootAccess ? localization.yes : localization.no,
-          Icons.security_outlined,
-          _hasRootAccess ? Colors.green : colorScheme.error,
+        // Banner Card
+        Card(
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Stack(
+            alignment: Alignment.bottomLeft,
+            children: [
+              Image.asset(
+                'assets/Raco.jpg', // Your image asset
+                fit: BoxFit.cover,
+                height: 150,
+                width: double.infinity,
+                // Optional: add an error builder
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    height: 150,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.surfaceContainerHighest,
+                    child: Center(
+                      child: Icon(
+                        Icons.image_not_supported_outlined,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  );
+                },
+              ),
+              Container(
+                margin: EdgeInsets.all(12.0),
+                padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(20.0),
+                ),
+                child: Text(
+                  'Project Raco $_moduleVersion',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
-        _buildStatusCard(
-          localization.module_installed,
-          _moduleInstalled ? localization.yes : localization.no,
-          Icons.extension_outlined,
-          _moduleInstalled ? Colors.green : colorScheme.error,
-        ),
-        _buildStatusCard(
-          localization.module_version,
-          _moduleVersion,
-          Icons.info_outline,
-          colorScheme.primary,
-        ),
-        _buildStatusCard(
-          localization.mode_status_label,
-          _isHamadaAiRunning
-              ? localization.mode_hamada_ai
-              : localization.mode_manual,
-          Icons.settings_input_component_outlined,
-          colorScheme.primary,
+        SizedBox(height: 10),
+        // Status Row
+        Row(
+          children: [
+            Expanded(
+              child: _buildStatusCard(
+                localization.root_access,
+                _hasRootAccess ? localization.yes : localization.no,
+                Icons.security_outlined,
+                _hasRootAccess
+                    ? Colors.green
+                    : Theme.of(context).colorScheme.error,
+              ),
+            ),
+            SizedBox(width: 10),
+            Expanded(
+              child: _buildStatusCard(
+                localization.mode_status_label,
+                _isHamadaAiRunning
+                    ? localization.mode_hamada_ai
+                    : localization.mode_manual,
+                Icons.settings_input_component_outlined,
+                Theme.of(context).colorScheme.primary,
+              ),
+            ),
+          ],
         ),
       ],
     );
   }
+
+  // REMOVED: The old _buildStatusGrid widget is no longer needed.
 
   Widget _buildStatusCard(
     String label,

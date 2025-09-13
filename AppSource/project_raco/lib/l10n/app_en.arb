@@ -25,13 +25,11 @@
     "credits_2": "MiAzami",
     "credits_3": "Kazuyoo",
     "credits_4": "RiProG",
-    "credits_5": "KanaDev_IS",
+ 
+   "credits_5": "KanaDev_IS",
     "credits_6": "And All Testers That I Can't Mentioned One by One",
     "yes": "Yes",
     "no": "No",
-    "device": "Device:",
-    "cpu": "CPU:",
-    "os": "OS:",
     "utilities": "Utilities",
     "utilities_title": "Utilities",
     "fix_and_tweak_title": "Fix and Tweak",
@@ -40,7 +38,8 @@
     "lite_mode_title": "LITE Mode",
     "lite_mode_description": "Using Lite mode (Requested by Fans)",
     "hamada_ai": "HAMADA AI",
-    "hamada_ai_description": "Automatically Switch to Performance When Entering Game",
+ 
+   "hamada_ai_description": "Automatically Switch to Performance When Entering Game",
     "downscale_resolution": "Downscale Resolution",
     "selected_resolution": "Selected: {resolution}",
     "@selected_resolution": {
@@ -51,7 +50,8 @@
         }
     },
     "reset_resolution": "Reset to Original",
-    "hamada_ai_toggle_title": "Enable HAMADA AI",
+   
+ "hamada_ai_toggle_title": "Enable HAMADA AI",
     "hamada_ai_start_on_boot": "Start on Boot",
     "edit_game_txt_title": "Edit game.txt",
     "save_button": "Save",
@@ -66,7 +66,8 @@
     "writing_service_file": "Updating boot script...",
     "service_file_updated": "Boot script updated.",
     "service_file_update_failed": "Failed to update boot script.",
-    "error_no_root": "Root access required.",
+    "error_no_root": 
+"Root access required.",
     "error_file_not_found": "File not found.",
     "game_txt_hint": "Enter game package names, one per line...",
     "resolution_unavailable_message": "Resolution control is not available on this device.",
@@ -89,8 +90,14 @@
     "select_theme": "Select Theme:",
     "theme_classic": "Classic",
     "theme_modern": "Modern",
+    "device_name": "Device name",
+    "processor": "Processor",
+    "ram": "RAM",
+    "phone_storage": "Phone storage",
+    "battery_capacity": "Battery capacity",
     "custom_governor_title": "Custom Governor",
     "custom_governor_description": "Set custom CPU governor, This will set the governor in balanced mode",
-    "loading_governors": "Loading governors...",
+  
+  "loading_governors": "Loading governors...",
     "no_governor_selected": "None"
 }

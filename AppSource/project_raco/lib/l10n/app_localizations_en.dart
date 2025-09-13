@@ -103,15 +103,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get no => 'No';
 
   @override
-  String get device => 'Device:';
-
-  @override
-  String get cpu => 'CPU:';
-
-  @override
-  String get os => 'OS:';
-
-  @override
   String get utilities => 'Utilities';
 
   @override
@@ -269,6 +260,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get theme_modern => 'Modern';
+
+  @override
+  String get device_name => 'Device name';
+
+  @override
+  String get processor => 'Processor';
+
+  @override
+  String get ram => 'RAM';
+
+  @override
+  String get phone_storage => 'Phone storage';
+
+  @override
+  String get battery_capacity => 'Battery capacity';
 
   @override
   String get custom_governor_title => 'Custom Governor';

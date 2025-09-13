@@ -280,24 +280,6 @@ abstract class AppLocalizations {
   /// **'No'**
   String get no;
 
-  /// No description provided for @device.
-  ///
-  /// In en, this message translates to:
-  /// **'Device:'**
-  String get device;
-
-  /// No description provided for @cpu.
-  ///
-  /// In en, this message translates to:
-  /// **'CPU:'**
-  String get cpu;
-
-  /// No description provided for @os.
-  ///
-  /// In en, this message translates to:
-  /// **'OS:'**
-  String get os;
-
   /// No description provided for @utilities.
   ///
   /// In en, this message translates to:
@@ -597,6 +579,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Modern'**
   String get theme_modern;
+
+  /// No description provided for @device_name.
+  ///
+  /// In en, this message translates to:
+  /// **'Device name'**
+  String get device_name;
+
+  /// No description provided for @processor.
+  ///
+  /// In en, this message translates to:
+  /// **'Processor'**
+  String get processor;
+
+  /// No description provided for @ram.
+  ///
+  /// In en, this message translates to:
+  /// **'RAM'**
+  String get ram;
+
+  /// No description provided for @phone_storage.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone storage'**
+  String get phone_storage;
+
+  /// No description provided for @battery_capacity.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery capacity'**
+  String get battery_capacity;
 
   /// No description provided for @custom_governor_title.
   ///

@@ -29,9 +29,6 @@
     "credits_6": "Dan Semua Penguji yang Tidak Bisa Disebutkan Satu per Satu",
     "yes": "Ya",
     "no": "Tidak",
-    "device": "Perangkat:",
-    "cpu": "CPU:",
-    "os": "OS:",
     "utilities": "Utilitas",
     "utilities_title": "Utilitas",
     "fix_and_tweak_title": "Perbaikan & Tweak",
@@ -89,8 +86,14 @@
     "select_theme": "Pilih Tema:",
     "theme_classic": "Klasik",
     "theme_modern": "Modern",
+    "device_name": "Nama perangkat",
+    "processor": "Prosesor",
+    "ram": "RAM",
+    "phone_storage": "Penyimpanan telepon",
+    "battery_capacity": "Kapasitas baterai",
     "custom_governor_title": "Gubernur Kustom",
     "custom_governor_description": "Atur gubernur CPU kustom, Ini akan mengatur gubernur dalam mode seimbang",
     "loading_governors": "Memuat gubernur...",
-    "no_governor_selected": "Tidak Ada"
+   
+ "no_governor_selected": "Tidak Ada"
 }
