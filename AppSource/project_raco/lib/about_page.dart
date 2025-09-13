@@ -88,7 +88,6 @@ class _AboutPageState extends State<AboutPage> {
           // 4: CPU Max Freq
           run('su', [
             '-c',
-            // --- FIX: Check all cores and get the highest frequency ---
             'cat /sys/devices/system/cpu/cpu*/cpufreq/cpuinfo_max_freq | sort -nr | head -n 1',
           ], verbose: false),
           // 5: Total RAM
@@ -159,6 +158,10 @@ class _AboutPageState extends State<AboutPage> {
         String batteryUah = results[7].stdout.toString().trim();
         if (batteryUah.isNotEmpty && int.tryParse(batteryUah) != null) {
           int mah = (int.parse(batteryUah) / 1000).round();
+          // --- FIX: Correct for devices that report a value 10x too small ---
+          if (mah < 1000) {
+            mah *= 10;
+          }
           batteryInfo = '${mah}mAh';
         }
       } catch (e) {
