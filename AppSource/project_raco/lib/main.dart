@@ -364,7 +364,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
       await ConfigManager.saveMode(targetMode);
       var result = await run('su', [
         '-c',
-        '/data/adb/modules/ProjectRaco/Raco.sh $scriptArg',
+        'sh /data/adb/modules/ProjectRaco/Scripts/Raco.sh $scriptArg',
       ], verbose: false);
 
       if (result.exitCode != 0) {
