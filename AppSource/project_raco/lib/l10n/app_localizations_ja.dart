@@ -250,9 +250,6 @@ class AppLocalizationsJa extends AppLocalizations {
       'メイン画面のバナー画像（アスペクト比16:9）をカスタマイズします。';
 
   @override
-  String get change_banner_button => 'バナーを変更';
-
-  @override
   String get select_theme => 'テーマを選択:';
 
   @override

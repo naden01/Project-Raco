@@ -574,12 +574,6 @@ abstract class AppLocalizations {
   /// **'Customize the main screen\'s banner image (16:9 aspect ratio).'**
   String get banner_settings_description;
 
-  /// No description provided for @change_banner_button.
-  ///
-  /// In en, this message translates to:
-  /// **'Change Banner'**
-  String get change_banner_button;
-
   /// No description provided for @select_theme.
   ///
   /// In en, this message translates to:

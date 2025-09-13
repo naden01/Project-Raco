@@ -1617,21 +1617,21 @@ class _BannerSettingsCardState extends State<BannerSettingsCard> {
             Row(
               children: [
                 Expanded(
-                  child: ElevatedButton.icon(
+                  child: ElevatedButton(
                     onPressed: _pickAndCropImage,
-                    icon: const Icon(Icons.image_search_outlined),
-                    label: Text(localization.change_banner_button),
+                    child: const Icon(Icons.image_outlined),
                   ),
                 ),
                 const SizedBox(width: 8),
-                ElevatedButton(
-                  onPressed: _resetBanner,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: colorScheme.errorContainer,
-                    foregroundColor: colorScheme.onErrorContainer,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _resetBanner,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: colorScheme.errorContainer,
+                      foregroundColor: colorScheme.onErrorContainer,
+                    ),
+                    child: const Icon(Icons.delete_outline),
                   ),
-                  child: const Icon(Icons.delete_outline),
                 ),
               ],
             ),

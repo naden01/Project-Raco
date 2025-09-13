@@ -260,9 +260,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Customize the main screen\'s banner image (16:9 aspect ratio).';
 
   @override
-  String get change_banner_button => 'Change Banner';
-
-  @override
   String get select_theme => 'Select Theme:';
 
   @override

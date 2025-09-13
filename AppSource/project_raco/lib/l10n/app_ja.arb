@@ -85,7 +85,6 @@
     "opacity_slider_label": "背景の不透明度",
     "banner_settings_title": "バナー設定",
     "banner_settings_description": "メイン画面のバナー画像（アスペクト比16:9）をカスタマイズします。",
-    "change_banner_button": "バナーを変更",
     "select_theme": "テーマを選択:",
     "theme_classic": "クラシック",
     "theme_modern": "モダン",

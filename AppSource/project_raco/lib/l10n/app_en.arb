@@ -85,7 +85,6 @@
     "opacity_slider_label": "Background Opacity",
     "banner_settings_title": "Banner Settings",
     "banner_settings_description": "Customize the main screen's banner image (16:9 aspect ratio).",
-    "change_banner_button": "Change Banner",
     "select_theme": "Select Theme:",
     "theme_classic": "Classic",
     "theme_modern": "Modern",
