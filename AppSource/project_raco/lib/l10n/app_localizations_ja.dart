@@ -114,6 +114,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get utilities_title => 'ユーティリティ';
 
   @override
+  String get fix_and_tweak_title => '修正と調整';
+
+  @override
   String get device_mitigation_title => 'デバイスの緩和';
 
   @override

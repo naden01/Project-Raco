@@ -321,11 +321,10 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    DeviceMitigationCard(
-                      initialValue: _encoreState?['deviceMitigation'] ?? false,
-                    ),
-                    LiteModeCard(
-                      initialValue: _encoreState?['liteMode'] ?? false,
+                    FixAndTweakCard(
+                      initialDeviceMitigationValue:
+                          _encoreState?['deviceMitigation'] ?? false,
+                      initialLiteModeValue: _encoreState?['liteMode'] ?? false,
                     ),
                     GovernorCard(
                       initialAvailableGovernors:
@@ -376,41 +375,52 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
 }
 
 //region Card Widgets
-class DeviceMitigationCard extends StatefulWidget {
-  final bool initialValue;
+class FixAndTweakCard extends StatefulWidget {
+  final bool initialDeviceMitigationValue;
+  final bool initialLiteModeValue;
 
-  const DeviceMitigationCard({Key? key, required this.initialValue})
-    : super(key: key);
+  const FixAndTweakCard({
+    Key? key,
+    required this.initialDeviceMitigationValue,
+    required this.initialLiteModeValue,
+  }) : super(key: key);
 
   @override
-  _DeviceMitigationCardState createState() => _DeviceMitigationCardState();
+  _FixAndTweakCardState createState() => _FixAndTweakCardState();
 }
 
-class _DeviceMitigationCardState extends State<DeviceMitigationCard> {
-  late bool _isEnabled;
-  bool _isUpdating = false;
+class _FixAndTweakCardState extends State<FixAndTweakCard> {
+  late bool _deviceMitigationEnabled;
+  late bool _liteModeEnabled;
+  bool _isUpdatingMitigation = false;
+  bool _isUpdatingLiteMode = false;
   final String _racoConfigFilePath = '/data/adb/modules/ProjectRaco/raco.txt';
 
   @override
   void initState() {
     super.initState();
-    _isEnabled = widget.initialValue;
+    _deviceMitigationEnabled = widget.initialDeviceMitigationValue;
+    _liteModeEnabled = widget.initialLiteModeValue;
   }
 
-  Future<void> _updateTweak(bool enable) async {
+  Future<void> _updateTweak({
+    required String key,
+    required bool enable,
+    required Function(bool) stateSetter,
+    required Function(bool) isUpdatingSetter,
+    required bool initialValue,
+  }) async {
     if (!await _checkRootAccess()) return;
-    if (mounted) setState(() => _isUpdating = true);
+    if (mounted) setState(() => isUpdatingSetter(true));
 
     try {
       final value = enable ? '1' : '0';
-      const key = 'DEVICE_MITIGATION';
       final sedCommand =
           "sed -i 's|^$key=.*|$key=$value|' $_racoConfigFilePath";
-
       final result = await _runRootCommandAndWait(sedCommand);
 
       if (result.exitCode == 0) {
-        if (mounted) setState(() => _isEnabled = enable);
+        if (mounted) setState(() => stateSetter(enable));
       } else {
         throw Exception('Failed to write to the config file.');
       }
@@ -419,10 +429,10 @@ class _DeviceMitigationCardState extends State<DeviceMitigationCard> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to update settings: $e')),
         );
-        setState(() => _isEnabled = widget.initialValue);
+        setState(() => stateSetter(initialValue));
       }
     } finally {
-      if (mounted) setState(() => _isUpdating = false);
+      if (mounted) setState(() => isUpdatingSetter(false));
     }
   }
 
@@ -430,6 +440,8 @@ class _DeviceMitigationCardState extends State<DeviceMitigationCard> {
   Widget build(BuildContext context) {
     final localization = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    final bool isBusy = _isUpdatingMitigation || _isUpdatingLiteMode;
 
     return Card(
       elevation: 2.0,
@@ -437,102 +449,64 @@ class _DeviceMitigationCardState extends State<DeviceMitigationCard> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       color: colorScheme.surfaceContainerHighest,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-        child: SwitchListTile(
-          title: Text(localization.device_mitigation_title),
-          subtitle: Text(localization.device_mitigation_description),
-          value: _isEnabled,
-          onChanged: _isUpdating ? null : _updateTweak,
-          secondary: _isUpdating
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Icon(Icons.security_update_warning_outlined),
-          activeColor: colorScheme.primary,
-          contentPadding: EdgeInsets.zero,
-        ),
-      ),
-    );
-  }
-}
-
-class LiteModeCard extends StatefulWidget {
-  final bool initialValue;
-
-  const LiteModeCard({Key? key, required this.initialValue}) : super(key: key);
-
-  @override
-  _LiteModeCardState createState() => _LiteModeCardState();
-}
-
-class _LiteModeCardState extends State<LiteModeCard> {
-  late bool _isEnabled;
-  bool _isUpdating = false;
-  final String _racoConfigFilePath = '/data/adb/modules/ProjectRaco/raco.txt';
-
-  @override
-  void initState() {
-    super.initState();
-    _isEnabled = widget.initialValue;
-  }
-
-  Future<void> _updateTweak(bool enable) async {
-    if (!await _checkRootAccess()) return;
-    if (mounted) setState(() => _isUpdating = true);
-
-    try {
-      final value = enable ? '1' : '0';
-      const key = 'LITE_MODE';
-      final sedCommand =
-          "sed -i 's|^$key=.*|$key=$value|' $_racoConfigFilePath";
-
-      final result = await _runRootCommandAndWait(sedCommand);
-
-      if (result.exitCode == 0) {
-        if (mounted) setState(() => _isEnabled = enable);
-      } else {
-        throw Exception('Failed to write to the config file.');
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update settings: $e')),
-        );
-        setState(() => _isEnabled = widget.initialValue);
-      }
-    } finally {
-      if (mounted) setState(() => _isUpdating = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final localization = AppLocalizations.of(context)!;
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Card(
-      elevation: 2.0,
-      margin: const EdgeInsets.only(bottom: 16),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      color: colorScheme.surfaceContainerHighest,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-        child: SwitchListTile(
-          title: Text(localization.lite_mode_title),
-          subtitle: Text(localization.lite_mode_description),
-          value: _isEnabled,
-          onChanged: _isUpdating ? null : _updateTweak,
-          secondary: _isUpdating
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Icon(Icons.energy_savings_leaf_outlined),
-          activeColor: colorScheme.primary,
-          contentPadding: EdgeInsets.zero,
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              localization.fix_and_tweak_title,
+              style: textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            SwitchListTile(
+              title: Text(localization.device_mitigation_title),
+              subtitle: Text(localization.device_mitigation_description),
+              value: _deviceMitigationEnabled,
+              onChanged: isBusy
+                  ? null
+                  : (bool enable) => _updateTweak(
+                      key: 'DEVICE_MITIGATION',
+                      enable: enable,
+                      stateSetter: (val) => _deviceMitigationEnabled = val,
+                      isUpdatingSetter: (val) => _isUpdatingMitigation = val,
+                      initialValue: widget.initialDeviceMitigationValue,
+                    ),
+              secondary: _isUpdatingMitigation
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.security_update_warning_outlined),
+              activeColor: colorScheme.primary,
+              contentPadding: EdgeInsets.zero,
+            ),
+            SwitchListTile(
+              title: Text(localization.lite_mode_title),
+              subtitle: Text(localization.lite_mode_description),
+              value: _liteModeEnabled,
+              onChanged: isBusy
+                  ? null
+                  : (bool enable) => _updateTweak(
+                      key: 'LITE_MODE',
+                      enable: enable,
+                      stateSetter: (val) => _liteModeEnabled = val,
+                      isUpdatingSetter: (val) => _isUpdatingLiteMode = val,
+                      initialValue: widget.initialLiteModeValue,
+                    ),
+              secondary: _isUpdatingLiteMode
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.energy_savings_leaf_outlined),
+              activeColor: colorScheme.primary,
+              contentPadding: EdgeInsets.zero,
+            ),
+          ],
         ),
       ),
     );
@@ -1471,3 +1445,4 @@ class _BackgroundSettingsCardState extends State<BackgroundSettingsCard> {
     );
   }
 }
+//endregion

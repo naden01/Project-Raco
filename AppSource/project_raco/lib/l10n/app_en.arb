@@ -34,6 +34,7 @@
     "os": "OS:",
     "utilities": "Utilities",
     "utilities_title": "Utilities",
+    "fix_and_tweak_title": "Fix and Tweak",
     "device_mitigation_title": "Device Mitigation",
     "device_mitigation_description": "Turn on if you experience screen freeze",
     "lite_mode_title": "LITE Mode",

@@ -310,6 +310,12 @@ abstract class AppLocalizations {
   /// **'Utilities'**
   String get utilities_title;
 
+  /// No description provided for @fix_and_tweak_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Fix and Tweak'**
+  String get fix_and_tweak_title;
+
   /// No description provided for @device_mitigation_title.
   ///
   /// In en, this message translates to:

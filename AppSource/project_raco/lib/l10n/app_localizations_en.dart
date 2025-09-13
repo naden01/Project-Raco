@@ -118,6 +118,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get utilities_title => 'Utilities';
 
   @override
+  String get fix_and_tweak_title => 'Fix and Tweak';
+
+  @override
   String get device_mitigation_title => 'Device Mitigation';
 
   @override

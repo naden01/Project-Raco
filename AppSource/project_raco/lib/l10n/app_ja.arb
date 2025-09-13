@@ -34,6 +34,7 @@
     "os": "OS:",
     "utilities": "ユーティリティ",
     "utilities_title": "ユーティリティ",
+    "fix_and_tweak_title": "修正と調整",
     "device_mitigation_title": "デバイスの緩和",
     "device_mitigation_description": "画面のフリーズが発生した場合にオンにします",
     "lite_mode_title": "ライトモード",

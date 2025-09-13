@@ -34,6 +34,7 @@
     "os": "OS:",
     "utilities": "Utilitas",
     "utilities_title": "Utilitas",
+    "fix_and_tweak_title": "Perbaikan & Tweak",
     "device_mitigation_title": "Mitigasi Perangkat",
     "device_mitigation_description": "Nyalakan jika Anda mengalami layar beku",
     "lite_mode_title": "Mode LITE",

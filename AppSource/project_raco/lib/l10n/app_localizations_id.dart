@@ -119,6 +119,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get utilities_title => 'Utilitas';
 
   @override
+  String get fix_and_tweak_title => 'Perbaikan & Tweak';
+
+  @override
   String get device_mitigation_title => 'Mitigasi Perangkat';
 
   @override
