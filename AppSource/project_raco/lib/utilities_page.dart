@@ -250,7 +250,7 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
     final localization = AppLocalizations.of(context)!;
     final results = await Future.wait([
       _runRootCommandAndWait(
-        '/data/adb/modules/ProjectRaco/Scripts/raco_bypass_controller.sh test',
+        'sh /data/adb/modules/ProjectRaco/Scripts/raco_bypass_controller.sh test',
       ),
       _runRootCommandAndWait('cat /data/adb/modules/ProjectRaco/raco.txt'),
     ]);
