@@ -263,15 +263,6 @@ class AppLocalizationsId extends AppLocalizations {
       'Sesuaikan gambar banner layar utama (rasio aspek 16:9).';
 
   @override
-  String get select_theme => 'Pilih Tema:';
-
-  @override
-  String get theme_classic => 'Klasik';
-
-  @override
-  String get theme_modern => 'Modern';
-
-  @override
   String get device_name => 'Nama perangkat';
 
   @override

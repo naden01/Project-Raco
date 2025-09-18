@@ -53,7 +53,6 @@ class _MyAppState extends State<MyApp> {
   String? _backgroundImagePath;
   double _backgroundOpacity = 0.2;
   String? _bannerImagePath; // Added banner image path state
-  String _currentTheme = 'Classic'; // Default theme
 
   static final _defaultLightColorScheme = ColorScheme.fromSeed(
     seedColor: Colors.blue,
@@ -77,14 +76,12 @@ class _MyAppState extends State<MyApp> {
     final path = prefs.getString('background_image_path');
     final opacity = prefs.getDouble('background_opacity') ?? 0.2;
     final bannerPath = prefs.getString('banner_image_path'); // Load banner path
-    final theme = prefs.getString('theme_preference') ?? 'Classic';
 
     setState(() {
       _locale = Locale(languageCode);
       _backgroundImagePath = path;
       _backgroundOpacity = opacity;
       _bannerImagePath = bannerPath; // Set banner path state
-      _currentTheme = theme;
     });
   }
 
@@ -95,16 +92,6 @@ class _MyAppState extends State<MyApp> {
     });
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('language_code', locale.languageCode);
-  }
-
-  Future<void> _updateTheme(String theme) async {
-    if (_currentTheme == theme) return;
-    if (!mounted) return;
-    setState(() {
-      _currentTheme = theme;
-    });
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('theme_preference', theme);
   }
 
   @override
@@ -127,10 +114,7 @@ class _MyAppState extends State<MyApp> {
             GlobalCupertinoLocalizations.delegate,
           ],
           home: Scaffold(
-            // Conditional background color based on the selected theme
-            backgroundColor: _currentTheme == 'Classic'
-                ? Colors.transparent
-                : null,
+            backgroundColor: Colors.transparent,
             body: Stack(
               fit: StackFit.expand,
               children: [
@@ -150,8 +134,6 @@ class _MyAppState extends State<MyApp> {
                   onLocaleChange: _updateLocale,
                   onUtilitiesClosed: _loadAllPreferences,
                   bannerImagePath: _bannerImagePath, // Pass banner path
-                  currentTheme: _currentTheme,
-                  onThemeChange: _updateTheme,
                 ),
               ],
             ),
@@ -172,15 +154,11 @@ class MainScreen extends StatefulWidget {
   final Function(Locale) onLocaleChange;
   final VoidCallback onUtilitiesClosed;
   final String? bannerImagePath; // Receive banner path
-  final String currentTheme;
-  final Function(String) onThemeChange;
 
   MainScreen({
     required this.onLocaleChange,
     required this.onUtilitiesClosed,
     required this.bannerImagePath, // Updated constructor
-    required this.currentTheme,
-    required this.onThemeChange,
   });
 
   @override
@@ -516,8 +494,6 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
                         _buildUtilitiesCard(localization),
                         SizedBox(height: 10),
                         _buildLanguageSelector(localization),
-                        SizedBox(height: 10),
-                        _buildThemeSelector(localization),
                         SizedBox(height: 20),
                       ],
                     ),
@@ -797,47 +773,6 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
               dropdownColor: colorScheme.surfaceContainerHighest,
               underline: Container(),
               iconEnabledColor: colorScheme.primary,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildThemeSelector(AppLocalizations localization) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Card(
-      elevation: 0,
-      margin: EdgeInsets.zero,
-      color: colorScheme.surfaceContainerHighest,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Container(
-        height: 56.0,
-        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              localization.select_theme,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            ToggleButtons(
-              isSelected: [
-                widget.currentTheme == 'Classic',
-                widget.currentTheme == 'Modern',
-              ],
-              onPressed: (int index) {
-                widget.onThemeChange(index == 0 ? 'Classic' : 'Modern');
-              },
-              borderRadius: BorderRadius.circular(8.0),
-              selectedColor: colorScheme.onPrimary,
-              fillColor: colorScheme.primary,
-              color: colorScheme.onSurfaceVariant,
-              constraints: BoxConstraints(minHeight: 36.0, minWidth: 80.0),
-              children: <Widget>[
-                Text(localization.theme_classic),
-                Text(localization.theme_modern),
-              ],
             ),
           ],
         ),

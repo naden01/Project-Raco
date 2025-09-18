@@ -574,24 +574,6 @@ abstract class AppLocalizations {
   /// **'Customize the main screen\'s banner image (16:9 aspect ratio).'**
   String get banner_settings_description;
 
-  /// No description provided for @select_theme.
-  ///
-  /// In en, this message translates to:
-  /// **'Select Theme:'**
-  String get select_theme;
-
-  /// No description provided for @theme_classic.
-  ///
-  /// In en, this message translates to:
-  /// **'Classic'**
-  String get theme_classic;
-
-  /// No description provided for @theme_modern.
-  ///
-  /// In en, this message translates to:
-  /// **'Modern'**
-  String get theme_modern;
-
   /// No description provided for @device_name.
   ///
   /// In en, this message translates to:
