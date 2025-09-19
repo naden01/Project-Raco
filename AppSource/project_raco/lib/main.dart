@@ -113,30 +113,35 @@ class _MyAppState extends State<MyApp> {
             GlobalWidgetsLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,
           ],
-          home: Scaffold(
-            backgroundColor: Colors.transparent,
-            body: Stack(
-              fit: StackFit.expand,
-              children: [
-                if (_backgroundImagePath != null &&
-                    _backgroundImagePath!.isNotEmpty)
-                  Opacity(
-                    opacity: _backgroundOpacity,
-                    child: Image.file(
-                      File(_backgroundImagePath!),
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(color: Colors.transparent);
-                      },
+          home: Builder(
+            builder: (context) {
+              return Scaffold(
+                body: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    // UPDATED: Added a container for the default background color
+                    Container(color: Theme.of(context).colorScheme.background),
+                    if (_backgroundImagePath != null &&
+                        _backgroundImagePath!.isNotEmpty)
+                      Opacity(
+                        opacity: _backgroundOpacity,
+                        child: Image.file(
+                          File(_backgroundImagePath!),
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(color: Colors.transparent);
+                          },
+                        ),
+                      ),
+                    MainScreen(
+                      onLocaleChange: _updateLocale,
+                      onUtilitiesClosed: _loadAllPreferences,
+                      bannerImagePath: _bannerImagePath, // Pass banner path
                     ),
-                  ),
-                MainScreen(
-                  onLocaleChange: _updateLocale,
-                  onUtilitiesClosed: _loadAllPreferences,
-                  bannerImagePath: _bannerImagePath, // Pass banner path
+                  ],
                 ),
-              ],
-            ),
+              );
+            },
           ),
           theme: ThemeData(useMaterial3: true, colorScheme: lightColorScheme),
           darkTheme: ThemeData(
@@ -446,7 +451,6 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
                       children: [
                         _buildTitleHeader(colorScheme, localization),
                         SizedBox(height: 16),
-                        // MODIFIED: Replaced status grid with new banner/status layout
                         _buildBannerAndStatus(localization),
                         SizedBox(height: 10),
                         _buildControlRow(
@@ -557,9 +561,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     );
   }
 
-  // ADDED: New widget for banner and status cards
   Widget _buildBannerAndStatus(AppLocalizations localization) {
-    // Conditional widget for the banner image
     Widget bannerImage;
     if (widget.bannerImagePath != null && widget.bannerImagePath!.isNotEmpty) {
       bannerImage = Image.file(
@@ -567,7 +569,6 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
         fit: BoxFit.cover,
         width: double.infinity,
         errorBuilder: (context, error, stackTrace) {
-          // Fallback to asset if file is not found or has an error
           return Image.asset(
             'assets/Raco.jpg',
             fit: BoxFit.cover,
@@ -582,7 +583,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
         width: double.infinity,
         errorBuilder: (context, error, stackTrace) {
           return Container(
-            color: Theme.of(context).colorScheme.surfaceContainerHighest,
+            color: Theme.of(context).colorScheme.surfaceContainer,
             child: Center(
               child: Icon(
                 Icons.image_not_supported_outlined,
@@ -596,9 +597,8 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
 
     return Column(
       children: [
-        // Banner Card
         Card(
-          elevation: 0,
+          elevation: 2.0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
@@ -608,7 +608,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
             child: Stack(
               alignment: Alignment.bottomLeft,
               children: [
-                bannerImage, // Use the dynamic banner widget
+                bannerImage,
                 Container(
                   margin: EdgeInsets.all(12.0),
                   padding: EdgeInsets.symmetric(
@@ -633,7 +633,6 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
           ),
         ),
         SizedBox(height: 10),
-        // Status Row
         Row(
           children: [
             Expanded(
@@ -663,8 +662,6 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     );
   }
 
-  // REMOVED: The old _buildStatusGrid widget is no longer needed.
-
   Widget _buildStatusCard(
     String label,
     String value,
@@ -673,8 +670,9 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   ) {
     final colorScheme = Theme.of(context).colorScheme;
     return Card(
-      elevation: 0,
-      color: colorScheme.surfaceContainerHighest,
+      elevation: 2.0,
+      // UPDATED: Changed card background color
+      color: colorScheme.surfaceContainer,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(12.0),
@@ -710,9 +708,10 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   Widget _buildUtilitiesCard(AppLocalizations localization) {
     final colorScheme = Theme.of(context).colorScheme;
     return Card(
-      elevation: 0,
+      elevation: 2.0,
       margin: EdgeInsets.zero,
-      color: colorScheme.surfaceContainerHighest,
+      // UPDATED: Changed card background color
+      color: colorScheme.surfaceContainer,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -742,9 +741,10 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   Widget _buildLanguageSelector(AppLocalizations localization) {
     final colorScheme = Theme.of(context).colorScheme;
     return Card(
-      elevation: 0,
+      elevation: 2.0,
       margin: EdgeInsets.zero,
-      color: colorScheme.surfaceContainerHighest,
+      // UPDATED: Changed card background color
+      color: colorScheme.surfaceContainer,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Container(
         height: 56.0,
@@ -770,7 +770,8 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
               style: Theme.of(
                 context,
               ).textTheme.bodyMedium?.copyWith(color: colorScheme.primary),
-              dropdownColor: colorScheme.surfaceContainerHighest,
+              // UPDATED: Changed dropdown background color
+              dropdownColor: colorScheme.surfaceContainer,
               underline: Container(),
               iconEnabledColor: colorScheme.primary,
             ),
@@ -796,10 +797,11 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     return Opacity(
       opacity: isHamadaMode ? 0.6 : 1.0,
       child: Card(
-        elevation: 0,
+        elevation: 2.0,
+        // UPDATED: Changed inactive card background color
         color: isCurrentMode && !isHamadaMode
             ? colorScheme.primaryContainer
-            : colorScheme.surfaceContainerHighest,
+            : colorScheme.surfaceContainer,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         margin: EdgeInsets.only(bottom: 10),
         child: InkWell(
