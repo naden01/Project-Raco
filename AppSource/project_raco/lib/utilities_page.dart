@@ -72,10 +72,10 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
   Future<void> _initializePage() async {
     final bool hasRoot = await _checkRootAccess();
 
-    // Start all data fetching processes and the artificial delay concurrently.
+    // Start all data fetching processes concurrently.
     final dataFutures = [
       _loadBackgroundSettings(),
-      _loadBannerSettings(), // Added banner settings loader
+      _loadBannerSettings(),
       if (hasRoot) ...[
         _loadEncoreSwitchState(),
         _loadGovernorState(),
@@ -87,11 +87,8 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
       ],
     ];
 
-    final delayFuture = Future.delayed(const Duration(seconds: 1));
-
-    // Await both the data and the delay.
+    // RAPIHIN: Removed artificial delay to improve loading speed.
     final results = await Future.wait(dataFutures);
-    await delayFuture;
 
     if (!mounted) return;
 
@@ -130,7 +127,6 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
     }
   }
 
-  // Added: Loader for banner settings
   Future<String?> _loadBannerSettings() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -298,6 +294,20 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
   }
   //endregion
 
+  // RAPIHIN: Added a helper widget for section headers.
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 24, 8, 8),
+      child: Text(
+        title,
+        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+          color: Theme.of(context).colorScheme.primary,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final localization = AppLocalizations.of(context)!;
@@ -333,66 +343,67 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
             AnimatedOpacity(
               opacity: _isLoading ? 0.0 : 1.0,
               duration: const Duration(milliseconds: 500),
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    FixAndTweakCard(
-                      initialDeviceMitigationValue:
-                          _encoreState?['deviceMitigation'] ?? false,
-                      initialLiteModeValue: _encoreState?['liteMode'] ?? false,
-                    ),
-                    GovernorCard(
-                      initialAvailableGovernors:
-                          _governorState?['available'] ?? [],
-                      initialSelectedGovernor: _governorState?['selected'],
-                    ),
-                    DndCard(initialDndEnabled: _dndEnabled ?? false),
-                    HamadaAiCard(
-                      initialHamadaAiEnabled:
-                          _hamadaAiState?['enabled'] ?? false,
-                      initialHamadaStartOnBoot:
-                          _hamadaAiState?['onBoot'] ?? false,
-                    ),
-                    ResolutionCard(
-                      isAvailable: _resolutionState?['isAvailable'] ?? false,
-                      originalSize: _resolutionState?['originalSize'] ?? '',
-                      originalDensity:
-                          _resolutionState?['originalDensity'] ?? 0,
-                    ),
-                    GameTxtCard(initialContent: _gameTxtContent ?? ''),
-                    BypassChargingCard(
-                      isSupported:
-                          _bypassChargingState?['isSupported'] ?? false,
-                      isEnabled: _bypassChargingState?['isEnabled'] ?? false,
-                      supportStatus:
-                          _bypassChargingState?['statusMsg'] ??
-                          localization.bypass_charging_unsupported,
-                    ),
-                    BackgroundSettingsCard(
-                      initialPath: _backgroundImagePath,
-                      initialOpacity: _backgroundOpacity,
-                      onSettingsChanged: (path, opacity) {
-                        if (!mounted) return;
-                        setState(() {
-                          _backgroundImagePath = path;
-                          _backgroundOpacity = opacity;
-                        });
-                      },
-                    ),
-                    // Added: Banner Settings Card
-                    BannerSettingsCard(
-                      initialPath: _bannerImagePath,
-                      onSettingsChanged: (path) {
-                        if (!mounted) return;
-                        setState(() {
-                          _bannerImagePath = path;
-                        });
-                      },
-                    ),
-                  ],
-                ),
+              // RAPIHIN: Changed to ListView for better structure.
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(8, 8, 8, 32),
+                children: [
+                  _buildSectionHeader("CORE TWEAKS"),
+                  FixAndTweakCard(
+                    initialDeviceMitigationValue:
+                        _encoreState?['deviceMitigation'] ?? false,
+                    initialLiteModeValue: _encoreState?['liteMode'] ?? false,
+                  ),
+                  GovernorCard(
+                    initialAvailableGovernors:
+                        _governorState?['available'] ?? [],
+                    initialSelectedGovernor: _governorState?['selected'],
+                  ),
+
+                  _buildSectionHeader("AUTOMATION"),
+                  HamadaAiCard(
+                    initialHamadaAiEnabled: _hamadaAiState?['enabled'] ?? false,
+                    initialHamadaStartOnBoot:
+                        _hamadaAiState?['onBoot'] ?? false,
+                  ),
+                  GameTxtCard(initialContent: _gameTxtContent ?? ''),
+
+                  _buildSectionHeader("SYSTEM"),
+                  DndCard(initialDndEnabled: _dndEnabled ?? false),
+                  BypassChargingCard(
+                    isSupported: _bypassChargingState?['isSupported'] ?? false,
+                    isEnabled: _bypassChargingState?['isEnabled'] ?? false,
+                    supportStatus:
+                        _bypassChargingState?['statusMsg'] ??
+                        localization.bypass_charging_unsupported,
+                  ),
+                  ResolutionCard(
+                    isAvailable: _resolutionState?['isAvailable'] ?? false,
+                    originalSize: _resolutionState?['originalSize'] ?? '',
+                    originalDensity: _resolutionState?['originalDensity'] ?? 0,
+                  ),
+
+                  _buildSectionHeader("APPEARANCE"),
+                  BackgroundSettingsCard(
+                    initialPath: _backgroundImagePath,
+                    initialOpacity: _backgroundOpacity,
+                    onSettingsChanged: (path, opacity) {
+                      if (!mounted) return;
+                      setState(() {
+                        _backgroundImagePath = path;
+                        _backgroundOpacity = opacity;
+                      });
+                    },
+                  ),
+                  BannerSettingsCard(
+                    initialPath: _bannerImagePath,
+                    onSettingsChanged: (path) {
+                      if (!mounted) return;
+                      setState(() {
+                        _bannerImagePath = path;
+                      });
+                    },
+                  ),
+                ],
               ),
             ),
         ],
@@ -402,6 +413,7 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
 }
 
 //region Card Widgets
+// RAPIHIN: Adjusted card margins for better consistency.
 class FixAndTweakCard extends StatefulWidget {
   final bool initialDeviceMitigationValue;
   final bool initialLiteModeValue;
@@ -472,7 +484,7 @@ class _FixAndTweakCardState extends State<FixAndTweakCard> {
 
     return Card(
       elevation: 2.0,
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       color: colorScheme.surfaceContainerHighest,
       child: Padding(
@@ -616,7 +628,7 @@ class _GovernorCardState extends State<GovernorCard> {
 
     return Card(
       elevation: 2.0,
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       color: colorScheme.surfaceContainerHighest,
       child: Padding(
@@ -729,7 +741,7 @@ class _DndCardState extends State<DndCard> {
 
     return Card(
       elevation: 2.0,
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       color: colorScheme.surfaceContainerHighest,
       child: Padding(
@@ -895,7 +907,7 @@ class _HamadaAiCardState extends State<HamadaAiCard> {
 
     return Card(
       elevation: 2.0,
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       color: colorScheme.surfaceContainerHighest,
       child: Padding(
@@ -1040,7 +1052,7 @@ class _ResolutionCardState extends State<ResolutionCard> {
 
     return Card(
       elevation: 2.0,
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       color: colorScheme.surfaceContainerHighest,
       child: Padding(
@@ -1178,7 +1190,7 @@ class _GameTxtCardState extends State<GameTxtCard> {
 
     return Card(
       elevation: 2.0,
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       color: colorScheme.surfaceContainerHighest,
       child: Padding(
@@ -1281,7 +1293,7 @@ class _BypassChargingCardState extends State<BypassChargingCard> {
 
     return Card(
       elevation: 2.0,
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       color: colorScheme.surfaceContainerHighest,
       child: Padding(
@@ -1421,7 +1433,7 @@ class _BackgroundSettingsCardState extends State<BackgroundSettingsCard> {
 
     return Card(
       elevation: 2.0,
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       color: colorScheme.surfaceContainerHighest,
       child: Padding(
@@ -1594,7 +1606,7 @@ class _BannerSettingsCardState extends State<BannerSettingsCard> {
 
     return Card(
       elevation: 2.0,
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       color: colorScheme.surfaceContainerHighest,
       child: Padding(
