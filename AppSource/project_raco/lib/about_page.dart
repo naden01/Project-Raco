@@ -4,6 +4,11 @@ import '/l10n/app_localizations.dart';
 import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 
+// REVISI: Kode ini sudah menggunakan Theme.of(context).colorScheme dengan benar
+// untuk warna teks dan ikon. Tidak ada perubahan fungsional yang diperlukan
+// karena implementasi awal sudah sesuai dengan prinsip Material You,
+// memastikan adaptasi otomatis terhadap tema terang/gelap.
+
 class AboutPage extends StatefulWidget {
   AboutPage({Key? key}) : super(key: key);
 
@@ -224,7 +229,12 @@ class _AboutPageState extends State<AboutPage> {
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
+      appBar: AppBar(
+        // AppBar transparan agar menyatu dengan background utama dari main.dart
+        // Ikon back '<-' dan judul akan otomatis menyesuaikan warna (putih/hitam)
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
       body: Stack(
         fit: StackFit.expand,
         children: [
