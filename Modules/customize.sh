@@ -189,7 +189,6 @@ if [ "$USE_SAVED_CONFIG" = false ]; then
   # Prompt for Anya Thermal
   ui_print " "
   ui_print "- Include Anya Thermal?"
-  ui_print "  Optimizes thermal management."
   ui_print " "
   ui_print "  Vol+ = Yes"
   ui_print "  Vol- = No"
@@ -205,7 +204,6 @@ if [ "$USE_SAVED_CONFIG" = false ]; then
   # Prompt for Kobo Fast Charge
   ui_print " "
   ui_print "- Include Kobo Fast Charge?"
-  ui_print "  Enables faster charging speeds."
   ui_print " "
   ui_print "  Vol+ = Yes"
   ui_print "  Vol- = No"
@@ -221,7 +219,6 @@ if [ "$USE_SAVED_CONFIG" = false ]; then
   # Prompt for Sandevistan Boot
   ui_print " "
   ui_print "- Include Sandevistan Boot?"
-  ui_print "  Speeds up the device boot process."
   ui_print " "
   ui_print "  Vol+ = Yes"
   ui_print "  Vol- = No"
