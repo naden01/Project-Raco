@@ -22,5 +22,6 @@ if grep -q "INCLUDE_ANYA=1" "$CONFIG_FILE" && grep -q "ANYA=1" "$CONFIG_FILE"; t
             stop "$service"
         fi
     done
-
+    else
+    exit 0
 fi
