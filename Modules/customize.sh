@@ -123,15 +123,17 @@ ui_print "      INSTALLING Project Raco       "
 ui_print " "
 sleep 1.5
 
+ui_print "- Setting up module files..."
+mkdir -p /data/ProjectRaco
+unzip -o "$ZIPFILE" 'Scripts/*' -d $MODPATH >&2
+copy_with_retry "$MODPATH/logo.png" "/data/local/tmp"
+copy_with_retry "$MODPATH/Anya.png" "/data/local/tmp"
+
 if [ -f "/data/ProjectRaco/game.txt" ]; then
-    ui_print "- Previous installation found. Skipping initial file copy."
+    ui_print "- Existing game.txt found, preserving user settings."
 else
-    ui_print "- Performing first-time file setup..."
-    mkdir -p /data/ProjectRaco
-    unzip -o "$ZIPFILE" 'Scripts/*' -d $MODPATH >&2
+    ui_print "- Performing first-time setup for game.txt."
     copy_with_retry "$MODPATH/game.txt" "/data/ProjectRaco"
-    copy_with_retry "$MODPATH/logo.png" "/data/local/tmp"
-    copy_with_retry "$MODPATH/Anya.png" "/data/local/tmp"
 fi
 ui_print " "
 
