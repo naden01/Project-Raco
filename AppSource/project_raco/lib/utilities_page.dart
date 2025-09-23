@@ -98,6 +98,7 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
   Map<String, dynamic>? _governorState;
   bool? _dndEnabled;
   bool? _anyaThermalEnabled;
+  bool? _anyaIncluded;
   Map<String, bool>? _hamadaAiState;
   Map<String, dynamic>? _resolutionState;
   String? _gameTxtContent;
@@ -126,6 +127,7 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
         _loadGovernorState(),
         _loadDndState(),
         _loadAnyaThermalState(),
+        _loadAnyaInclusionState(),
         _loadHamadaAiState(),
         _loadResolutionState(),
         _loadGameTxtState(),
@@ -142,6 +144,7 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
       _governorState = results[resultIndex++] as Map<String, dynamic>;
       _dndEnabled = results[resultIndex++] as bool;
       _anyaThermalEnabled = results[resultIndex++] as bool;
+      _anyaIncluded = results[resultIndex++] as bool;
       _hamadaAiState = results[resultIndex++] as Map<String, bool>;
       _resolutionState = results[resultIndex++] as Map<String, dynamic>;
       _gameTxtContent = results[resultIndex++] as String;
@@ -231,6 +234,7 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
     final systemPage = SystemPage(
       dndEnabled: _dndEnabled,
       anyaThermalEnabled: _anyaThermalEnabled,
+      isAnyaIncluded: _anyaIncluded ?? true,
       bypassChargingState: _bypassChargingState,
       resolutionState: _resolutionState,
     );
@@ -249,14 +253,15 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
         navigationTarget: systemPage,
         searchKeywords: 'dnd do not disturb notifications silence',
       ),
-      SearchResultItem(
-        title: localization.anya_thermal_title,
-        subtitle: localization.system_title,
-        icon: Icons.thermostat_outlined,
-        navigationTarget: systemPage,
-        searchKeywords:
-            'anya melfissa thermal temperature heat throttle flowstate',
-      ),
+      if (_anyaIncluded ?? true)
+        SearchResultItem(
+          title: localization.anya_thermal_title,
+          subtitle: localization.system_title,
+          icon: Icons.thermostat_outlined,
+          navigationTarget: systemPage,
+          searchKeywords:
+              'anya melfissa thermal temperature heat throttle flowstate',
+        ),
       SearchResultItem(
         title: localization.bypass_charging_title,
         subtitle: localization.system_title,
@@ -398,6 +403,23 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
       return match?.group(1) == '1';
     }
     return false;
+  }
+
+  Future<bool> _loadAnyaInclusionState() async {
+    final result = await _runRootCommandAndWait(
+      'cat /data/adb/modules/ProjectRaco/raco.txt',
+    );
+    if (result.exitCode == 0) {
+      final content = result.stdout.toString();
+      final match = RegExp(
+        r'^INCLUDE_ANYA=(\d)',
+        multiLine: true,
+      ).firstMatch(content);
+      // Hide if INCLUDE_ANYA=0. Show otherwise.
+      return match?.group(1) != '0';
+    }
+    // Default to showing if file/line is not found.
+    return true;
   }
 
   Future<Map<String, bool>> _loadHamadaAiState() async {
@@ -631,7 +653,7 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
   }
 }
 
-//region Sub-Pages and Cards (No changes needed below this line)
+//region Sub-Pages and Cards
 
 //region Sub-Pages
 abstract class _LoadingStatefulWidget extends StatefulWidget {
@@ -754,6 +776,7 @@ class _AutomationPageState extends _LoadingState<AutomationPage> {
 class SystemPage extends _LoadingStatefulWidget {
   final bool? dndEnabled;
   final bool? anyaThermalEnabled;
+  final bool isAnyaIncluded;
   final Map<String, dynamic>? bypassChargingState;
   final Map<String, dynamic>? resolutionState;
 
@@ -761,6 +784,7 @@ class SystemPage extends _LoadingStatefulWidget {
     Key? key,
     required this.dndEnabled,
     required this.anyaThermalEnabled,
+    required this.isAnyaIncluded,
     required this.bypassChargingState,
     required this.resolutionState,
   }) : super(key: key);
@@ -780,9 +804,10 @@ class _SystemPageState extends _LoadingState<SystemPage> {
         padding: const EdgeInsets.fromLTRB(8, 8, 8, 32),
         children: [
           DndCard(initialDndEnabled: widget.dndEnabled ?? false),
-          AnyaThermalCard(
-            initialAnyaThermalEnabled: widget.anyaThermalEnabled ?? false,
-          ),
+          if (widget.isAnyaIncluded)
+            AnyaThermalCard(
+              initialAnyaThermalEnabled: widget.anyaThermalEnabled ?? false,
+            ),
           BypassChargingCard(
             isSupported: widget.bypassChargingState?['isSupported'] ?? false,
             isEnabled: widget.bypassChargingState?['isEnabled'] ?? false,
