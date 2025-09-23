@@ -36,6 +36,14 @@ source "$MODULE_PATH/Scripts/corin.sh"
 # Begin Functions
 ##############################
 
+anyamelfissa() {
+    sh /data/adb/modules/Scripts/AnyaMelfissa.sh
+}
+
+anyakawaii() {
+    sh /data/adb/modules/Scripts/AnyaKawaii.sh
+}
+
 tweak() {
     if [ -e "$2" ]; then
         chmod 644 "$2" >/dev/null 2>&1
@@ -825,6 +833,7 @@ performance_basic() {
     dnd_on
     corin_perf
     bypass_on
+    anyamelfissa
 }
 
 ##########################################
@@ -888,6 +897,7 @@ balanced_basic() {
     corin_balanced
     dnd_off
     bypass_off
+    anyakawaii
 }
 
 ##########################################
@@ -930,6 +940,7 @@ powersave_basic() {
     corin_powersave
     dnd_off
     bypass_off
+    anyakawaii
 }
 
 ##########################################
