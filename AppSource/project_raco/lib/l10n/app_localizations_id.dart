@@ -24,6 +24,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get module_version => 'Versi Modul:';
 
   @override
+  String get module_not_installed => 'Tidak Terpasang';
+
+  @override
   String get current_mode => 'Mode Saat Ini:';
 
   @override

@@ -130,6 +130,12 @@ abstract class AppLocalizations {
   /// **'Module Version:'**
   String get module_version;
 
+  /// No description provided for @module_not_installed.
+  ///
+  /// In en, this message translates to:
+  /// **'Not Installed'**
+  String get module_not_installed;
+
   /// No description provided for @current_mode.
   ///
   /// In en, this message translates to:

@@ -4,6 +4,7 @@
     "root_access": "Akses Root:",
     "module_installed": "Modul Terpasang:",
     "module_version": "Versi Modul:",
+    "module_not_installed": "Tidak Terpasang",
     "current_mode": "Mode Saat Ini:",
     "select_language": "Pilih Bahasa:",
     "power_save_desc": "Memprioritaskan Baterai Di Atas Performa",

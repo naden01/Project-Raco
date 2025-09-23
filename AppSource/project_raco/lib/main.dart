@@ -595,6 +595,18 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
       );
     }
 
+    String bannerText;
+    if (_hasRootAccess) {
+      if (_moduleInstalled) {
+        bannerText = '${localization.app_title} $_moduleVersion';
+      } else {
+        bannerText =
+            '${localization.app_title} ${localization.module_not_installed}';
+      }
+    } else {
+      bannerText = localization.app_title;
+    }
+
     return Column(
       children: [
         Card(
@@ -620,7 +632,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
                     borderRadius: BorderRadius.circular(20.0),
                   ),
                   child: Text(
-                    'Project Raco $_moduleVersion',
+                    bannerText,
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,

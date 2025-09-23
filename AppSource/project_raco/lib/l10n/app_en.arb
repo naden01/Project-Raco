@@ -4,6 +4,7 @@
     "root_access": "Root Access:",
     "module_installed": "Module Installed:",
     "module_version": "Module Version:",
+    "module_not_installed": "Not Installed",
     "current_mode": "Current Mode:",
     "select_language": "Select Language:",
     "power_save_desc": "Prioritizing Battery Over Performance",

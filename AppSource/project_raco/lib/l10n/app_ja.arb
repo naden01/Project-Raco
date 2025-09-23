@@ -4,6 +4,7 @@
     "root_access": "ルートアクセス:",
     "module_installed": "モジュール:",
     "module_version": "モジュールバージョン:",
+    "module_not_installed": "インストールされていません",
     "current_mode": "現在のモード:",
     "select_language": "言語を選択:",
     "power_save_desc": "バッテリーを優先（パフォーマンス最小）",

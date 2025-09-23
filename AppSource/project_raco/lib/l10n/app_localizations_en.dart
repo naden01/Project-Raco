@@ -24,6 +24,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get module_version => 'Module Version:';
 
   @override
+  String get module_not_installed => 'Not Installed';
+
+  @override
   String get current_mode => 'Current Mode:';
 
   @override
