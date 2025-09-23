@@ -41,17 +41,32 @@ Future<bool> _checkRootAccess() async {
 }
 //endregion
 
-//region Model for Search and Navigation
+//region Models for Search and Navigation
 class UtilityCategory {
   final String title;
   final IconData icon;
   final Widget page;
-  final String searchKeywords;
 
   UtilityCategory({
     required this.title,
     required this.icon,
     required this.page,
+  });
+}
+
+// NEW: A model for an individual search result item.
+class SearchResultItem {
+  final String title;
+  final String subtitle; // The name of the parent category
+  final IconData icon;
+  final Widget navigationTarget;
+  final String searchKeywords;
+
+  SearchResultItem({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.navigationTarget,
     required this.searchKeywords,
   });
 }
@@ -65,14 +80,18 @@ class UtilitiesPage extends StatefulWidget {
 }
 
 class _UtilitiesPageState extends State<UtilitiesPage> {
-  // REVERTED: Removed background state variables
   bool _isLoading = true;
   bool _hasRootAccess = false;
   bool _isContentVisible = false;
 
   final TextEditingController _searchController = TextEditingController();
+
+  // Lists for the default category view
   List<UtilityCategory> _allCategories = [];
-  List<UtilityCategory> _filteredCategories = [];
+
+  // NEW: Lists to manage individual searchable items and their filtered results
+  List<SearchResultItem> _allSearchableItems = [];
+  List<SearchResultItem> _filteredSearchResults = [];
 
   // Data for child widgets
   Map<String, dynamic>? _encoreState;
@@ -87,12 +106,12 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
   void initState() {
     super.initState();
     _initializePage();
-    _searchController.addListener(_filterCategories);
+    _searchController.addListener(_updateSearchResults);
   }
 
   @override
   void dispose() {
-    _searchController.removeListener(_filterCategories);
+    _searchController.removeListener(_updateSearchResults);
     _searchController.dispose();
     super.dispose();
   }
@@ -100,7 +119,6 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
   Future<void> _initializePage() async {
     final bool hasRoot = await _checkRootAccess();
 
-    // REVERTED: Simplified data loading, removed background/banner
     final dataFutures = [
       if (hasRoot) ...[
         _loadEncoreSwitchState(),
@@ -135,73 +153,165 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
     });
   }
 
-  void _setupCategories(AppLocalizations localization) {
-    _allCategories = [
+  // MODIFIED: This method now populates both the categories and the individual searchable items.
+  void _setupData(AppLocalizations localization) {
+    // Clear lists to prevent duplication on rebuild
+    _allCategories = [];
+    _allSearchableItems = [];
+
+    // --- Core Tweaks ---
+    final coreTweaksPage = CoreTweaksPage(
+      encoreState: _encoreState,
+      governorState: _governorState,
+    );
+    _allCategories.add(
       UtilityCategory(
         title: localization.core_tweaks_title,
         icon: Icons.tune,
-        searchKeywords:
-            '${localization.core_tweaks_title} ${localization.fix_and_tweak_title} ${localization.custom_governor_title} mitigation lite governor',
-        page: CoreTweaksPage(
-          encoreState: _encoreState,
-          governorState: _governorState,
-        ),
+        page: coreTweaksPage,
       ),
+    );
+    _allSearchableItems.addAll([
+      SearchResultItem(
+        title: localization.device_mitigation_title,
+        subtitle: localization.core_tweaks_title,
+        icon: Icons.security_update_warning_outlined,
+        navigationTarget: coreTweaksPage,
+        searchKeywords: 'device mitigation fix tweak encore',
+      ),
+      SearchResultItem(
+        title: localization.lite_mode_title,
+        subtitle: localization.core_tweaks_title,
+        icon: Icons.energy_savings_leaf_outlined,
+        navigationTarget: coreTweaksPage,
+        searchKeywords: 'lite mode battery power savings',
+      ),
+      SearchResultItem(
+        title: localization.custom_governor_title,
+        subtitle: localization.core_tweaks_title,
+        icon: Icons.speed,
+        navigationTarget: coreTweaksPage,
+        searchKeywords: 'custom governor cpu performance',
+      ),
+    ]);
+
+    // --- Automation ---
+    final automationPage = AutomationPage(
+      hamadaAiState: _hamadaAiState,
+      gameTxtContent: _gameTxtContent,
+    );
+    _allCategories.add(
       UtilityCategory(
         title: localization.automation_title,
         icon: Icons.smart_toy_outlined,
-        searchKeywords:
-            '${localization.automation_title} ${localization.hamada_ai} ${localization.edit_game_txt_title} game auto',
-        page: AutomationPage(
-          hamadaAiState: _hamadaAiState,
-          gameTxtContent: _gameTxtContent,
-        ),
+        page: automationPage,
       ),
+    );
+    _allSearchableItems.addAll([
+      SearchResultItem(
+        title: localization.hamada_ai,
+        subtitle: localization.automation_title,
+        icon: Icons.smart_toy_outlined,
+        navigationTarget: automationPage,
+        searchKeywords: 'hamada ai automation bot',
+      ),
+      SearchResultItem(
+        title: localization.edit_game_txt_title,
+        subtitle: localization.automation_title,
+        icon: Icons.edit_note,
+        navigationTarget: automationPage,
+        searchKeywords: 'edit game txt list apps',
+      ),
+    ]);
+
+    // --- System ---
+    final systemPage = SystemPage(
+      dndEnabled: _dndEnabled,
+      bypassChargingState: _bypassChargingState,
+      resolutionState: _resolutionState,
+    );
+    _allCategories.add(
       UtilityCategory(
         title: localization.system_title,
         icon: Icons.settings_system_daydream,
-        searchKeywords:
-            '${localization.system_title} ${localization.dnd_title} ${localization.bypass_charging_title} ${localization.downscale_resolution} dnd charging resolution screen',
-        page: SystemPage(
-          dndEnabled: _dndEnabled,
-          bypassChargingState: _bypassChargingState,
-          resolutionState: _resolutionState,
-        ),
+        page: systemPage,
       ),
+    );
+    _allSearchableItems.addAll([
+      SearchResultItem(
+        title: localization.dnd_title,
+        subtitle: localization.system_title,
+        icon: Icons.do_not_disturb_on_outlined,
+        navigationTarget: systemPage,
+        searchKeywords: 'dnd do not disturb notifications silence',
+      ),
+      SearchResultItem(
+        title: localization.bypass_charging_title,
+        subtitle: localization.system_title,
+        icon: Icons.bolt_outlined,
+        navigationTarget: systemPage,
+        searchKeywords: 'bypass charging battery power',
+      ),
+      SearchResultItem(
+        title: localization.downscale_resolution,
+        subtitle: localization.system_title,
+        icon: Icons.aspect_ratio_outlined,
+        navigationTarget: systemPage,
+        searchKeywords: 'downscale resolution screen density display',
+      ),
+    ]);
+
+    // --- Appearance ---
+    const appearancePage = AppearancePage();
+    _allCategories.add(
       UtilityCategory(
         title: localization.appearance_title,
         icon: Icons.color_lens_outlined,
-        searchKeywords:
-            '${localization.appearance_title} ${localization.background_settings_title} ${localization.banner_settings_title} background banner image theme color',
-        page: const AppearancePage(),
+        page: appearancePage,
       ),
-    ];
-    _filteredCategories = _allCategories;
+    );
+    _allSearchableItems.addAll([
+      SearchResultItem(
+        title: localization.background_settings_title,
+        subtitle: localization.appearance_title,
+        icon: Icons.image_outlined,
+        navigationTarget: appearancePage,
+        searchKeywords: 'background image wallpaper opacity theme',
+      ),
+      SearchResultItem(
+        title: localization.banner_settings_title,
+        subtitle: localization.appearance_title,
+        icon: Icons.panorama_outlined,
+        navigationTarget: appearancePage,
+        searchKeywords: 'banner image header theme color',
+      ),
+    ]);
   }
 
-  void _filterCategories() {
-    final query = _searchController.text.toLowerCase();
+  void _updateSearchResults() {
+    final query = _searchController.text.toLowerCase().trim();
     if (query.isEmpty) {
       if (mounted) {
         setState(() {
-          _filteredCategories = _allCategories;
+          _filteredSearchResults = [];
         });
       }
     } else {
+      final queryTerms = query.split(' ').where((t) => t.isNotEmpty).toList();
       if (mounted) {
         setState(() {
-          _filteredCategories = _allCategories
-              .where(
-                (category) =>
-                    category.searchKeywords.toLowerCase().contains(query),
-              )
-              .toList();
+          _filteredSearchResults = _allSearchableItems.where((item) {
+            final itemKeywords = item.searchKeywords.toLowerCase().split(' ');
+            return queryTerms.every(
+              (term) => itemKeywords.any((keyword) => keyword.startsWith(term)),
+            );
+          }).toList();
         });
       }
     }
   }
 
-  //region Data Loading Methods - REVERTED: Removed background/banner loaders
+  //region Data Loading Methods
   Future<Map<String, dynamic>> _loadEncoreSwitchState() async {
     final result = await _runRootCommandAndWait(
       'cat /data/adb/modules/ProjectRaco/raco.txt',
@@ -235,13 +345,11 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
     ]);
     final governorsResult = results[0];
     final configResult = results[1];
-
     List<String> available =
         (governorsResult.exitCode == 0 &&
             governorsResult.stdout.toString().isNotEmpty)
         ? governorsResult.stdout.toString().trim().split(' ')
         : [];
-
     String? selected;
     if (configResult.exitCode == 0) {
       selected = RegExp(
@@ -284,17 +392,14 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
     ]);
     final sr = results[0];
     final dr = results[1];
-
     bool available =
         sr.exitCode == 0 &&
         sr.stdout.toString().contains('Physical size:') &&
         dr.exitCode == 0 &&
         (dr.stdout.toString().contains('Physical density:') ||
             dr.stdout.toString().contains('Override density:'));
-
     String originalSize = '';
     int originalDensity = 0;
-
     if (available) {
       originalSize =
           RegExp(
@@ -335,14 +440,12 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
     ]);
     final supportResult = results[0];
     final configResult = results[1];
-
     bool isSupported = supportResult.stdout.toString().toLowerCase().contains(
       'supported',
     );
     String statusMsg = isSupported
         ? localization.bypass_charging_supported
         : localization.bypass_charging_unsupported;
-
     bool isEnabled = false;
     if (configResult.exitCode == 0) {
       isEnabled =
@@ -363,12 +466,12 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
   @override
   Widget build(BuildContext context) {
     final localization = AppLocalizations.of(context)!;
-    if (_allCategories.isEmpty) {
-      _setupCategories(localization);
+    if (_allCategories.isEmpty && !_isLoading) {
+      _setupData(localization);
     }
     final colorScheme = Theme.of(context).colorScheme;
+    final bool isSearching = _searchController.text.isNotEmpty;
 
-    // REVERTED: Simplified Scaffold, no Stack or transparency
     return Scaffold(
       appBar: AppBar(title: Text(localization.utilities_title)),
       body: _isLoading
@@ -414,63 +517,97 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
                     ),
                   ),
                   Expanded(
-                    child: ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      itemCount: _filteredCategories.length,
-                      itemBuilder: (context, index) {
-                        final category = _filteredCategories[index];
-                        return Card(
-                          elevation: 2.0,
-                          margin: const EdgeInsets.symmetric(
-                            horizontal: 8.0,
-                            vertical: 6.0,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          color: colorScheme.surfaceContainerHighest,
-                          child: ListTile(
-                            leading: Icon(
-                              category.icon,
-                              color: colorScheme.primary,
-                            ),
-                            title: Text(
-                              category.title,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            trailing: const Icon(Icons.chevron_right),
-                            // UPDATED: Simplified navigation, no dialog or delay
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                PageRouteBuilder(
-                                  pageBuilder:
-                                      (
-                                        context,
-                                        animation,
-                                        secondaryAnimation,
-                                      ) => category.page,
-                                  transitionDuration: Duration.zero,
-                                  reverseTransitionDuration: Duration.zero,
-                                ),
-                              );
-                            },
-                          ),
-                        );
-                      },
-                    ),
+                    // NEW: Conditionally show category list or search results list
+                    child: isSearching
+                        ? _buildSearchResultsList()
+                        : _buildCategoryList(),
                   ),
                 ],
               ),
             ),
     );
   }
+
+  /// Builds the default list of utility categories.
+  Widget _buildCategoryList() {
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+      itemCount: _allCategories.length,
+      itemBuilder: (context, index) {
+        final category = _allCategories[index];
+        return Card(
+          elevation: 2.0,
+          margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+          child: ListTile(
+            leading: Icon(
+              category.icon,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            title: Text(
+              category.title,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              Navigator.push(
+                context,
+                PageRouteBuilder(
+                  pageBuilder: (context, animation, secondaryAnimation) =>
+                      category.page,
+                  transitionDuration: Duration.zero,
+                  reverseTransitionDuration: Duration.zero,
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  /// Builds the list of individual search results.
+  Widget _buildSearchResultsList() {
+    if (_filteredSearchResults.isEmpty) {
+      return Center(
+        child: Text(
+          'No results found',
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+      );
+    }
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+      itemCount: _filteredSearchResults.length,
+      itemBuilder: (context, index) {
+        final item = _filteredSearchResults[index];
+        return ListTile(
+          leading: Icon(item.icon),
+          title: Text(item.title),
+          subtitle: Text(item.subtitle),
+          onTap: () {
+            Navigator.push(
+              context,
+              PageRouteBuilder(
+                pageBuilder: (context, animation, secondaryAnimation) =>
+                    item.navigationTarget,
+                transitionDuration: Duration.zero,
+                reverseTransitionDuration: Duration.zero,
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
 }
 
+//region Sub-Pages and Cards (No changes needed below this line)
+
 //region Sub-Pages
-// UPDATED: All sub-pages now handle their own simple loading state
 abstract class _LoadingStatefulWidget extends StatefulWidget {
   const _LoadingStatefulWidget({Key? key}) : super(key: key);
 }
@@ -482,7 +619,6 @@ abstract class _LoadingState<T extends _LoadingStatefulWidget>
   @override
   void initState() {
     super.initState();
-    // Simulate a short delay for the transition
     Future.delayed(const Duration(milliseconds: 250), () {
       if (mounted) {
         setState(() {
@@ -648,7 +784,6 @@ class _AppearancePageState extends _LoadingState<AppearancePage> {
   @override
   void initState() {
     super.initState();
-    // Overriding initState to load settings, but still calling super.
     _loadAppearanceSettings();
   }
 
