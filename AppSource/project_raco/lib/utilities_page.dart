@@ -506,21 +506,51 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
                               ),
                             ),
                             trailing: const Icon(Icons.chevron_right),
-                            onTap: () {
-                              // UPDATED: Replaced MaterialPageRoute with PageRouteBuilder for no transition animation
-                              Navigator.push(
-                                context,
-                                PageRouteBuilder(
-                                  pageBuilder:
-                                      (
-                                        context,
-                                        animation,
-                                        secondaryAnimation,
-                                      ) => category.page,
-                                  transitionDuration: Duration.zero,
-                                  reverseTransitionDuration: Duration.zero,
-                                ),
+                            onTap: () async {
+                              // Show the progress bar dialog
+                              showDialog(
+                                context: context,
+                                barrierDismissible: false,
+                                // UPDATED: Set the barrier color to solid black
+                                barrierColor: Colors.black,
+                                builder: (BuildContext context) {
+                                  return const Center(
+                                    child: Padding(
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 32.0,
+                                      ),
+                                      child: LinearProgressIndicator(),
+                                    ),
+                                  );
+                                },
                               );
+
+                              // Wait for a short period to simulate loading
+                              await Future.delayed(
+                                const Duration(milliseconds: 350),
+                              );
+
+                              // Pop the dialog, making sure the context is still valid
+                              if (mounted) {
+                                Navigator.of(context).pop();
+                              }
+
+                              // Push the new page with no animation
+                              if (mounted) {
+                                Navigator.push(
+                                  context,
+                                  PageRouteBuilder(
+                                    pageBuilder:
+                                        (
+                                          context,
+                                          animation,
+                                          secondaryAnimation,
+                                        ) => category.page,
+                                    transitionDuration: Duration.zero,
+                                    reverseTransitionDuration: Duration.zero,
+                                  ),
+                                );
+                              }
                             },
                           ),
                         );
@@ -1941,4 +1971,3 @@ class _BannerSettingsCardState extends State<BannerSettingsCard> {
     );
   }
 }
-//endregion
