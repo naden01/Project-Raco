@@ -4,10 +4,9 @@ import '/l10n/app_localizations.dart';
 import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 
-// REVISI: Kode ini sudah menggunakan Theme.of(context).colorScheme dengan benar
-// untuk warna teks dan ikon. Tidak ada perubahan fungsional yang diperlukan
-// karena implementasi awal sudah sesuai dengan prinsip Material You,
-// memastikan adaptasi otomatis terhadap tema terang/gelap.
+// REVISI: The code now detects the app's theme (light/dark).
+// It applies a theme-appropriate scrim (white for light, black for dark)
+// to the background image, ensuring text is always readable and matches the theme.
 
 class AboutPage extends StatefulWidget {
   AboutPage({Key? key}) : super(key: key);
@@ -163,7 +162,6 @@ class _AboutPageState extends State<AboutPage> {
         String batteryUah = results[7].stdout.toString().trim();
         if (batteryUah.isNotEmpty && int.tryParse(batteryUah) != null) {
           int mah = (int.parse(batteryUah) / 1000).round();
-          // --- FIX: Correct for devices that report a value 10x too small ---
           if (mah < 1000) {
             mah *= 10;
           }
@@ -211,13 +209,21 @@ class _AboutPageState extends State<AboutPage> {
     final localization = AppLocalizations.of(context)!;
     final credits = _getCredits(localization);
 
-    // Define text styles for consistency
+    // ** NEW: Detect theme and set scrim color accordingly **
+    final isLightTheme = Theme.of(context).brightness == Brightness.light;
+    final Color scrimColor = isLightTheme
+        ? Colors.white.withOpacity(0.8) // Light overlay for light theme
+        : Colors.black.withOpacity(0.7); // Dark overlay for dark theme
+
+    // Define text styles that will now correctly adapt to the theme
     final valueStyle = Theme.of(
       context,
     ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold);
+
     final labelStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
       color: Theme.of(context).colorScheme.onSurfaceVariant,
     );
+
     final separator = Text(
       '|',
       style: TextStyle(
@@ -229,15 +235,11 @@ class _AboutPageState extends State<AboutPage> {
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        // AppBar transparan agar menyatu dengan background utama dari main.dart
-        // Ikon back '<-' dan judul akan otomatis menyesuaikan warna (putih/hitam)
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
+      appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
       body: Stack(
         fit: StackFit.expand,
         children: [
+          // 1. Background Image (no changes here)
           if (_backgroundImagePath != null && _backgroundImagePath!.isNotEmpty)
             Opacity(
               opacity: _backgroundOpacity,
@@ -249,6 +251,9 @@ class _AboutPageState extends State<AboutPage> {
                 },
               ),
             ),
+          // 2. ** NEW: Theme-aware Scrim (Overlay) **
+          Container(color: scrimColor),
+          // 3. Page Content
           Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: 20.0,
