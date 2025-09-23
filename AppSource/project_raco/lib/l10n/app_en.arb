@@ -99,5 +99,8 @@
     "custom_governor_title": "Custom Governor",
     "custom_governor_description": "Set custom CPU governor, This will set the governor in balanced mode",
     "loading_governors": "Loading governors...",
-    "no_governor_selected": "None"
+    "no_governor_selected": "None",
+    "anya_thermal_title": "Anya Melfissa Disable Thermal",
+    "anya_thermal_description": "Anya Thermal Flowstate: Disable Thermal on Performance and Gaming, Enable Thermal on Powersave, Balanced, Cool Down.",
+    "anya_thermal_toggle_title": "Enable Anya Thermal Flowstate"
 }

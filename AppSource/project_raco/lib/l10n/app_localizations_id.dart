@@ -307,4 +307,14 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get no_governor_selected => 'Tidak Ada';
+
+  @override
+  String get anya_thermal_title => 'Anya Melfissa Nonaktifkan Thermal';
+
+  @override
+  String get anya_thermal_description =>
+      'Anya Thermal Flowstate: Nonaktifkan Thermal pada mode Performa dan Gaming, Aktifkan Thermal pada mode Hemat Daya, Seimbang, dan Dinginkan.';
+
+  @override
+  String get anya_thermal_toggle_title => 'Aktifkan Anya Thermal Flowstate';
 }

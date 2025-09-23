@@ -304,4 +304,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get no_governor_selected => 'None';
+
+  @override
+  String get anya_thermal_title => 'Anya Melfissa Disable Thermal';
+
+  @override
+  String get anya_thermal_description =>
+      'Anya Thermal Flowstate: Disable Thermal on Performance and Gaming, Enable Thermal on Powersave, Balanced, Cool Down.';
+
+  @override
+  String get anya_thermal_toggle_title => 'Enable Anya Thermal Flowstate';
 }

@@ -663,6 +663,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'None'**
   String get no_governor_selected;
+
+  /// No description provided for @anya_thermal_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Anya Melfissa Disable Thermal'**
+  String get anya_thermal_title;
+
+  /// No description provided for @anya_thermal_description.
+  ///
+  /// In en, this message translates to:
+  /// **'Anya Thermal Flowstate: Disable Thermal on Performance and Gaming, Enable Thermal on Powersave, Balanced, Cool Down.'**
+  String get anya_thermal_description;
+
+  /// No description provided for @anya_thermal_toggle_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Anya Thermal Flowstate'**
+  String get anya_thermal_toggle_title;
 }
 
 class _AppLocalizationsDelegate

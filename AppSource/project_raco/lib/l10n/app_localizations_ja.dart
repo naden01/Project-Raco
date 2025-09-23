@@ -294,4 +294,14 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get no_governor_selected => 'なし';
+
+  @override
+  String get anya_thermal_title => 'アーニャ・メルフィッサ サーマル無効化';
+
+  @override
+  String get anya_thermal_description =>
+      'アーニャサーマルフローステート：パフォーマンスとゲーミングモードでサーマルを無効化し、省電力、バランス、冷却モードで有効化します。';
+
+  @override
+  String get anya_thermal_toggle_title => 'アーニャサーマルフローステートを有効にする';
 }

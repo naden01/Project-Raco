@@ -97,6 +97,7 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
   Map<String, dynamic>? _encoreState;
   Map<String, dynamic>? _governorState;
   bool? _dndEnabled;
+  bool? _anyaThermalEnabled;
   Map<String, bool>? _hamadaAiState;
   Map<String, dynamic>? _resolutionState;
   String? _gameTxtContent;
@@ -124,6 +125,7 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
         _loadEncoreSwitchState(),
         _loadGovernorState(),
         _loadDndState(),
+        _loadAnyaThermalState(),
         _loadHamadaAiState(),
         _loadResolutionState(),
         _loadGameTxtState(),
@@ -139,6 +141,7 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
       _encoreState = results[resultIndex++] as Map<String, dynamic>;
       _governorState = results[resultIndex++] as Map<String, dynamic>;
       _dndEnabled = results[resultIndex++] as bool;
+      _anyaThermalEnabled = results[resultIndex++] as bool;
       _hamadaAiState = results[resultIndex++] as Map<String, bool>;
       _resolutionState = results[resultIndex++] as Map<String, dynamic>;
       _gameTxtContent = results[resultIndex++] as String;
@@ -227,6 +230,7 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
     // --- System ---
     final systemPage = SystemPage(
       dndEnabled: _dndEnabled,
+      anyaThermalEnabled: _anyaThermalEnabled,
       bypassChargingState: _bypassChargingState,
       resolutionState: _resolutionState,
     );
@@ -244,6 +248,14 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
         icon: Icons.do_not_disturb_on_outlined,
         navigationTarget: systemPage,
         searchKeywords: 'dnd do not disturb notifications silence',
+      ),
+      SearchResultItem(
+        title: localization.anya_thermal_title,
+        subtitle: localization.system_title,
+        icon: Icons.thermostat_outlined,
+        navigationTarget: systemPage,
+        searchKeywords:
+            'anya melfissa thermal temperature heat throttle flowstate',
       ),
       SearchResultItem(
         title: localization.bypass_charging_title,
@@ -370,6 +382,20 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
         multiLine: true,
       ).firstMatch(result.stdout.toString());
       return match?.group(1)?.trim().toLowerCase() == 'yes';
+    }
+    return false;
+  }
+
+  Future<bool> _loadAnyaThermalState() async {
+    final result = await _runRootCommandAndWait(
+      'cat /data/adb/modules/ProjectRaco/raco.txt',
+    );
+    if (result.exitCode == 0) {
+      final match = RegExp(
+        r'^ANYA=(\d)',
+        multiLine: true,
+      ).firstMatch(result.stdout.toString());
+      return match?.group(1) == '1';
     }
     return false;
   }
@@ -727,12 +753,14 @@ class _AutomationPageState extends _LoadingState<AutomationPage> {
 
 class SystemPage extends _LoadingStatefulWidget {
   final bool? dndEnabled;
+  final bool? anyaThermalEnabled;
   final Map<String, dynamic>? bypassChargingState;
   final Map<String, dynamic>? resolutionState;
 
   const SystemPage({
     Key? key,
     required this.dndEnabled,
+    required this.anyaThermalEnabled,
     required this.bypassChargingState,
     required this.resolutionState,
   }) : super(key: key);
@@ -752,6 +780,9 @@ class _SystemPageState extends _LoadingState<SystemPage> {
         padding: const EdgeInsets.fromLTRB(8, 8, 8, 32),
         children: [
           DndCard(initialDndEnabled: widget.dndEnabled ?? false),
+          AnyaThermalCard(
+            initialAnyaThermalEnabled: widget.anyaThermalEnabled ?? false,
+          ),
           BypassChargingCard(
             isSupported: widget.bypassChargingState?['isSupported'] ?? false,
             isEnabled: widget.bypassChargingState?['isEnabled'] ?? false,
@@ -1188,6 +1219,100 @@ class _DndCardState extends State<DndCard> {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.do_not_disturb_on_outlined),
+              activeColor: colorScheme.primary,
+              contentPadding: EdgeInsets.zero,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class AnyaThermalCard extends StatefulWidget {
+  final bool initialAnyaThermalEnabled;
+  const AnyaThermalCard({Key? key, required this.initialAnyaThermalEnabled})
+    : super(key: key);
+  @override
+  _AnyaThermalCardState createState() => _AnyaThermalCardState();
+}
+
+class _AnyaThermalCardState extends State<AnyaThermalCard> {
+  late bool _isEnabled;
+  bool _isUpdating = false;
+  final String _configFilePath = '/data/adb/modules/ProjectRaco/raco.txt';
+
+  @override
+  void initState() {
+    super.initState();
+    _isEnabled = widget.initialAnyaThermalEnabled;
+  }
+
+  Future<void> _toggleAnyaThermal(bool enable) async {
+    if (!await _checkRootAccess()) return;
+    if (mounted) setState(() => _isUpdating = true);
+    final valueString = enable ? '1' : '0';
+
+    try {
+      final sedCommand =
+          "sed -i 's|^ANYA=.*|ANYA=$valueString|' $_configFilePath";
+      final result = await _runRootCommandAndWait(sedCommand);
+      if (result.exitCode == 0) {
+        if (mounted) setState(() => _isEnabled = enable);
+      } else {
+        throw Exception('Failed to write to config file.');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update thermal setting: $e')),
+        );
+        setState(() => _isEnabled = widget.initialAnyaThermalEnabled);
+      }
+    } finally {
+      if (mounted) setState(() => _isUpdating = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final localization = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Card(
+      elevation: 2.0,
+      margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      color: colorScheme.surfaceContainerHighest,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              localization.anya_thermal_title,
+              style: textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              localization.anya_thermal_description,
+              style: textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),
+            ),
+            const SizedBox(height: 8),
+            SwitchListTile(
+              title: Text(localization.anya_thermal_toggle_title),
+              value: _isEnabled,
+              onChanged: _isUpdating ? null : _toggleAnyaThermal,
+              secondary: _isUpdating
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.thermostat_outlined),
               activeColor: colorScheme.primary,
               contentPadding: EdgeInsets.zero,
             ),

@@ -99,5 +99,8 @@
     "custom_governor_title": "Gubernur Kustom",
     "custom_governor_description": "Atur gubernur CPU kustom, Ini akan mengatur gubernur dalam mode seimbang",
     "loading_governors": "Memuat gubernur...",
-    "no_governor_selected": "Tidak Ada"
+    "no_governor_selected": "Tidak Ada",
+    "anya_thermal_title": "Anya Melfissa Nonaktifkan Thermal",
+    "anya_thermal_description": "Anya Thermal Flowstate: Nonaktifkan Thermal pada mode Performa dan Gaming, Aktifkan Thermal pada mode Hemat Daya, Seimbang, dan Dinginkan.",
+    "anya_thermal_toggle_title": "Aktifkan Anya Thermal Flowstate"
 }
