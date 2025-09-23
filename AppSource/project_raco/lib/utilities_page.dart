@@ -70,6 +70,7 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
   String? _bannerImagePath;
   bool _isLoading = true;
   bool _hasRootAccess = false;
+  bool _isContentVisible = false;
 
   final TextEditingController _searchController = TextEditingController();
   List<UtilityCategory> _allCategories = [];
@@ -139,6 +140,7 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
       }
 
       _isLoading = false;
+      _isContentVisible = true;
     });
   }
 
@@ -454,63 +456,79 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
               ),
             )
           else
-            Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                  child: TextField(
-                    controller: _searchController,
-                    decoration: InputDecoration(
-                      hintText: localization.search_utilities,
-                      prefixIcon: const Icon(Icons.search),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(30.0),
-                        borderSide: BorderSide.none,
+            AnimatedOpacity(
+              opacity: _isContentVisible ? 1.0 : 0.0,
+              duration: const Duration(milliseconds: 500),
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                    child: TextField(
+                      controller: _searchController,
+                      decoration: InputDecoration(
+                        hintText: localization.search_utilities,
+                        prefixIcon: const Icon(Icons.search),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(30.0),
+                          borderSide: BorderSide.none,
+                        ),
+                        filled: true,
+                        fillColor: colorScheme.surfaceContainer,
+                        contentPadding: EdgeInsets.zero,
                       ),
-                      filled: true,
-                      fillColor: colorScheme.surfaceContainer,
-                      contentPadding: EdgeInsets.zero,
                     ),
                   ),
-                ),
-                Expanded(
-                  child: ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                    itemCount: _filteredCategories.length,
-                    itemBuilder: (context, index) {
-                      final category = _filteredCategories[index];
-                      return Card(
-                        elevation: 2.0,
-                        margin: const EdgeInsets.symmetric(
-                          horizontal: 8.0,
-                          vertical: 6.0,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        color: colorScheme.surfaceContainerHighest,
-                        child: ListTile(
-                          leading: Icon(
-                            category.icon,
-                            color: colorScheme.primary,
+                  Expanded(
+                    child: ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      itemCount: _filteredCategories.length,
+                      itemBuilder: (context, index) {
+                        final category = _filteredCategories[index];
+                        return Card(
+                          elevation: 2.0,
+                          margin: const EdgeInsets.symmetric(
+                            horizontal: 8.0,
+                            vertical: 6.0,
                           ),
-                          title: Text(
-                            category.title,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          trailing: const Icon(Icons.chevron_right),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (_) => category.page),
-                            );
-                          },
-                        ),
-                      );
-                    },
+                          color: colorScheme.surfaceContainerHighest,
+                          child: ListTile(
+                            leading: Icon(
+                              category.icon,
+                              color: colorScheme.primary,
+                            ),
+                            title: Text(
+                              category.title,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            trailing: const Icon(Icons.chevron_right),
+                            onTap: () {
+                              // UPDATED: Replaced MaterialPageRoute with PageRouteBuilder for no transition animation
+                              Navigator.push(
+                                context,
+                                PageRouteBuilder(
+                                  pageBuilder:
+                                      (
+                                        context,
+                                        animation,
+                                        secondaryAnimation,
+                                      ) => category.page,
+                                  transitionDuration: Duration.zero,
+                                  reverseTransitionDuration: Duration.zero,
+                                ),
+                              );
+                            },
+                          ),
+                        );
+                      },
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
         ],
       ),
