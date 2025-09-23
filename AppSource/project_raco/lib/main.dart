@@ -148,7 +148,7 @@ class _MyAppState extends State<MyApp> {
             useMaterial3: true,
             colorScheme: darkColorScheme,
           ),
-          themeMode: ThemeMode.system,
+          themeMode: ThemeMode.dark, // UPDATED: Forced dark theme
         );
       },
     );
