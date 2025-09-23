@@ -41,6 +41,22 @@ Future<bool> _checkRootAccess() async {
 }
 //endregion
 
+//region Model for Search and Navigation
+class UtilityCategory {
+  final String title;
+  final IconData icon;
+  final Widget page;
+  final String searchKeywords;
+
+  UtilityCategory({
+    required this.title,
+    required this.icon,
+    required this.page,
+    required this.searchKeywords,
+  });
+}
+//endregion
+
 class UtilitiesPage extends StatefulWidget {
   const UtilitiesPage({Key? key}) : super(key: key);
 
@@ -55,6 +71,10 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
   bool _isLoading = true;
   bool _hasRootAccess = false;
 
+  final TextEditingController _searchController = TextEditingController();
+  List<UtilityCategory> _allCategories = [];
+  List<UtilityCategory> _filteredCategories = [];
+
   // Data for child widgets
   Map<String, dynamic>? _encoreState;
   Map<String, dynamic>? _governorState;
@@ -68,12 +88,19 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
   void initState() {
     super.initState();
     _initializePage();
+    _searchController.addListener(_filterCategories);
+  }
+
+  @override
+  void dispose() {
+    _searchController.removeListener(_filterCategories);
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _initializePage() async {
     final bool hasRoot = await _checkRootAccess();
 
-    // Start all data fetching processes concurrently.
     final dataFutures = [
       _loadBackgroundSettings(),
       _loadBannerSettings(),
@@ -88,12 +115,10 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
       ],
     ];
 
-    // RAPIHIN: Removed artificial delay to improve loading speed.
     final results = await Future.wait(dataFutures);
 
     if (!mounted) return;
 
-    // Process results and update the UI state in a single call.
     setState(() {
       _hasRootAccess = hasRoot;
       int resultIndex = 0;
@@ -115,6 +140,89 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
 
       _isLoading = false;
     });
+  }
+
+  void _setupCategories(AppLocalizations localization) {
+    _allCategories = [
+      UtilityCategory(
+        title: localization.core_tweaks_title,
+        icon: Icons.tune,
+        searchKeywords:
+            '${localization.core_tweaks_title} ${localization.fix_and_tweak_title} ${localization.custom_governor_title} mitigation lite governor',
+        page: CoreTweaksPage(
+          encoreState: _encoreState,
+          governorState: _governorState,
+        ),
+      ),
+      UtilityCategory(
+        title: localization.automation_title,
+        icon: Icons.smart_toy_outlined,
+        searchKeywords:
+            '${localization.automation_title} ${localization.hamada_ai} ${localization.edit_game_txt_title} game auto',
+        page: AutomationPage(
+          hamadaAiState: _hamadaAiState,
+          gameTxtContent: _gameTxtContent,
+        ),
+      ),
+      UtilityCategory(
+        title: localization.system_title,
+        icon: Icons.settings_system_daydream,
+        searchKeywords:
+            '${localization.system_title} ${localization.dnd_title} ${localization.bypass_charging_title} ${localization.downscale_resolution} dnd charging resolution screen',
+        page: SystemPage(
+          dndEnabled: _dndEnabled,
+          bypassChargingState: _bypassChargingState,
+          resolutionState: _resolutionState,
+        ),
+      ),
+      UtilityCategory(
+        title: localization.appearance_title,
+        icon: Icons.color_lens_outlined,
+        searchKeywords:
+            '${localization.appearance_title} ${localization.background_settings_title} ${localization.banner_settings_title} background banner image theme color',
+        page: AppearancePage(
+          initialBackgroundImagePath: _backgroundImagePath,
+          initialBackgroundOpacity: _backgroundOpacity,
+          initialBannerImagePath: _bannerImagePath,
+          onBackgroundChanged: (path, opacity) {
+            if (!mounted) return;
+            setState(() {
+              _backgroundImagePath = path;
+              _backgroundOpacity = opacity;
+            });
+          },
+          onBannerChanged: (path) {
+            if (!mounted) return;
+            setState(() {
+              _bannerImagePath = path;
+            });
+          },
+        ),
+      ),
+    ];
+    _filteredCategories = _allCategories;
+  }
+
+  void _filterCategories() {
+    final query = _searchController.text.toLowerCase();
+    if (query.isEmpty) {
+      if (mounted) {
+        setState(() {
+          _filteredCategories = _allCategories;
+        });
+      }
+    } else {
+      if (mounted) {
+        setState(() {
+          _filteredCategories = _allCategories
+              .where(
+                (category) =>
+                    category.searchKeywords.toLowerCase().contains(query),
+              )
+              .toList();
+        });
+      }
+    }
   }
 
   //region Data Loading Methods
@@ -296,23 +404,14 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
   }
   //endregion
 
-  // RAPIHIN: Added a helper widget for section headers.
-  Widget _buildSectionHeader(String title) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 24, 8, 8),
-      child: Text(
-        title,
-        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-          color: Theme.of(context).colorScheme.primary,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final localization = AppLocalizations.of(context)!;
+    // Initialize categories here to ensure localization is available
+    if (_allCategories.isEmpty) {
+      _setupCategories(localization);
+    }
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -355,71 +454,63 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
               ),
             )
           else
-            AnimatedOpacity(
-              opacity: _isLoading ? 0.0 : 1.0,
-              duration: const Duration(milliseconds: 500),
-              // RAPIHIN: Changed to ListView for better structure.
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(8, 8, 8, 32),
-                children: [
-                  _buildSectionHeader("CORE TWEAKS"),
-                  FixAndTweakCard(
-                    initialDeviceMitigationValue:
-                        _encoreState?['deviceMitigation'] ?? false,
-                    initialLiteModeValue: _encoreState?['liteMode'] ?? false,
+            Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: localization.search_utilities,
+                      prefixIcon: const Icon(Icons.search),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(30.0),
+                        borderSide: BorderSide.none,
+                      ),
+                      filled: true,
+                      fillColor: colorScheme.surfaceContainer,
+                      contentPadding: EdgeInsets.zero,
+                    ),
                   ),
-                  GovernorCard(
-                    initialAvailableGovernors:
-                        _governorState?['available'] ?? [],
-                    initialSelectedGovernor: _governorState?['selected'],
-                  ),
-
-                  _buildSectionHeader("AUTOMATION"),
-                  HamadaAiCard(
-                    initialHamadaAiEnabled: _hamadaAiState?['enabled'] ?? false,
-                    initialHamadaStartOnBoot:
-                        _hamadaAiState?['onBoot'] ?? false,
-                  ),
-                  GameTxtCard(initialContent: _gameTxtContent ?? ''),
-
-                  _buildSectionHeader("SYSTEM"),
-                  DndCard(initialDndEnabled: _dndEnabled ?? false),
-                  BypassChargingCard(
-                    isSupported: _bypassChargingState?['isSupported'] ?? false,
-                    isEnabled: _bypassChargingState?['isEnabled'] ?? false,
-                    supportStatus:
-                        _bypassChargingState?['statusMsg'] ??
-                        localization.bypass_charging_unsupported,
-                  ),
-                  ResolutionCard(
-                    isAvailable: _resolutionState?['isAvailable'] ?? false,
-                    originalSize: _resolutionState?['originalSize'] ?? '',
-                    originalDensity: _resolutionState?['originalDensity'] ?? 0,
-                  ),
-
-                  _buildSectionHeader("APPEARANCE"),
-                  BackgroundSettingsCard(
-                    initialPath: _backgroundImagePath,
-                    initialOpacity: _backgroundOpacity,
-                    onSettingsChanged: (path, opacity) {
-                      if (!mounted) return;
-                      setState(() {
-                        _backgroundImagePath = path;
-                        _backgroundOpacity = opacity;
-                      });
+                ),
+                Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    itemCount: _filteredCategories.length,
+                    itemBuilder: (context, index) {
+                      final category = _filteredCategories[index];
+                      return Card(
+                        elevation: 2.0,
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 8.0,
+                          vertical: 6.0,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        color: colorScheme.surfaceContainerHighest,
+                        child: ListTile(
+                          leading: Icon(
+                            category.icon,
+                            color: colorScheme.primary,
+                          ),
+                          title: Text(
+                            category.title,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          trailing: const Icon(Icons.chevron_right),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => category.page),
+                            );
+                          },
+                        ),
+                      );
                     },
                   ),
-                  BannerSettingsCard(
-                    initialPath: _bannerImagePath,
-                    onSettingsChanged: (path) {
-                      if (!mounted) return;
-                      setState(() {
-                        _bannerImagePath = path;
-                      });
-                    },
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
         ],
       ),
@@ -427,8 +518,169 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
   }
 }
 
+//region Sub-Pages
+class CoreTweaksPage extends StatelessWidget {
+  final Map<String, dynamic>? encoreState;
+  final Map<String, dynamic>? governorState;
+
+  const CoreTweaksPage({
+    Key? key,
+    required this.encoreState,
+    required this.governorState,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final localization = AppLocalizations.of(context)!;
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        title: Text(localization.core_tweaks_title),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(8, 8, 8, 32),
+        children: [
+          FixAndTweakCard(
+            initialDeviceMitigationValue:
+                encoreState?['deviceMitigation'] ?? false,
+            initialLiteModeValue: encoreState?['liteMode'] ?? false,
+          ),
+          GovernorCard(
+            initialAvailableGovernors: governorState?['available'] ?? [],
+            initialSelectedGovernor: governorState?['selected'],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class AutomationPage extends StatelessWidget {
+  final Map<String, bool>? hamadaAiState;
+  final String? gameTxtContent;
+
+  const AutomationPage({
+    Key? key,
+    required this.hamadaAiState,
+    required this.gameTxtContent,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final localization = AppLocalizations.of(context)!;
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        title: Text(localization.automation_title),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(8, 8, 8, 32),
+        children: [
+          HamadaAiCard(
+            initialHamadaAiEnabled: hamadaAiState?['enabled'] ?? false,
+            initialHamadaStartOnBoot: hamadaAiState?['onBoot'] ?? false,
+          ),
+          GameTxtCard(initialContent: gameTxtContent ?? ''),
+        ],
+      ),
+    );
+  }
+}
+
+class SystemPage extends StatelessWidget {
+  final bool? dndEnabled;
+  final Map<String, dynamic>? bypassChargingState;
+  final Map<String, dynamic>? resolutionState;
+
+  const SystemPage({
+    Key? key,
+    required this.dndEnabled,
+    required this.bypassChargingState,
+    required this.resolutionState,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final localization = AppLocalizations.of(context)!;
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        title: Text(localization.system_title),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(8, 8, 8, 32),
+        children: [
+          DndCard(initialDndEnabled: dndEnabled ?? false),
+          BypassChargingCard(
+            isSupported: bypassChargingState?['isSupported'] ?? false,
+            isEnabled: bypassChargingState?['isEnabled'] ?? false,
+            supportStatus:
+                bypassChargingState?['statusMsg'] ??
+                localization.bypass_charging_unsupported,
+          ),
+          ResolutionCard(
+            isAvailable: resolutionState?['isAvailable'] ?? false,
+            originalSize: resolutionState?['originalSize'] ?? '',
+            originalDensity: resolutionState?['originalDensity'] ?? 0,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class AppearancePage extends StatelessWidget {
+  final String? initialBackgroundImagePath;
+  final double initialBackgroundOpacity;
+  final String? initialBannerImagePath;
+  final Function(String?, double) onBackgroundChanged;
+  final Function(String?) onBannerChanged;
+
+  const AppearancePage({
+    Key? key,
+    required this.initialBackgroundImagePath,
+    required this.initialBackgroundOpacity,
+    required this.initialBannerImagePath,
+    required this.onBackgroundChanged,
+    required this.onBannerChanged,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final localization = AppLocalizations.of(context)!;
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        title: Text(localization.appearance_title),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(8, 8, 8, 32),
+        children: [
+          BackgroundSettingsCard(
+            initialPath: initialBackgroundImagePath,
+            initialOpacity: initialBackgroundOpacity,
+            onSettingsChanged: onBackgroundChanged,
+          ),
+          BannerSettingsCard(
+            initialPath: initialBannerImagePath,
+            onSettingsChanged: onBannerChanged,
+          ),
+        ],
+      ),
+    );
+  }
+}
+//endregion
+
 //region Card Widgets
-// RAPIHIN: Adjusted card margins for better consistency.
 class FixAndTweakCard extends StatefulWidget {
   final bool initialDeviceMitigationValue;
   final bool initialLiteModeValue;
@@ -826,8 +1078,6 @@ class _HamadaAiCardState extends State<HamadaAiCard> {
     _hamadaStartOnBoot = widget.initialHamadaStartOnBoot;
   }
 
-  /// Fetches the current state of HamadaAI directly.
-  /// This is used to refresh the card's state after a toggle action.
   Future<Map<String, bool>> _fetchCurrentState() async {
     if (!await _checkRootAccess()) {
       return {'enabled': _hamadaAiEnabled, 'onBoot': _hamadaStartOnBoot};
@@ -1388,16 +1638,17 @@ class _BackgroundSettingsCardState extends State<BackgroundSettingsCard> {
     _opacity = widget.initialOpacity;
   }
 
-  // Update state if the parent widget provides new initial values
   @override
   void didUpdateWidget(BackgroundSettingsCard oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.initialPath != oldWidget.initialPath ||
         widget.initialOpacity != oldWidget.initialOpacity) {
-      setState(() {
-        _path = widget.initialPath;
-        _opacity = widget.initialOpacity;
-      });
+      if (mounted) {
+        setState(() {
+          _path = widget.initialPath;
+          _opacity = widget.initialOpacity;
+        });
+      }
     }
   }
 
@@ -1409,7 +1660,9 @@ class _BackgroundSettingsCardState extends State<BackgroundSettingsCard> {
       if (pickedFile != null && mounted) {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('background_image_path', pickedFile.path);
-        setState(() => _path = pickedFile.path);
+        if (mounted) {
+          setState(() => _path = pickedFile.path);
+        }
         widget.onSettingsChanged(_path, _opacity);
       }
     } catch (e) {
@@ -1481,8 +1734,8 @@ class _BackgroundSettingsCardState extends State<BackgroundSettingsCard> {
               onChanged: (value) {
                 if (mounted) {
                   setState(() => _opacity = value);
-                  widget.onSettingsChanged(_path, value);
                 }
+                widget.onSettingsChanged(_path, value);
               },
               onChangeEnd: _updateOpacity,
             ),
@@ -1515,7 +1768,6 @@ class _BackgroundSettingsCardState extends State<BackgroundSettingsCard> {
   }
 }
 
-// Added: New BannerSettingsCard widget
 class BannerSettingsCard extends StatefulWidget {
   final String? initialPath;
   final Function(String?) onSettingsChanged;
@@ -1543,9 +1795,11 @@ class _BannerSettingsCardState extends State<BannerSettingsCard> {
   void didUpdateWidget(BannerSettingsCard oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.initialPath != oldWidget.initialPath) {
-      setState(() {
-        _path = widget.initialPath;
-      });
+      if (mounted) {
+        setState(() {
+          _path = widget.initialPath;
+        });
+      }
     }
   }
 
@@ -1581,7 +1835,6 @@ class _BannerSettingsCardState extends State<BannerSettingsCard> {
       );
 
       if (croppedFile != null && mounted) {
-        // Save the cropped image to the app's document directory for persistence
         final appDir = await getApplicationDocumentsDirectory();
         final fileName = 'banner_${DateTime.now().millisecondsSinceEpoch}.jpg';
         final savedImage = await File(
@@ -1590,7 +1843,9 @@ class _BannerSettingsCardState extends State<BannerSettingsCard> {
 
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('banner_image_path', savedImage.path);
-        setState(() => _path = savedImage.path);
+        if (mounted) {
+          setState(() => _path = savedImage.path);
+        }
         widget.onSettingsChanged(_path);
       }
     } catch (e) {
@@ -1668,3 +1923,4 @@ class _BannerSettingsCardState extends State<BannerSettingsCard> {
     );
   }
 }
+//endregion

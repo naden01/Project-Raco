@@ -298,6 +298,36 @@ abstract class AppLocalizations {
   /// **'Utilities'**
   String get utilities_title;
 
+  /// No description provided for @search_utilities.
+  ///
+  /// In en, this message translates to:
+  /// **'Search Utilities'**
+  String get search_utilities;
+
+  /// No description provided for @core_tweaks_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Core Tweaks'**
+  String get core_tweaks_title;
+
+  /// No description provided for @automation_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Automation'**
+  String get automation_title;
+
+  /// No description provided for @system_title.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get system_title;
+
+  /// No description provided for @appearance_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance'**
+  String get appearance_title;
+
   /// No description provided for @fix_and_tweak_title.
   ///
   /// In en, this message translates to:

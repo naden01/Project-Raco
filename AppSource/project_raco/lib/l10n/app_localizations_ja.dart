@@ -108,6 +108,21 @@ class AppLocalizationsJa extends AppLocalizations {
   String get utilities_title => 'ユーティリティ';
 
   @override
+  String get search_utilities => 'ユーティリティを検索';
+
+  @override
+  String get core_tweaks_title => 'コア調整';
+
+  @override
+  String get automation_title => '自動化';
+
+  @override
+  String get system_title => 'システム';
+
+  @override
+  String get appearance_title => '外観';
+
+  @override
   String get fix_and_tweak_title => '修正と調整';
 
   @override

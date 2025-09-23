@@ -112,6 +112,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get utilities_title => 'Utilities';
 
   @override
+  String get search_utilities => 'Search Utilities';
+
+  @override
+  String get core_tweaks_title => 'Core Tweaks';
+
+  @override
+  String get automation_title => 'Automation';
+
+  @override
+  String get system_title => 'System';
+
+  @override
+  String get appearance_title => 'Appearance';
+
+  @override
   String get fix_and_tweak_title => 'Fix and Tweak';
 
   @override

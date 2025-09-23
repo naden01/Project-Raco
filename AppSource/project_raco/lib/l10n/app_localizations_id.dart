@@ -113,6 +113,21 @@ class AppLocalizationsId extends AppLocalizations {
   String get utilities_title => 'Utilitas';
 
   @override
+  String get search_utilities => 'Cari Utilitas';
+
+  @override
+  String get core_tweaks_title => 'Tweak Inti';
+
+  @override
+  String get automation_title => 'Otomatisasi';
+
+  @override
+  String get system_title => 'Sistem';
+
+  @override
+  String get appearance_title => 'Tampilan';
+
+  @override
   String get fix_and_tweak_title => 'Perbaikan & Tweak';
 
   @override
