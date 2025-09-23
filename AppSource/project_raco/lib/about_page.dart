@@ -4,25 +4,23 @@ import '/l10n/app_localizations.dart';
 import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 
-// REVISI: Kode ini sudah menggunakan Theme.of(context).colorScheme dengan benar
-// untuk warna teks dan ikon. Tidak ada perubahan fungsional yang diperlukan
-// karena implementasi awal sudah sesuai dengan prinsip Material You,
-// memastikan adaptasi otomatis terhadap tema terang/gelap.
-
 class AboutPage extends StatefulWidget {
-  AboutPage({Key? key}) : super(key: key);
+  const AboutPage({Key? key}) : super(key: key);
 
   @override
   _AboutPageState createState() => _AboutPageState();
 }
 
 class _AboutPageState extends State<AboutPage> {
-  String _deviceModel = 'Loading...';
-  String _cpuInfo = 'Loading...';
-  String _ramInfo = 'Loading...';
-  String _storageInfo = 'Loading...';
-  String _batteryInfo = 'Loading...';
+  String _deviceModel = '';
+  String _cpuInfo = '';
+  String _ramInfo = '';
+  String _storageInfo = '';
+  String _batteryInfo = '';
   bool _isLoading = true;
+
+  // --- UPDATE: New state variable to control visibility of the spec section ---
+  bool _deviceInfoAvailable = false;
 
   String? _backgroundImagePath;
   double _backgroundOpacity = 0.2;
@@ -70,11 +68,12 @@ class _AboutPageState extends State<AboutPage> {
   Future<void> _loadDeviceInfo() async {
     final rootGranted = await _checkRootAccessInAbout();
 
-    String deviceModel = 'N/A';
-    String cpuInfo = 'N/A';
-    String ramInfo = 'N/A';
-    String storageInfo = 'N/A';
-    String batteryInfo = 'N/A';
+    String deviceModel = '';
+    String cpuInfo = '';
+    String ramInfo = '';
+    String storageInfo = '';
+    String batteryInfo = '';
+    bool isSuccess = false; // Flag to track if fetching was successful
 
     if (rootGranted) {
       try {
@@ -163,34 +162,35 @@ class _AboutPageState extends State<AboutPage> {
         String batteryUah = results[7].stdout.toString().trim();
         if (batteryUah.isNotEmpty && int.tryParse(batteryUah) != null) {
           int mah = (int.parse(batteryUah) / 1000).round();
-          // --- FIX: Correct for devices that report a value 10x too small ---
           if (mah < 1000) {
             mah *= 10;
           }
           batteryInfo = '${mah}mAh';
         }
+
+        // --- UPDATE: Check if essential data was actually fetched ---
+        // If device model is empty, we consider it a failure.
+        if (deviceModel.isNotEmpty && cpuInfo.isNotEmpty) {
+          isSuccess = true;
+        }
       } catch (e) {
-        deviceModel = 'Error';
-        cpuInfo = 'Error';
-        ramInfo = 'Error';
-        storageInfo = 'Error';
-        batteryInfo = 'Error';
+        // Any error during the process means failure
+        isSuccess = false;
       }
-    } else {
-      deviceModel = 'Root Required';
-      cpuInfo = 'Root Required';
-      ramInfo = 'Root Required';
-      storageInfo = 'Root Required';
-      batteryInfo = 'Root Required';
     }
+    // If root is not granted, isSuccess remains false
 
     if (mounted) {
       setState(() {
-        _deviceModel = deviceModel.isEmpty ? 'N/A' : deviceModel;
-        _cpuInfo = cpuInfo.isEmpty ? 'N/A' : cpuInfo;
-        _ramInfo = ramInfo.isEmpty ? 'N/A' : ramInfo;
-        _storageInfo = storageInfo.isEmpty ? 'N/A' : storageInfo;
-        _batteryInfo = batteryInfo.isEmpty ? 'N/A' : batteryInfo;
+        // --- UPDATE: Set the visibility flag and only update values on success ---
+        _deviceInfoAvailable = isSuccess;
+        if (isSuccess) {
+          _deviceModel = deviceModel;
+          _cpuInfo = cpuInfo;
+          _ramInfo = ramInfo;
+          _storageInfo = storageInfo;
+          _batteryInfo = batteryInfo;
+        }
       });
     }
   }
@@ -229,12 +229,7 @@ class _AboutPageState extends State<AboutPage> {
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        // AppBar transparan agar menyatu dengan background utama dari main.dart
-        // Ikon back '<-' dan judul akan otomatis menyesuaikan warna (putih/hitam)
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
+      appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
       body: Stack(
         fit: StackFit.expand,
         children: [
@@ -255,109 +250,113 @@ class _AboutPageState extends State<AboutPage> {
               vertical: 10.0,
             ),
             child: _isLoading
-                ? Center(
+                ? const Center(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                      padding: EdgeInsets.symmetric(horizontal: 32.0),
                       child: LinearProgressIndicator(),
                     ),
                   )
                 : AnimatedOpacity(
                     opacity: _isLoading ? 0.0 : 1.0,
-                    duration: Duration(milliseconds: 500),
+                    duration: const Duration(milliseconds: 500),
                     child: SingleChildScrollView(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Device spec layout
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.baseline,
-                                  textBaseline: TextBaseline.alphabetic,
-                                  children: [
-                                    Text(_deviceModel, style: valueStyle),
-                                    SizedBox(width: 8),
-                                    Text(
-                                      localization.device_name,
-                                      style: labelStyle,
-                                    ),
-                                    SizedBox(width: 4),
-                                    Icon(
-                                      Icons.chevron_right,
-                                      size: 18,
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.onSurfaceVariant,
-                                    ),
-                                  ],
-                                ),
-                                SizedBox(height: 24),
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.baseline,
-                                  textBaseline: TextBaseline.alphabetic,
-                                  children: [
-                                    Text(_cpuInfo, style: valueStyle),
-                                    SizedBox(width: 8),
-                                    Text(
-                                      localization.processor,
-                                      style: labelStyle,
-                                    ),
-                                    SizedBox(width: 8),
-                                    separator,
-                                  ],
-                                ),
-                                SizedBox(height: 24),
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.baseline,
-                                  textBaseline: TextBaseline.alphabetic,
-                                  children: [
-                                    Text(_ramInfo, style: valueStyle),
-                                    SizedBox(width: 8),
-                                    Text(localization.ram, style: labelStyle),
-                                    SizedBox(width: 8),
-                                    separator,
-                                    SizedBox(width: 16),
-                                    Text(_storageInfo, style: valueStyle),
-                                    SizedBox(width: 8),
-                                    Text(
-                                      localization.phone_storage,
-                                      style: labelStyle,
-                                    ),
-                                    SizedBox(width: 8),
-                                    separator,
-                                  ],
-                                ),
-                                SizedBox(height: 24),
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.baseline,
-                                  textBaseline: TextBaseline.alphabetic,
-                                  children: [
-                                    Text(_batteryInfo, style: valueStyle),
-                                    SizedBox(width: 8),
-                                    Text(
-                                      localization.battery_capacity,
-                                      style: labelStyle,
-                                    ),
-                                    SizedBox(width: 8),
-                                    separator,
-                                  ],
-                                ),
-                              ],
+                          // --- UPDATE: Conditionally build the device spec layout ---
+                          if (_deviceInfoAvailable)
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.baseline,
+                                    textBaseline: TextBaseline.alphabetic,
+                                    children: [
+                                      Text(_deviceModel, style: valueStyle),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        localization.device_name,
+                                        style: labelStyle,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Icon(
+                                        Icons.chevron_right,
+                                        size: 18,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onSurfaceVariant,
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 24),
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.baseline,
+                                    textBaseline: TextBaseline.alphabetic,
+                                    children: [
+                                      Text(_cpuInfo, style: valueStyle),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        localization.processor,
+                                        style: labelStyle,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      separator,
+                                    ],
+                                  ),
+                                  const SizedBox(height: 24),
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.baseline,
+                                    textBaseline: TextBaseline.alphabetic,
+                                    children: [
+                                      Text(_ramInfo, style: valueStyle),
+                                      const SizedBox(width: 8),
+                                      Text(localization.ram, style: labelStyle),
+                                      const SizedBox(width: 8),
+                                      separator,
+                                      const SizedBox(width: 16),
+                                      Text(_storageInfo, style: valueStyle),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        localization.phone_storage,
+                                        style: labelStyle,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      separator,
+                                    ],
+                                  ),
+                                  const SizedBox(height: 24),
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.baseline,
+                                    textBaseline: TextBaseline.alphabetic,
+                                    children: [
+                                      Text(_batteryInfo, style: valueStyle),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        localization.battery_capacity,
+                                        style: labelStyle,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      separator,
+                                    ],
+                                  ),
+                                  const SizedBox(
+                                    height: 40,
+                                  ), // Add spacing after the block
+                                ],
+                              ),
                             ),
-                          ),
+
                           // End of device spec layout
-                          SizedBox(height: 40),
                           Text(
                             localization.about_title,
                             style: Theme.of(context).textTheme.titleMedium
@@ -366,23 +365,23 @@ class _AboutPageState extends State<AboutPage> {
                                   decoration: TextDecoration.underline,
                                 ),
                           ),
-                          SizedBox(height: 15),
+                          const SizedBox(height: 15),
                           ...credits.map(
                             (creditText) => Padding(
-                              padding: EdgeInsets.symmetric(vertical: 3),
+                              padding: const EdgeInsets.symmetric(vertical: 3),
                               child: Text(
                                 '• $creditText',
                                 style: Theme.of(context).textTheme.bodyMedium,
                               ),
                             ),
                           ),
-                          SizedBox(height: 20),
+                          const SizedBox(height: 20),
                           Text(
                             localization.about_note,
                             style: Theme.of(context).textTheme.bodyMedium
                                 ?.copyWith(fontStyle: FontStyle.italic),
                           ),
-                          SizedBox(height: 20),
+                          const SizedBox(height: 20),
                           Center(
                             child: Text(
                               localization.about_quote,
@@ -396,7 +395,7 @@ class _AboutPageState extends State<AboutPage> {
                               textAlign: TextAlign.center,
                             ),
                           ),
-                          SizedBox(height: 20),
+                          const SizedBox(height: 20),
                         ],
                       ),
                     ),
