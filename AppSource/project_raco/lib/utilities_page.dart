@@ -65,9 +65,7 @@ class UtilitiesPage extends StatefulWidget {
 }
 
 class _UtilitiesPageState extends State<UtilitiesPage> {
-  String? _backgroundImagePath;
-  double _backgroundOpacity = 0.2;
-  String? _bannerImagePath;
+  // REVERTED: Removed background state variables
   bool _isLoading = true;
   bool _hasRootAccess = false;
   bool _isContentVisible = false;
@@ -102,9 +100,8 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
   Future<void> _initializePage() async {
     final bool hasRoot = await _checkRootAccess();
 
+    // REVERTED: Simplified data loading, removed background/banner
     final dataFutures = [
-      _loadBackgroundSettings(),
-      _loadBannerSettings(),
       if (hasRoot) ...[
         _loadEncoreSwitchState(),
         _loadGovernorState(),
@@ -116,29 +113,23 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
       ],
     ];
 
-    final results = await Future.wait(dataFutures);
+    if (hasRoot) {
+      final results = await Future.wait(dataFutures);
+      if (!mounted) return;
+
+      int resultIndex = 0;
+      _encoreState = results[resultIndex++] as Map<String, dynamic>;
+      _governorState = results[resultIndex++] as Map<String, dynamic>;
+      _dndEnabled = results[resultIndex++] as bool;
+      _hamadaAiState = results[resultIndex++] as Map<String, bool>;
+      _resolutionState = results[resultIndex++] as Map<String, dynamic>;
+      _gameTxtContent = results[resultIndex++] as String;
+      _bypassChargingState = results[resultIndex++] as Map<String, dynamic>;
+    }
 
     if (!mounted) return;
-
     setState(() {
       _hasRootAccess = hasRoot;
-      int resultIndex = 0;
-      final bgSettings = results[resultIndex++] as Map<String, dynamic>;
-      _backgroundImagePath = bgSettings['path'];
-      _backgroundOpacity = bgSettings['opacity'];
-
-      _bannerImagePath = results[resultIndex++] as String?;
-
-      if (hasRoot) {
-        _encoreState = results[resultIndex++] as Map<String, dynamic>;
-        _governorState = results[resultIndex++] as Map<String, dynamic>;
-        _dndEnabled = results[resultIndex++] as bool;
-        _hamadaAiState = results[resultIndex++] as Map<String, bool>;
-        _resolutionState = results[resultIndex++] as Map<String, dynamic>;
-        _gameTxtContent = results[resultIndex++] as String;
-        _bypassChargingState = results[resultIndex++] as Map<String, dynamic>;
-      }
-
       _isLoading = false;
       _isContentVisible = true;
     });
@@ -182,24 +173,7 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
         icon: Icons.color_lens_outlined,
         searchKeywords:
             '${localization.appearance_title} ${localization.background_settings_title} ${localization.banner_settings_title} background banner image theme color',
-        page: AppearancePage(
-          initialBackgroundImagePath: _backgroundImagePath,
-          initialBackgroundOpacity: _backgroundOpacity,
-          initialBannerImagePath: _bannerImagePath,
-          onBackgroundChanged: (path, opacity) {
-            if (!mounted) return;
-            setState(() {
-              _backgroundImagePath = path;
-              _backgroundOpacity = opacity;
-            });
-          },
-          onBannerChanged: (path) {
-            if (!mounted) return;
-            setState(() {
-              _bannerImagePath = path;
-            });
-          },
-        ),
+        page: const AppearancePage(),
       ),
     ];
     _filteredCategories = _allCategories;
@@ -227,27 +201,7 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
     }
   }
 
-  //region Data Loading Methods
-  Future<Map<String, dynamic>> _loadBackgroundSettings() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final path = prefs.getString('background_image_path');
-      final opacity = prefs.getDouble('background_opacity') ?? 0.2;
-      return {'path': path, 'opacity': opacity};
-    } catch (e) {
-      return {'path': null, 'opacity': 0.2};
-    }
-  }
-
-  Future<String?> _loadBannerSettings() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      return prefs.getString('banner_image_path');
-    } catch (e) {
-      return null;
-    }
-  }
-
+  //region Data Loading Methods - REVERTED: Removed background/banner loaders
   Future<Map<String, dynamic>> _loadEncoreSwitchState() async {
     final result = await _runRootCommandAndWait(
       'cat /data/adb/modules/ProjectRaco/raco.txt',
@@ -409,41 +363,23 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
   @override
   Widget build(BuildContext context) {
     final localization = AppLocalizations.of(context)!;
-    // Initialize categories here to ensure localization is available
     if (_allCategories.isEmpty) {
       _setupCategories(localization);
     }
     final colorScheme = Theme.of(context).colorScheme;
 
+    // REVERTED: Simplified Scaffold, no Stack or transparency
     return Scaffold(
-      backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        title: Text(localization.utilities_title),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          if (_backgroundImagePath != null && _backgroundImagePath!.isNotEmpty)
-            Opacity(
-              opacity: _backgroundOpacity,
-              child: Image.file(
-                File(_backgroundImagePath!),
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) =>
-                    Container(color: Colors.transparent),
-              ),
-            ),
-          if (_isLoading)
-            const Center(
+      appBar: AppBar(title: Text(localization.utilities_title)),
+      body: _isLoading
+          ? const Center(
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: 32.0),
                 child: LinearProgressIndicator(),
               ),
             )
-          else if (!_hasRootAccess)
-            Center(
+          : !_hasRootAccess
+          ? Center(
               child: Padding(
                 padding: const EdgeInsets.all(32.0),
                 child: Text(
@@ -455,8 +391,7 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
                 ),
               ),
             )
-          else
-            AnimatedOpacity(
+          : AnimatedOpacity(
               opacity: _isContentVisible ? 1.0 : 0.0,
               duration: const Duration(milliseconds: 500),
               child: Column(
@@ -506,51 +441,21 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
                               ),
                             ),
                             trailing: const Icon(Icons.chevron_right),
-                            onTap: () async {
-                              // Show the progress bar dialog
-                              showDialog(
-                                context: context,
-                                barrierDismissible: false,
-                                // UPDATED: Set the barrier color to solid black
-                                barrierColor: Colors.black,
-                                builder: (BuildContext context) {
-                                  return const Center(
-                                    child: Padding(
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: 32.0,
-                                      ),
-                                      child: LinearProgressIndicator(),
-                                    ),
-                                  );
-                                },
+                            // UPDATED: Simplified navigation, no dialog or delay
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                PageRouteBuilder(
+                                  pageBuilder:
+                                      (
+                                        context,
+                                        animation,
+                                        secondaryAnimation,
+                                      ) => category.page,
+                                  transitionDuration: Duration.zero,
+                                  reverseTransitionDuration: Duration.zero,
+                                ),
                               );
-
-                              // Wait for a short period to simulate loading
-                              await Future.delayed(
-                                const Duration(milliseconds: 350),
-                              );
-
-                              // Pop the dialog, making sure the context is still valid
-                              if (mounted) {
-                                Navigator.of(context).pop();
-                              }
-
-                              // Push the new page with no animation
-                              if (mounted) {
-                                Navigator.push(
-                                  context,
-                                  PageRouteBuilder(
-                                    pageBuilder:
-                                        (
-                                          context,
-                                          animation,
-                                          secondaryAnimation,
-                                        ) => category.page,
-                                    transitionDuration: Duration.zero,
-                                    reverseTransitionDuration: Duration.zero,
-                                  ),
-                                );
-                              }
                             },
                           ),
                         );
@@ -560,14 +465,57 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
                 ],
               ),
             ),
-        ],
-      ),
     );
   }
 }
 
 //region Sub-Pages
-class CoreTweaksPage extends StatelessWidget {
+// UPDATED: All sub-pages now handle their own simple loading state
+abstract class _LoadingStatefulWidget extends StatefulWidget {
+  const _LoadingStatefulWidget({Key? key}) : super(key: key);
+}
+
+abstract class _LoadingState<T extends _LoadingStatefulWidget>
+    extends State<T> {
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    // Simulate a short delay for the transition
+    Future.delayed(const Duration(milliseconds: 250), () {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    });
+  }
+
+  Widget buildScaffold({
+    required BuildContext context,
+    required String title,
+    required Widget child,
+  }) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(title),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
+      body: _isLoading
+          ? const Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 32.0),
+                child: LinearProgressIndicator(),
+              ),
+            )
+          : child,
+    );
+  }
+}
+
+class CoreTweaksPage extends _LoadingStatefulWidget {
   final Map<String, dynamic>? encoreState;
   final Map<String, dynamic>? governorState;
 
@@ -578,26 +526,27 @@ class CoreTweaksPage extends StatelessWidget {
   }) : super(key: key);
 
   @override
+  _CoreTweaksPageState createState() => _CoreTweaksPageState();
+}
+
+class _CoreTweaksPageState extends _LoadingState<CoreTweaksPage> {
+  @override
   Widget build(BuildContext context) {
     final localization = AppLocalizations.of(context)!;
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        title: Text(localization.core_tweaks_title),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
-      body: ListView(
+    return buildScaffold(
+      context: context,
+      title: localization.core_tweaks_title,
+      child: ListView(
         padding: const EdgeInsets.fromLTRB(8, 8, 8, 32),
         children: [
           FixAndTweakCard(
             initialDeviceMitigationValue:
-                encoreState?['deviceMitigation'] ?? false,
-            initialLiteModeValue: encoreState?['liteMode'] ?? false,
+                widget.encoreState?['deviceMitigation'] ?? false,
+            initialLiteModeValue: widget.encoreState?['liteMode'] ?? false,
           ),
           GovernorCard(
-            initialAvailableGovernors: governorState?['available'] ?? [],
-            initialSelectedGovernor: governorState?['selected'],
+            initialAvailableGovernors: widget.governorState?['available'] ?? [],
+            initialSelectedGovernor: widget.governorState?['selected'],
           ),
         ],
       ),
@@ -605,7 +554,7 @@ class CoreTweaksPage extends StatelessWidget {
   }
 }
 
-class AutomationPage extends StatelessWidget {
+class AutomationPage extends _LoadingStatefulWidget {
   final Map<String, bool>? hamadaAiState;
   final String? gameTxtContent;
 
@@ -616,30 +565,31 @@ class AutomationPage extends StatelessWidget {
   }) : super(key: key);
 
   @override
+  _AutomationPageState createState() => _AutomationPageState();
+}
+
+class _AutomationPageState extends _LoadingState<AutomationPage> {
+  @override
   Widget build(BuildContext context) {
     final localization = AppLocalizations.of(context)!;
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        title: Text(localization.automation_title),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
-      body: ListView(
+    return buildScaffold(
+      context: context,
+      title: localization.automation_title,
+      child: ListView(
         padding: const EdgeInsets.fromLTRB(8, 8, 8, 32),
         children: [
           HamadaAiCard(
-            initialHamadaAiEnabled: hamadaAiState?['enabled'] ?? false,
-            initialHamadaStartOnBoot: hamadaAiState?['onBoot'] ?? false,
+            initialHamadaAiEnabled: widget.hamadaAiState?['enabled'] ?? false,
+            initialHamadaStartOnBoot: widget.hamadaAiState?['onBoot'] ?? false,
           ),
-          GameTxtCard(initialContent: gameTxtContent ?? ''),
+          GameTxtCard(initialContent: widget.gameTxtContent ?? ''),
         ],
       ),
     );
   }
 }
 
-class SystemPage extends StatelessWidget {
+class SystemPage extends _LoadingStatefulWidget {
   final bool? dndEnabled;
   final Map<String, dynamic>? bypassChargingState;
   final Map<String, dynamic>? resolutionState;
@@ -652,30 +602,31 @@ class SystemPage extends StatelessWidget {
   }) : super(key: key);
 
   @override
+  _SystemPageState createState() => _SystemPageState();
+}
+
+class _SystemPageState extends _LoadingState<SystemPage> {
+  @override
   Widget build(BuildContext context) {
     final localization = AppLocalizations.of(context)!;
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        title: Text(localization.system_title),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
-      body: ListView(
+    return buildScaffold(
+      context: context,
+      title: localization.system_title,
+      child: ListView(
         padding: const EdgeInsets.fromLTRB(8, 8, 8, 32),
         children: [
-          DndCard(initialDndEnabled: dndEnabled ?? false),
+          DndCard(initialDndEnabled: widget.dndEnabled ?? false),
           BypassChargingCard(
-            isSupported: bypassChargingState?['isSupported'] ?? false,
-            isEnabled: bypassChargingState?['isEnabled'] ?? false,
+            isSupported: widget.bypassChargingState?['isSupported'] ?? false,
+            isEnabled: widget.bypassChargingState?['isEnabled'] ?? false,
             supportStatus:
-                bypassChargingState?['statusMsg'] ??
+                widget.bypassChargingState?['statusMsg'] ??
                 localization.bypass_charging_unsupported,
           ),
           ResolutionCard(
-            isAvailable: resolutionState?['isAvailable'] ?? false,
-            originalSize: resolutionState?['originalSize'] ?? '',
-            originalDensity: resolutionState?['originalDensity'] ?? 0,
+            isAvailable: widget.resolutionState?['isAvailable'] ?? false,
+            originalSize: widget.resolutionState?['originalSize'] ?? '',
+            originalDensity: widget.resolutionState?['originalDensity'] ?? 0,
           ),
         ],
       ),
@@ -683,43 +634,58 @@ class SystemPage extends StatelessWidget {
   }
 }
 
-class AppearancePage extends StatelessWidget {
-  final String? initialBackgroundImagePath;
-  final double initialBackgroundOpacity;
-  final String? initialBannerImagePath;
-  final Function(String?, double) onBackgroundChanged;
-  final Function(String?) onBannerChanged;
+class AppearancePage extends _LoadingStatefulWidget {
+  const AppearancePage({Key? key}) : super(key: key);
+  @override
+  _AppearancePageState createState() => _AppearancePageState();
+}
 
-  const AppearancePage({
-    Key? key,
-    required this.initialBackgroundImagePath,
-    required this.initialBackgroundOpacity,
-    required this.initialBannerImagePath,
-    required this.onBackgroundChanged,
-    required this.onBannerChanged,
-  }) : super(key: key);
+class _AppearancePageState extends _LoadingState<AppearancePage> {
+  String? backgroundImagePath;
+  double backgroundOpacity = 0.2;
+  String? bannerImagePath;
+
+  @override
+  void initState() {
+    super.initState();
+    // Overriding initState to load settings, but still calling super.
+    _loadAppearanceSettings();
+  }
+
+  Future<void> _loadAppearanceSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    setState(() {
+      backgroundImagePath = prefs.getString('background_image_path');
+      backgroundOpacity = prefs.getDouble('background_opacity') ?? 0.2;
+      bannerImagePath = prefs.getString('banner_image_path');
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final localization = AppLocalizations.of(context)!;
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        title: Text(localization.appearance_title),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
-      body: ListView(
+    return buildScaffold(
+      context: context,
+      title: localization.appearance_title,
+      child: ListView(
         padding: const EdgeInsets.fromLTRB(8, 8, 8, 32),
         children: [
           BackgroundSettingsCard(
-            initialPath: initialBackgroundImagePath,
-            initialOpacity: initialBackgroundOpacity,
-            onSettingsChanged: onBackgroundChanged,
+            initialPath: backgroundImagePath,
+            initialOpacity: backgroundOpacity,
+            onSettingsChanged: (path, opacity) {
+              setState(() {
+                backgroundImagePath = path;
+                backgroundOpacity = opacity;
+              });
+            },
           ),
           BannerSettingsCard(
-            initialPath: initialBannerImagePath,
-            onSettingsChanged: onBannerChanged,
+            initialPath: bannerImagePath,
+            onSettingsChanged: (path) {
+              setState(() => bannerImagePath = path);
+            },
           ),
         ],
       ),
