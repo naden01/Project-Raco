@@ -207,6 +207,8 @@ if [ "$USE_SAVED_CONFIG" = false ]; then
   ui_print "  Vol+ = Yes  |  Vol- = No"
   if choose; then
     ui_print "- Saving configuration for next time."
+    ui_print "  - Adding SOC Code ($SOC) to persistent config."
+    sed -i "s/^SOC=.*/SOC=$SOC/" "$RACO_MODULE_CONFIG"
     copy_with_retry "$RACO_MODULE_CONFIG" "/data/ProjectRaco"
   else
     ui_print "- Choices will not be saved."
