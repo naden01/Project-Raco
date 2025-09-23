@@ -18,7 +18,7 @@ fi
 
 rm -rf /data/local/tmp/logo.png
 rm -rf /data/local/tmp/Anya.png
-pm uninstall com.kanagawa.yamada.encorinvest
+pm uninstall com.kanagawa.yamada.project.raco
 rm -rf /data/ProjectRaco
 
 # Managed to read this? Thanks for using Project Raco

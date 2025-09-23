@@ -101,7 +101,7 @@ ui_print "------------------------------------"
 ui_print "            MODULE INFO             "
 ui_print "------------------------------------"
 ui_print "Name : Project Raco"
-ui_print "Version : 29.2"
+ui_print "Version : CBT"
 ui_print " "
 sleep 1.5
 
@@ -275,14 +275,14 @@ ui_print " "
 ui_print "     INSTALLING Project Raco App      "
 ui_print " "
 
-# Check if EnCorinVest is already installed
-if pm list packages | grep -q "com.kanagawa.yamada.encorinvest"; then
-    pm uninstall --user 0 com.kanagawa.yamada.encorinvest >/dev/null 2>&1
+# Check if Project Raco App is already installed
+if pm list packages | grep -q "com.kanagawa.yamada.project.raco"; then
+    pm uninstall --user 0 com.kanagawa.yamada.project.raco >/dev/null 2>&1
 fi
 
-cp "$MODPATH"/EnCorinVest.apk /data/local/tmp >/dev/null 2>&1
-pm install /data/local/tmp/EnCorinVest.apk >/dev/null 2>&1
-rm /data/local/tmp/EnCorinVest.apk >/dev/null 2&>1
+cp "$MODPATH"/ProjectRaco.apk /data/local/tmp >/dev/null 2>&1
+pm install /data/local/tmp/ProjectRaco.apk >/dev/null 2>&1
+rm /data/local/tmp/ProjectRaco.apk >/dev/null 2&>1
 
 ui_print " "
 ui_print "         INSTALLING HAMADA AI         "
