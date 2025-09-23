@@ -37,11 +37,11 @@ source "$MODULE_PATH/Scripts/corin.sh"
 ##############################
 
 anyamelfissa() {
-    sh /data/adb/modules/Scripts/AnyaMelfissa.sh
+    sh /data/adb/modules/ProjectRaco/Scripts/AnyaMelfissa.sh
 }
 
 anyakawaii() {
-    sh /data/adb/modules/Scripts/AnyaKawaii.sh
+    sh /data/adb/modules/ProjectRaco/Scripts/AnyaKawaii.sh
 }
 
 tweak() {

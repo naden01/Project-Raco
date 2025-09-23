@@ -46,4 +46,4 @@ if grep -q "INCLUDE_SANDEV=1" "$CONFIG_FILE"; then
     sh /data/adb/modules/ProjectRaco/Scripts/SandevBoot.sh
 fi
 
-su -lp 2000 -c "cmd notification post -S bigtext -t 'EnCorinVest' -i file:///data/local/tmp/logo.png -I file:///data/local/tmp/logo.png TagEncorin 'EnCorinVest - オンライン'"
+su -lp 2000 -c "cmd notification post -S bigtext -t 'Project Raco' -i file:///data/local/tmp/logo.png -I file:///data/local/tmp/logo.png TagRaco 'Project Raco - オンライン'"
