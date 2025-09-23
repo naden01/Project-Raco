@@ -86,7 +86,7 @@ bypass_off() {
 }
 
 notification() {
-    local TITLE="Raco"
+    local TITLE="Otonose Raco"
     local MESSAGE="$1"
     local LOGO="/data/local/tmp/logo.png"
     
@@ -942,7 +942,6 @@ powersave_basic() {
     bypass_off
     anyakawaii
 }
-
 ##########################################
 # MAIN EXECUTION LOGIC
 ##########################################
@@ -963,24 +962,31 @@ MODE=$1
 case $MODE in
     1)
         performance_basic
+        notification "Performance Mode Activated 🔥"
         ;;
     2)
         balanced_basic
+        notification "Balanced Mode Activated ⚖️"
         ;;
     3)
         powersave_basic
+        notification "Powersave Mode Activated 🔋"
         ;;
     4)
         performance_basic
         kill_all
+        notification "Gaming Pro Mode Activated 🚀"
         ;;
     5)
         powersave_basic
+        notification "Cool Down initiated for 2 minutes... ❄️"
         sleep 120
         balanced_basic
+        notification "Cool Down finished. Switched to Balanced Mode."
         ;;
     6)
         kill_all
+        notification "All background applications cleared. ✅"
         ;;
     *)
         echo "Error: Invalid mode '$MODE'. Please use 1, 2, 3, 4, 5, or 6."
