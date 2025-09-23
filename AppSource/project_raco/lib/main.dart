@@ -604,7 +604,8 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
             '${localization.app_title} ${localization.module_not_installed}';
       }
     } else {
-      bannerText = localization.app_title;
+      // UPDATED: This is the requested change
+      bannerText = localization.error_no_root;
     }
 
     return Column(
