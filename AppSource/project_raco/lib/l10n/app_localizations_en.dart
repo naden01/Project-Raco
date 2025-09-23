@@ -310,7 +310,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get anya_thermal_description =>
-      'Anya Thermal Flowstate: Disable Thermal on Performance and Gaming, Enable Thermal on Powersave, Balanced, Cool Down.';
+      'Disable Thermal on Performance and Gaming, Enable Thermal on Powersave, Balanced, Cool Down.';
 
   @override
   String get anya_thermal_toggle_title => 'Enable Anya Thermal Flowstate';

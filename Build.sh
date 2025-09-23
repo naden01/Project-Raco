@@ -15,7 +15,7 @@ mkdir -p "$BUILD_DIR"
 welcome() {
     clear
     echo "---------------------------------"
-    echo "      Yamada Module Builder      "
+    echo "     Project Raco Builder      "
     echo "---------------------------------"
     echo ""
 }
@@ -202,12 +202,12 @@ build_modules() {
     read -p "Enter Version (e.g., V1.0): " VERSION
 
     while true; do
-        read -p "Enter Build Type (LAB/RELEASE): " BUILD_TYPE
+        read -p "Enter Build Type (CBT/LAB/RELEASE): " BUILD_TYPE
         BUILD_TYPE=${BUILD_TYPE^^}
-        if [[ "$BUILD_TYPE" == "LAB" || "$BUILD_TYPE" == "RELEASE" ]]; then
+        if [[ "$BUILD_TYPE" == "CBT" || "$BUILD_TYPE" == "LAB" || "$BUILD_TYPE" == "RELEASE" ]]; then
             break
         fi
-        echo "Invalid input. Please enter LAB or RELEASE."
+        echo "Invalid input. Please enter CBT, LAB, or RELEASE."
     done
 
     cd "$MODULES_DIR" || exit 1
@@ -250,7 +250,7 @@ build_modules() {
                 echo "Uploading to selected Telegram groups..."
 
                 # Create a summary message
-                SUMMARY_MESSAGE="🚀 *Yamada Module Build Complete*%0A%0A"
+                SUMMARY_MESSAGE="🚀 *Project Raco Build Complete*%0A%0A"
                 SUMMARY_MESSAGE+="📦 *Module:* $MODULE_ID%0A"
                 SUMMARY_MESSAGE+="🏷️ *Version:* $VERSION%0A"
                 SUMMARY_MESSAGE+="🔧 *Build Type:* $BUILD_TYPE%0A"

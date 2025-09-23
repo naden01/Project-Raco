@@ -673,7 +673,7 @@ abstract class AppLocalizations {
   /// No description provided for @anya_thermal_description.
   ///
   /// In en, this message translates to:
-  /// **'Anya Thermal Flowstate: Disable Thermal on Performance and Gaming, Enable Thermal on Powersave, Balanced, Cool Down.'**
+  /// **'Disable Thermal on Performance and Gaming, Enable Thermal on Powersave, Balanced, Cool Down.'**
   String get anya_thermal_description;
 
   /// No description provided for @anya_thermal_toggle_title.

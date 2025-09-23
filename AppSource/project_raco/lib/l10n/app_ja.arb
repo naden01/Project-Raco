@@ -101,6 +101,6 @@
     "loading_governors": "ガバナーを読み込み中...",
     "no_governor_selected": "なし",
     "anya_thermal_title": "アーニャ・メルフィッサ サーマル無効化",
-    "anya_thermal_description": "アーニャサーマルフローステート：パフォーマンスとゲーミングモードでサーマルを無効化し、省電力、バランス、冷却モードで有効化します。",
+    "anya_thermal_description": "パフォーマンスとゲーミングモードではサーマルを無効化し、省電力、バランス、冷却モードではサーマルを有効化します。",
     "anya_thermal_toggle_title": "アーニャサーマルフローステートを有効にする"
 }

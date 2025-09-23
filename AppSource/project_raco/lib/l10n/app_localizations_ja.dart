@@ -300,7 +300,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get anya_thermal_description =>
-      'アーニャサーマルフローステート：パフォーマンスとゲーミングモードでサーマルを無効化し、省電力、バランス、冷却モードで有効化します。';
+      'パフォーマンスとゲーミングモードではサーマルを無効化し、省電力、バランス、冷却モードではサーマルを有効化します。';
 
   @override
   String get anya_thermal_toggle_title => 'アーニャサーマルフローステートを有効にする';
