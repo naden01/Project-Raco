@@ -53,6 +53,7 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
   double _backgroundOpacity = 0.2;
   String? _bannerImagePath;
   bool _isLoading = true;
+  bool _hasRootAccess = false;
 
   // Data for child widgets
   Map<String, dynamic>? _encoreState;
@@ -94,6 +95,7 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
 
     // Process results and update the UI state in a single call.
     setState(() {
+      _hasRootAccess = hasRoot;
       int resultIndex = 0;
       final bgSettings = results[resultIndex++] as Map<String, dynamic>;
       _backgroundImagePath = bgSettings['path'];
@@ -337,6 +339,19 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: 32.0),
                 child: LinearProgressIndicator(),
+              ),
+            )
+          else if (!_hasRootAccess)
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32.0),
+                child: Text(
+                  localization.error_no_root,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+                ),
               ),
             )
           else
