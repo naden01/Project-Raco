@@ -1,7 +1,7 @@
 #!/system/bin/sh
 # AnyaKawaii.sh - Simplified to run if ANYA=1 is NOT set.
 
-if grep -q "ANYA=1" /data/adb/modules/ProjectRaco/Raco.txt; then
+if grep -q "ANYA=1" /data/adb/modules/ProjectRaco/raco.txt; then
     exit 0
 fi
 

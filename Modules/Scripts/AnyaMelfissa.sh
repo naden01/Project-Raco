@@ -4,7 +4,7 @@
 # RiProG Thermal 2.6.1 (RTN 2.6.1 Low + UnSensor) - Converted to shell by Kanagawa Yamada
 #
 
-CONFIG_FILE="/data/adb/modules/ProjectRaco/Raco.txt"
+CONFIG_FILE="/data/adb/modules/ProjectRaco/raco.txt"
 
 # Check if both required settings are present.
 if grep -q "INCLUDE_ANYA=1" "$CONFIG_FILE" && grep -q "ANYA=1" "$CONFIG_FILE"; then
