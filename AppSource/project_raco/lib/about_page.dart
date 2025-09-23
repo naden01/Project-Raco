@@ -228,11 +228,14 @@ class _AboutPageState extends State<AboutPage> {
     );
 
     return Scaffold(
+      // UPDATED: Allow body to draw behind the AppBar
+      extendBodyBehindAppBar: true,
       backgroundColor: Colors.transparent,
       appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
       body: Stack(
         fit: StackFit.expand,
         children: [
+          Container(color: Theme.of(context).colorScheme.background),
           if (_backgroundImagePath != null && _backgroundImagePath!.isNotEmpty)
             Opacity(
               opacity: _backgroundOpacity,
@@ -244,162 +247,170 @@ class _AboutPageState extends State<AboutPage> {
                 },
               ),
             ),
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 20.0,
-              vertical: 10.0,
-            ),
-            child: _isLoading
-                ? const Center(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 32.0),
-                      child: LinearProgressIndicator(),
-                    ),
-                  )
-                : AnimatedOpacity(
-                    opacity: _isLoading ? 0.0 : 1.0,
-                    duration: const Duration(milliseconds: 500),
-                    child: SingleChildScrollView(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // --- UPDATE: Conditionally build the device spec layout ---
-                          if (_deviceInfoAvailable)
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.baseline,
-                                    textBaseline: TextBaseline.alphabetic,
-                                    children: [
-                                      Text(_deviceModel, style: valueStyle),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        localization.device_name,
-                                        style: labelStyle,
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Icon(
-                                        Icons.chevron_right,
-                                        size: 18,
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.onSurfaceVariant,
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 24),
-                                  Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.baseline,
-                                    textBaseline: TextBaseline.alphabetic,
-                                    children: [
-                                      Text(_cpuInfo, style: valueStyle),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        localization.processor,
-                                        style: labelStyle,
-                                      ),
-                                      const SizedBox(width: 8),
-                                      separator,
-                                    ],
-                                  ),
-                                  const SizedBox(height: 24),
-                                  Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.baseline,
-                                    textBaseline: TextBaseline.alphabetic,
-                                    children: [
-                                      Text(_ramInfo, style: valueStyle),
-                                      const SizedBox(width: 8),
-                                      Text(localization.ram, style: labelStyle),
-                                      const SizedBox(width: 8),
-                                      separator,
-                                      const SizedBox(width: 16),
-                                      Text(_storageInfo, style: valueStyle),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        localization.phone_storage,
-                                        style: labelStyle,
-                                      ),
-                                      const SizedBox(width: 8),
-                                      separator,
-                                    ],
-                                  ),
-                                  const SizedBox(height: 24),
-                                  Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.baseline,
-                                    textBaseline: TextBaseline.alphabetic,
-                                    children: [
-                                      Text(_batteryInfo, style: valueStyle),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        localization.battery_capacity,
-                                        style: labelStyle,
-                                      ),
-                                      const SizedBox(width: 8),
-                                      separator,
-                                    ],
-                                  ),
-                                  const SizedBox(
-                                    height: 40,
-                                  ), // Add spacing after the block
-                                ],
-                              ),
-                            ),
-
-                          // End of device spec layout
-                          Text(
-                            localization.about_title,
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  decoration: TextDecoration.underline,
+          // UPDATED: Wrapped content in SafeArea
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 20.0,
+                vertical: 10.0,
+              ),
+              child: _isLoading
+                  ? const Center(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 32.0),
+                        child: LinearProgressIndicator(),
+                      ),
+                    )
+                  : AnimatedOpacity(
+                      opacity: _isLoading ? 0.0 : 1.0,
+                      duration: const Duration(milliseconds: 500),
+                      child: SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // --- UPDATE: Conditionally build the device spec layout ---
+                            if (_deviceInfoAvailable)
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.baseline,
+                                      textBaseline: TextBaseline.alphabetic,
+                                      children: [
+                                        Text(_deviceModel, style: valueStyle),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          localization.device_name,
+                                          style: labelStyle,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Icon(
+                                          Icons.chevron_right,
+                                          size: 18,
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.onSurfaceVariant,
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 24),
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.baseline,
+                                      textBaseline: TextBaseline.alphabetic,
+                                      children: [
+                                        Text(_cpuInfo, style: valueStyle),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          localization.processor,
+                                          style: labelStyle,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        separator,
+                                      ],
+                                    ),
+                                    const SizedBox(height: 24),
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.baseline,
+                                      textBaseline: TextBaseline.alphabetic,
+                                      children: [
+                                        Text(_ramInfo, style: valueStyle),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          localization.ram,
+                                          style: labelStyle,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        separator,
+                                        const SizedBox(width: 16),
+                                        Text(_storageInfo, style: valueStyle),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          localization.phone_storage,
+                                          style: labelStyle,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        separator,
+                                      ],
+                                    ),
+                                    const SizedBox(height: 24),
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.baseline,
+                                      textBaseline: TextBaseline.alphabetic,
+                                      children: [
+                                        Text(_batteryInfo, style: valueStyle),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          localization.battery_capacity,
+                                          style: labelStyle,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        separator,
+                                      ],
+                                    ),
+                                    const SizedBox(
+                                      height: 40,
+                                    ), // Add spacing after the block
+                                  ],
                                 ),
-                          ),
-                          const SizedBox(height: 15),
-                          ...credits.map(
-                            (creditText) => Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 3),
-                              child: Text(
-                                '• $creditText',
-                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+
+                            // End of device spec layout
+                            Text(
+                              localization.about_title,
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    decoration: TextDecoration.underline,
+                                  ),
+                            ),
+                            const SizedBox(height: 15),
+                            ...credits.map(
+                              (creditText) => Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 3,
+                                ),
+                                child: Text(
+                                  '• $creditText',
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                ),
                               ),
                             ),
-                          ),
-                          const SizedBox(height: 20),
-                          Text(
-                            localization.about_note,
-                            style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(fontStyle: FontStyle.italic),
-                          ),
-                          const SizedBox(height: 20),
-                          Center(
-                            child: Text(
-                              localization.about_quote,
+                            const SizedBox(height: 20),
+                            Text(
+                              localization.about_note,
                               style: Theme.of(context).textTheme.bodyMedium
-                                  ?.copyWith(
-                                    fontStyle: FontStyle.italic,
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.primary,
-                                  ),
-                              textAlign: TextAlign.center,
+                                  ?.copyWith(fontStyle: FontStyle.italic),
                             ),
-                          ),
-                          const SizedBox(height: 20),
-                        ],
+                            const SizedBox(height: 20),
+                            Center(
+                              child: Text(
+                                localization.about_quote,
+                                style: Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(
+                                      fontStyle: FontStyle.italic,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
+                                    ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
+            ),
           ),
         ],
       ),
