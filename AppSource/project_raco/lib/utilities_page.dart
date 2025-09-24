@@ -1379,7 +1379,7 @@ class _HamadaAiCardState extends State<HamadaAiCard> {
   bool _isTogglingBoot = false;
 
   final String _serviceFilePath = '/data/adb/modules/ProjectRaco/service.sh';
-  final String _hamadaStartCommand = 'HamadaAI';
+  final String _hamadaStartCommand = 'su -c /system/bin/HamadaAI';
 
   @override
   void initState() {
