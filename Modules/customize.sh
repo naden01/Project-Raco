@@ -185,16 +185,19 @@ fi
 if [ "$USE_SAVED_CONFIG" = false ]; then
   ui_print " "
   ui_print "- Include Anya Thermal?"
+  ui_print "Disable / Enable Thermal | Anya Flowstate"
   ui_print "  Vol+ = Yes  |  Vol- = No"
   if choose; then INCLUDE_ANYA=1; ui_print "  > Yes"; else INCLUDE_ANYA=0; ui_print "  > No"; fi
 
   ui_print " "
   ui_print "- Include Kobo Fast Charge?"
+  ui_print "Fast Charging Add On"
   ui_print "  Vol+ = Yes  |  Vol- = No"
   if choose; then INCLUDE_KOBO=1; ui_print "  > Yes"; else INCLUDE_KOBO=0; ui_print "  > No"; fi
 
   ui_print " "
   ui_print "- Include Sandevistan Boot?"
+  ui_print "An Attempt to Make Boot Faster"
   ui_print "  Vol+ = Yes  |  Vol- = No"
   if choose; then INCLUDE_SANDEV=1; ui_print "  > Yes"; else INCLUDE_SANDEV=0; ui_print "  > No"; fi
 
