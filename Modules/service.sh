@@ -5,15 +5,15 @@ while [ -z "$(getprop sys.boot_completed)" ]; do
     sleep 10
 done
 
-if grep -q "INCLUDE_SANDEV=1" "$CONFIG_FILE"; then
-    sh /data/adb/modules/ProjectRaco/Scripts/SandevBoot.sh
-fi
-
 # Mali Scheduler Tweaks By: MiAzami
 
 mali_dir=$(ls -d /sys/devices/platform/soc/*mali*/scheduling 2>/dev/null | head -n 1)
 mali1_dir=$(ls -d /sys/devices/platform/soc/*mali* 2>/dev/null | head -n 1)
 CONFIG_FILE="/data/adb/modules/ProjectRaco/raco.txt"
+
+if grep -q "INCLUDE_SANDEV=1" "$CONFIG_FILE"; then
+    sh /data/adb/modules/ProjectRaco/Scripts/SandevBoot.sh
+fi
 
 tweak() {
     if [ -e "$1" ]; then
