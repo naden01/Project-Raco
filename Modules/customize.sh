@@ -281,3 +281,10 @@ else
 fi
 
 rm -rf $TEMP_EXTRACT_DIR
+
+#############################
+# Celestial Render FlowX (@Kzuyoo)
+# Version 1.5G
+#############################
+
+set_perm_recursive $MODPATH/system/lib/libncurses.so 0 0 0644 0644
