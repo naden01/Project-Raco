@@ -1276,15 +1276,25 @@ class _AnyaThermalCardState extends State<AnyaThermalCard> {
   Future<void> _toggleAnyaThermal(bool enable) async {
     if (!await _checkRootAccess()) return;
     if (mounted) setState(() => _isUpdating = true);
+
     final valueString = enable ? '1' : '0';
+    final scriptPath = enable
+        ? '/data/adb/modules/ProjectRaco/Scripts/AnyaMelfissa.sh'
+        : '/data/adb/modules/ProjectRaco/Scripts/AnyaKawaii.sh';
 
     try {
+      // First, run the appropriate script to enable/disable the thermal mod
+      await _runRootCommandAndWait(scriptPath);
+
+      // Then, update the configuration file to reflect the state
       final sedCommand =
           "sed -i 's|^ANYA=.*|ANYA=$valueString|' $_configFilePath";
       final result = await _runRootCommandAndWait(sedCommand);
+
       if (result.exitCode == 0) {
         if (mounted) setState(() => _isEnabled = enable);
       } else {
+        // If updating the config fails, consider the whole operation failed.
         throw Exception('Failed to write to config file.');
       }
     } catch (e) {
@@ -1292,6 +1302,7 @@ class _AnyaThermalCardState extends State<AnyaThermalCard> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to update thermal setting: $e')),
         );
+        // Revert the UI state if any part of the operation fails
         setState(() => _isEnabled = widget.initialAnyaThermalEnabled);
       }
     } finally {
