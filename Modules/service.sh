@@ -5,7 +5,10 @@ while [ -z "$(getprop sys.boot_completed)" ]; do
     sleep 10
 done
 
-# EnCorinVest Service Script
+if grep -q "INCLUDE_SANDEV=1" "$CONFIG_FILE"; then
+    sh /data/adb/modules/ProjectRaco/Scripts/SandevBoot.sh
+fi
+
 # Mali Scheduler Tweaks By: MiAzami
 
 mali_dir=$(ls -d /sys/devices/platform/soc/*mali*/scheduling 2>/dev/null | head -n 1)
@@ -39,10 +42,6 @@ fi
 
 if grep -q "INCLUDE_KOBO=1" "$CONFIG_FILE"; then
     sh /data/adb/modules/ProjectRaco/Scripts/KoboKanaeru.sh
-fi
-
-if grep -q "INCLUDE_SANDEV=1" "$CONFIG_FILE"; then
-    sh /data/adb/modules/ProjectRaco/Scripts/SandevBoot.sh
 fi
 
 su -lp 2000 -c "cmd notification post -S bigtext -t 'Project Raco' -i file:///data/local/tmp/logo.png -I file:///data/local/tmp/logo.png TagRaco 'Project Raco - オンライン'"

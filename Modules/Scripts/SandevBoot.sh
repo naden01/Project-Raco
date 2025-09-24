@@ -12,7 +12,7 @@ if grep -q "^INCLUDE_SANDEV=1" "$RACO_CONFIG"; then
 
     change_cpu_gov performance
 
-    sleep 30
+    sleep 100
 
     DEFAULT_CPU_GOV=$(grep '^GOV=' "$RACO_CONFIG" | cut -d'=' -f2)
 
