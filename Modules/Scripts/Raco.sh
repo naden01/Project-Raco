@@ -95,7 +95,7 @@ notification() {
 
 dnd_off() {
 	DND=$(grep "^DND" "$RACO_CONFIG" | cut -d'=' -f2 | tr -d ' ')
-	if [ "$DND" = "No" ]; then
+	if [ "$DND" = "Yes" ]; then
 		cmd notification set_dnd off
 	fi
 }
@@ -372,44 +372,24 @@ mediatek_performance() {
 	# Disable GED KPI
 	tweak 0 /sys/module/sspm_v3/holders/ged/parameters/is_GED_KPI_enabled
 
-	# NEW: Consolidated GPU Frequency Control Block
-    local GPU_FREQ_TABLE
-    if [[ -f "/proc/gpufreqv2/gpu_working_opp_table" ]]; then
-        GPU_FREQ_TABLE="/proc/gpufreqv2/gpu_working_opp_table"
-    elif [[ -f "/proc/gpufreq/gpufreq_opp_dump" ]]; then
-        GPU_FREQ_TABLE="/proc/gpufreq/gpufreq_opp_dump"
-    fi
+	if [ "$LITE_MODE" -eq 0 ]; then
+		if [ -d /proc/gpufreqv2 ]; then
+			tweak 0 /proc/gpufreqv2/fix_target_opp_index
+		else
+			gpu_freq=$(sed -n 's/.*freq = \([0-9]\{1,\}\).*/\1/p' /proc/gpufreq/gpufreq_opp_dump | head -n 1)
+			tweak "$gpu_freq" /proc/gpufreq/gpufreq_opp_freq
+		fi
+	else
+		tweak 0 /proc/gpufreq/gpufreq_opp_freq
+		tweak -1 /proc/gpufreqv2/fix_target_opp_index
 
-    if [[ -n "$GPU_FREQ_TABLE" ]]; then
-        local TARGET_FREQ
-        local opp_freq_index
-
-        if [ "$LITE_MODE" -eq 1 ]; then
-            # Lite Mode: Use middle frequency
-            TARGET_FREQ=$(which_midfreq "$GPU_FREQ_TABLE")
-            if [[ "$GPU_FREQ_TABLE" == *gpufreqv2* ]]; then
-                opp_freq_index=$(mtk_gpufreq_midfreq_index /proc/gpufreqv2/gpu_working_opp_table)
-            else
-                opp_freq_index=$(mtk_gpufreq_midfreq_index /proc/gpufreq/gpufreq_opp_dump)
-            fi
-        else
-            # Performance Mode: Use highest frequency
-            TARGET_FREQ=$(which_maxfreq "$GPU_FREQ_TABLE")
-            opp_freq_index=0
-        fi
-
-        # Apply index-based frequency setting
-        tweak 0 /proc/gpufreq/gpufreq_opp_freq
-        tweak -1 /proc/gpufreqv2/fix_target_opp_index
-        tweak "$opp_freq_index" /sys/kernel/ged/hal/custom_boost_gpu_freq
-
-        # Apply direct value-based frequency settings
-        if [[ -n "$TARGET_FREQ" ]]; then
-            tweak "$TARGET_FREQ" /sys/module/ged/parameters/gpu_bottom_freq
-            tweak "$TARGET_FREQ" /sys/module/ged/parameters/gpu_cust_boost_freq
-            tweak "$TARGET_FREQ" /sys/module/ged/parameters/gpu_cust_upbound_freq
-        fi
-    fi
+		if [ -d /proc/gpufreqv2 ]; then
+			mid_oppfreq=$(mtk_gpufreq_midfreq_index /proc/gpufreqv2/gpu_working_opp_table)
+		else
+			mid_oppfreq=$(mtk_gpufreq_midfreq_index /proc/gpufreq/gpufreq_opp_dump)
+		fi
+		tweak "$mid_oppfreq" /sys/kernel/ged/hal/custom_boost_gpu_freq
+	fi
 
 	# Disable GPU Power limiter
 	[ -f "/proc/gpufreq/gpufreq_power_limited" ] && {
@@ -568,9 +548,15 @@ mediatek_normal() {
 	tweak 0 /sys/devices/platform/boot_dramboost/dramboost/dramboost
 	tweak 2 /sys/devices/system/cpu/eas/enable
 	
-    # Consolidated GPU Frequency and Limiter Resets
 	kakangkuh 0 /proc/gpufreq/gpufreq_opp_freq
 	kakangkuh -1 /proc/gpufreqv2/fix_target_opp_index
+
+	if [ -d /proc/gpufreqv2 ]; then
+		min_oppfreq=$(mtk_gpufreq_minfreq_index /proc/gpufreqv2/gpu_working_opp_table)
+	else
+		min_oppfreq=$(mtk_gpufreq_minfreq_index /proc/gpufreq/gpufreq_opp_dump)
+	fi
+	tweak "$min_oppfreq" /sys/kernel/ged/hal/custom_boost_gpu_freq
 
     # Reset GPU frequency limits to normal
     if [[ -f "/proc/gpufreq/gpufreq_limit_table" ]]; then
