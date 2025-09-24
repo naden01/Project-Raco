@@ -1,7 +1,6 @@
 #!/system/bin/sh
 
-if grep -q "ANYA=1" /data/adb/modules/ProjectRaco/raco.txt; then
-# Function to find all relevant thermal service properties.
+# Function to find all relevant thermal and logging properties
 get_properties() {
     getprop | grep 'thermal' | cut -d '[' -f2 | cut -d ']' -f1 | grep -v 'hal'
 }
@@ -19,6 +18,5 @@ get_properties | while read -r prop; do
         start "$service"
     fi
 done
-else
-    exit 0
-fi
+
+find /sys/devices/virtual/thermal/thermal_zone*/mode -type f -exec sh -c 'chmod 644 "$1" && echo enabled > "$1"' _ {} \;

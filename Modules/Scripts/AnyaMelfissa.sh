@@ -1,27 +1,31 @@
 #!/system/bin/sh
 #
 # Telegram: @RiProG | Channel: @RiOpSo | Group: @RiOpSoDisc
+
 # RiProG Thermal 2.6.1 (RTN 2.6.1 Low + UnSensor) - Converted to shell by Kanagawa Yamada
-#
 
-CONFIG_FILE="/data/adb/modules/ProjectRaco/raco.txt"
+get_properties() {
+    getprop | grep 'thermal' | cut -d '[' -f2 | cut -d ']' -f1 | grep -v 'hal'
+}
 
-# Check if both required settings are present.
-if grep -q "INCLUDE_ANYA=1" "$CONFIG_FILE" && grep -q "ANYA=1" "$CONFIG_FILE"; then
-
-    # Function to get thermal-related service properties.
-    get_properties() {
-        getprop | grep 'thermal' | cut -d '[' -f2 | cut -d ']' -f1 | grep -v 'hal'
-    }
-
-    # Stop thermal services using two different methods for reliability.
-    get_properties | while read -r prop; do
-        if [ -n "$prop" ]; then
+get_properties | while read -r prop; do
+    if [ -n "$prop" ]; then
+        status=$(getprop "$prop")
+        if [ "$status" = "running" ] || [ "$status" = "restarting" ]; then
             service=${prop:9}
             setprop ctl.stop "$service"
+        fi
+    fi
+done
+
+get_properties | while read -r prop; do
+    if [ -n "$prop" ]; then
+        status=$(getprop "$prop")
+        if [ "$status" = "running" ] || [ "$status" = "restarting" ]; then
+            service=${prop:9}
             stop "$service"
         fi
-    done
-    else
-    exit 0
-fi
+    fi
+done
+
+find /sys/devices/virtual/thermal/thermal_zone*/mode -type f -exec sh -c 'echo disabled > "$1" && chmod 444 "$1"' _ {} \;
