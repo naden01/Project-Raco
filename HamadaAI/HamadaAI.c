@@ -5,7 +5,7 @@
 #include <stdbool.h>
 
 #define GAME_LIST "/data/ProjectRaco/game.txt"
-#define RACO_SCRIPT "/data/ProjectRaco/Scripts/Raco.sh"
+#define RACO_SCRIPT "/data/adb/modules/ProjectRaco/Scripts/Raco.sh"
 
 #define MAX_PATTERNS 256
 #define MAX_PATTERN_LENGTH 256
