@@ -115,7 +115,7 @@ ui_print "------------------------------------"
 ui_print "            MODULE INFO             "
 ui_print "------------------------------------"
 ui_print "Name : Project Raco"
-ui_print "Version : CBT 4"
+ui_print "Version : CBT 4.1"
 ui_print " "
 sleep 1.5
 
@@ -251,36 +251,33 @@ ui_print " "
 BIN_PATH=$MODPATH/system/bin
 TARGET_BIN_NAME=HamadaAI
 TARGET_BIN_PATH=$BIN_PATH/$TARGET_BIN_NAME
-TEMP_EXTRACT_DIR=$TMPDIR/hamada_extract
 
 mkdir -p $BIN_PATH
-mkdir -p $TEMP_EXTRACT_DIR
 
 ARCH=$(getprop ro.product.cpu.abi)
 if [[ "$ARCH" == *"arm64"* ]]; then
   ui_print "- Detected 64-bit ARM architecture ($ARCH)"
-  SOURCE_BIN_ZIP_PATH='HamadaAI/hamadaAI_arm64'
-  SOURCE_BIN_EXTRACTED_PATH=$TEMP_EXTRACT_DIR/HamadaAI/hamadaAI_arm64
-  ui_print "- Extracting $SOURCE_BIN_ZIP_PATH..."
-  unzip -o "$ZIPFILE" "$SOURCE_BIN_ZIP_PATH" -d $TEMP_EXTRACT_DIR >&2
+  SOURCE_BIN_IN_ZIP='HamadaAI/hamadaAI_arm64'
 else
   ui_print "- Detected 32-bit ARM architecture or other ($ARCH)"
-  SOURCE_BIN_ZIP_PATH='HamadaAI/hamadaAI_arm32'
-  SOURCE_BIN_EXTRACTED_PATH=$TEMP_EXTRACT_DIR/HamadaAI/hamadaAI_arm32
-  ui_print "- Extracting $SOURCE_BIN_ZIP_PATH..."
-  unzip -o "$ZIPFILE" "$SOURCE_BIN_ZIP_PATH" -d $TEMP_EXTRACT_DIR >&2
+  SOURCE_BIN_IN_ZIP='HamadaAI/hamadaAI_arm32'
 fi
 
-if [ -f "$SOURCE_BIN_EXTRACTED_PATH" ]; then
-  move_with_retry "$SOURCE_BIN_EXTRACTED_PATH" "$TARGET_BIN_PATH"
+ui_print "- Extracting HamadaAI binary..."
+unzip -j -o "$ZIPFILE" "$SOURCE_BIN_IN_ZIP" -d $TMPDIR >&2
+EXTRACTED_FILE_NAME=$(basename "$SOURCE_BIN_IN_ZIP")
+EXTRACTED_FILE_PATH="$TMPDIR/$EXTRACTED_FILE_NAME"
+
+if [ -f "$EXTRACTED_FILE_PATH" ]; then
+  move_with_retry "$EXTRACTED_FILE_PATH" "$TARGET_BIN_PATH"
+
   ui_print "- Setting permissions for $TARGET_BIN_NAME"
   set_perm $TARGET_BIN_PATH 0 0 0755
+  chmod 755 $TARGET_BIN_PATH
 else
-  ui_print "! ERROR: Failed to extract binary from $SOURCE_BIN_ZIP_PATH"
+  ui_print "! ERROR: Failed to extract binary from $SOURCE_BIN_IN_ZIP"
   abort "! Aborting installation."
 fi
-
-rm -rf $TEMP_EXTRACT_DIR
 
 #############################
 # Celestial Render FlowX (@Kzuyoo)

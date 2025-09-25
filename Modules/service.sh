@@ -5,15 +5,24 @@ while [ -z "$(getprop sys.boot_completed)" ]; do
     sleep 10
 done
 
-# Mali Scheduler Tweaks By: MiAzami
-
-mali_dir=$(ls -d /sys/devices/platform/soc/*mali*/scheduling 2>/dev/null | head -n 1)
-mali1_dir=$(ls -d /sys/devices/platform/soc/*mali* 2>/dev/null | head -n 1)
 CONFIG_FILE="/data/adb/modules/ProjectRaco/raco.txt"
 
+# Define the function to change the CPU governor.
+# It will only be called if INCLUDE_SANDEV is set to 1.
+change_cpu_gov() {
+  chmod 644 /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
+  echo "$1" | tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor >/dev/null
+  chmod 444 /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
+}
+
+# Set CPU governor to performance only if INCLUDE_SANDEV=1
 if grep -q "INCLUDE_SANDEV=1" "$CONFIG_FILE"; then
-    sh /data/adb/modules/ProjectRaco/Scripts/SandevBoot.sh
+    change_cpu_gov performance
 fi
+
+# Mali Scheduler Tweaks By: MiAzami
+mali_dir=$(ls -d /sys/devices/platform/soc/*mali*/scheduling 2>/dev/null | head -n 1)
+mali1_dir=$(ls -d /sys/devices/platform/soc/*mali* 2>/dev/null | head -n 1)
 
 tweak() {
     if [ -e "$1" ]; then
@@ -40,6 +49,7 @@ if grep -q "INCLUDE_ANYA=1" "$CONFIG_FILE" && grep -q "ANYA=1" "$CONFIG_FILE"; t
     su -lp 2000 -c "cmd notification post -S bigtext -t 'Anya Melfissa' -i file:///data/local/tmp/Anya.png -I file:///data/local/tmp/Anya.png TagAnya 'Good Day! Thermal Is Dead BTW'"
 fi
 
+# Run KoboKanaeru.sh if INCLUDE_KOBO=1
 if grep -q "INCLUDE_KOBO=1" "$CONFIG_FILE"; then
     sh /data/adb/modules/ProjectRaco/Scripts/KoboKanaeru.sh
 fi
@@ -50,12 +60,9 @@ fi
 # Note: Notification Disabled
 ###################################
 
-#!/system/bin/sh
 # Do NOT assume where your module will be located.
 # ALWAYS use $MODDIR if you need to know where this script
 # and module is placed.
-# This will make sure your module will still work
-# if Magisk change its mount point in the future
 MODDIR=${0%/*}
 
 # ----------------- VARIABLES -----------------
@@ -402,9 +409,25 @@ main() {
     cleanup_memory
 }
 
-# Main Execution & Exit script successfully
-sync && main && exit 0
+# Main Execution
+sync && main
 
 # This script will be executed in late_start service mode
-
 su -lp 2000 -c "cmd notification post -S bigtext -t 'Project Raco' -i file:///data/local/tmp/logo.png -I file:///data/local/tmp/logo.png TagRaco 'Project Raco - オンライン'"
+
+# Revert CPU governor to default after 20 seconds, only if INCLUDE_SANDEV=1
+if grep -q "INCLUDE_SANDEV=1" "$CONFIG_FILE"; then
+    sleep 20
+    
+    DEFAULT_CPU_GOV=$(grep '^GOV=' "$CONFIG_FILE" | cut -d'=' -f2)
+
+    if [ -z "$DEFAULT_CPU_GOV" ]; then
+        if [ -e /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors ] && grep -q "schedhorizon" /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors; then
+            DEFAULT_CPU_GOV="schedhorizon"
+        else
+            DEFAULT_CPU_GOV="schedutil"
+        fi
+    fi
+
+    change_cpu_gov "$DEFAULT_CPU_GOV"
+fi
