@@ -2028,7 +2028,7 @@ class _SystemActionsCardState extends State<SystemActionsCard> {
                     ? null
                     : () => _runAction(
                         command:
-                            '/data/adb/modules/ProjectRaco/Scripts/Fstrim.sh',
+                            'su -c sh /data/adb/modules/ProjectRaco/Scripts/Fstrim.sh',
                         setLoadingState: (val) => _isFstrimRunning = val,
                         localization: localization,
                       ),
@@ -2056,7 +2056,7 @@ class _SystemActionsCardState extends State<SystemActionsCard> {
                     ? null
                     : () => _runAction(
                         command:
-                            '/data/adb/modules/ProjectRaco/Scripts/Clear_cache.sh',
+                            'su -c sh /data/adb/modules/ProjectRaco/Scripts/Clear_cache.sh',
                         setLoadingState: (val) => _isClearCacheRunning = val,
                         localization: localization,
                       ),

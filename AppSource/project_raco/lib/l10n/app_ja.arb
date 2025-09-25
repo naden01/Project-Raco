@@ -105,9 +105,9 @@
     "anya_thermal_toggle_title": "アーニャサーマルフローステートを有効にする",
     "system_actions_title": "システムアクション",
     "fstrim_title": "Fstrim",
-    "fstrim_description": "Androidパーティションをトリムします。処理には時間がかかる場合がありますので、しばらくお待ちください。",
+    "fstrim_description": "Androidパーティションをトリムします。",
     "clear_cache_title": "キャッシュをクリア",
-    "clear_cache_description": "デバイスのキャッシュをクリアします。",
+    "clear_cache_description": "デバイスのキャッシュをクリアします。処理には時間がかかる場合がありますので、しばらくお待ちください。",
     "action_successful": "アクションは正常に完了しました。",
     "action_failed": "アクションが失敗しました。",
     "running_action": "実行中..."

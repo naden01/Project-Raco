@@ -105,9 +105,9 @@
     "anya_thermal_toggle_title": "Aktifkan Anya Thermal Flowstate",
     "system_actions_title": "Tindakan Sistem",
     "fstrim_title": "Fstrim",
-    "fstrim_description": "Pangkas partisi Android. Harap tunggu, proses ini mungkin memakan waktu.",
+    "fstrim_description": "Pangkas partisi Android.",
     "clear_cache_title": "Bersihkan Cache",
-    "clear_cache_description": "Bersihkan cache perangkat.",
+    "clear_cache_description": "Bersihkan cache perangkat. Harap tunggu, proses ini mungkin memakan waktu.",
     "action_successful": "Tindakan berhasil diselesaikan.",
     "action_failed": "Tindakan gagal.",
     "running_action": "Menjalankan..."
