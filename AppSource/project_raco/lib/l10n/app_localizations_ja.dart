@@ -304,4 +304,29 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get anya_thermal_toggle_title => 'アーニャサーマルフローステートを有効にする';
+
+  @override
+  String get system_actions_title => 'システムアクション';
+
+  @override
+  String get fstrim_title => 'Fstrim';
+
+  @override
+  String get fstrim_description =>
+      'Androidパーティションをトリムします。処理には時間がかかる場合がありますので、しばらくお待ちください。';
+
+  @override
+  String get clear_cache_title => 'キャッシュをクリア';
+
+  @override
+  String get clear_cache_description => 'デバイスのキャッシュをクリアします。';
+
+  @override
+  String get action_successful => 'アクションは正常に完了しました。';
+
+  @override
+  String get action_failed => 'アクションが失敗しました。';
+
+  @override
+  String get running_action => '実行中...';
 }

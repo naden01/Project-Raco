@@ -317,4 +317,29 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get anya_thermal_toggle_title => 'Aktifkan Anya Thermal Flowstate';
+
+  @override
+  String get system_actions_title => 'Tindakan Sistem';
+
+  @override
+  String get fstrim_title => 'Fstrim';
+
+  @override
+  String get fstrim_description =>
+      'Pangkas partisi Android. Harap tunggu, proses ini mungkin memakan waktu.';
+
+  @override
+  String get clear_cache_title => 'Bersihkan Cache';
+
+  @override
+  String get clear_cache_description => 'Bersihkan cache perangkat.';
+
+  @override
+  String get action_successful => 'Tindakan berhasil diselesaikan.';
+
+  @override
+  String get action_failed => 'Tindakan gagal.';
+
+  @override
+  String get running_action => 'Menjalankan...';
 }

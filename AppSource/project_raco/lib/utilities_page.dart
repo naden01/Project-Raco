@@ -276,6 +276,20 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
         navigationTarget: systemPage,
         searchKeywords: 'downscale resolution screen density display',
       ),
+      SearchResultItem(
+        title: localization.fstrim_title,
+        subtitle: localization.system_title,
+        icon: Icons.cleaning_services_outlined,
+        navigationTarget: systemPage,
+        searchKeywords: 'fstrim trim storage system maintenance clean',
+      ),
+      SearchResultItem(
+        title: localization.clear_cache_title,
+        subtitle: localization.system_title,
+        icon: Icons.delete_sweep_outlined,
+        navigationTarget: systemPage,
+        searchKeywords: 'clear cache temporary files system maintenance clean',
+      ),
     ]);
 
     // --- Appearance ---
@@ -820,6 +834,7 @@ class _SystemPageState extends _LoadingState<SystemPage> {
             originalSize: widget.resolutionState?['originalSize'] ?? '',
             originalDensity: widget.resolutionState?['originalDensity'] ?? 0,
           ),
+          const SystemActionsCard(),
         ],
       ),
     );
@@ -1912,6 +1927,141 @@ class _BypassChargingCardState extends State<BypassChargingCard> {
                     )
                   : const Icon(Icons.bolt_outlined),
               activeColor: colorScheme.primary,
+              contentPadding: EdgeInsets.zero,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class SystemActionsCard extends StatefulWidget {
+  const SystemActionsCard({Key? key}) : super(key: key);
+
+  @override
+  _SystemActionsCardState createState() => _SystemActionsCardState();
+}
+
+class _SystemActionsCardState extends State<SystemActionsCard> {
+  bool _isFstrimRunning = false;
+  bool _isClearCacheRunning = false;
+
+  Future<void> _runAction({
+    required String command,
+    required Function(bool) setLoadingState,
+    required AppLocalizations localization,
+  }) async {
+    if (!await _checkRootAccess()) return;
+    if (mounted) setState(() => setLoadingState(true));
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(localization.running_action)));
+
+    try {
+      final result = await _runRootCommandAndWait(command);
+      if (mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        if (result.exitCode == 0) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(localization.action_successful)),
+          );
+        } else {
+          throw Exception(result.stderr);
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${localization.action_failed}: $e'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => setLoadingState(false));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final localization = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    final bool isBusy = _isFstrimRunning || _isClearCacheRunning;
+
+    return Card(
+      elevation: 2.0,
+      margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      color: colorScheme.surfaceContainerHighest,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              localization.system_actions_title,
+              style: textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 16),
+            // Fstrim Action
+            ListTile(
+              leading: _isFstrimRunning
+                  ? const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(strokeWidth: 2.5),
+                    )
+                  : const Icon(Icons.cleaning_services_outlined),
+              title: Text(localization.fstrim_title),
+              subtitle: Text(
+                localization.fstrim_description,
+                style: textTheme.bodySmall,
+              ),
+              trailing: ElevatedButton(
+                onPressed: isBusy
+                    ? null
+                    : () => _runAction(
+                        command:
+                            '/data/adb/modules/ProjectRaco/Scripts/Fstrim.sh',
+                        setLoadingState: (val) => _isFstrimRunning = val,
+                        localization: localization,
+                      ),
+                child: const Icon(Icons.play_arrow),
+              ),
+              contentPadding: EdgeInsets.zero,
+            ),
+            const Divider(),
+            // Clear Cache Action
+            ListTile(
+              leading: _isClearCacheRunning
+                  ? const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(strokeWidth: 2.5),
+                    )
+                  : const Icon(Icons.delete_sweep_outlined),
+              title: Text(localization.clear_cache_title),
+              subtitle: Text(
+                localization.clear_cache_description,
+                style: textTheme.bodySmall,
+              ),
+              trailing: ElevatedButton(
+                onPressed: isBusy
+                    ? null
+                    : () => _runAction(
+                        command:
+                            '/data/adb/modules/ProjectRaco/Scripts/Clear_cache.sh',
+                        setLoadingState: (val) => _isClearCacheRunning = val,
+                        localization: localization,
+                      ),
+                child: const Icon(Icons.play_arrow),
+              ),
               contentPadding: EdgeInsets.zero,
             ),
           ],

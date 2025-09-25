@@ -102,5 +102,13 @@
     "no_governor_selected": "None",
     "anya_thermal_title": "Anya Melfissa Disable Thermal",
     "anya_thermal_description": "Disable Thermal on Performance and Gaming, Enable Thermal on Powersave, Balanced, Cool Down.",
-    "anya_thermal_toggle_title": "Enable Anya Thermal Flowstate"
+    "anya_thermal_toggle_title": "Enable Anya Thermal Flowstate",
+    "system_actions_title": "System Actions",
+    "fstrim_title": "Fstrim",
+    "fstrim_description": "Trim Android partitions. Please wait, the process may take some time.",
+    "clear_cache_title": "Clear Cache",
+    "clear_cache_description": "Clear the device's cache.",
+    "action_successful": "Action completed successfully.",
+    "action_failed": "Action failed.",
+    "running_action": "Running..."
 }

@@ -681,6 +681,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Enable Anya Thermal Flowstate'**
   String get anya_thermal_toggle_title;
+
+  /// No description provided for @system_actions_title.
+  ///
+  /// In en, this message translates to:
+  /// **'System Actions'**
+  String get system_actions_title;
+
+  /// No description provided for @fstrim_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Fstrim'**
+  String get fstrim_title;
+
+  /// No description provided for @fstrim_description.
+  ///
+  /// In en, this message translates to:
+  /// **'Trim Android partitions. Please wait, the process may take some time.'**
+  String get fstrim_description;
+
+  /// No description provided for @clear_cache_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Cache'**
+  String get clear_cache_title;
+
+  /// No description provided for @clear_cache_description.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear the device\'s cache.'**
+  String get clear_cache_description;
+
+  /// No description provided for @action_successful.
+  ///
+  /// In en, this message translates to:
+  /// **'Action completed successfully.'**
+  String get action_successful;
+
+  /// No description provided for @action_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Action failed.'**
+  String get action_failed;
+
+  /// No description provided for @running_action.
+  ///
+  /// In en, this message translates to:
+  /// **'Running...'**
+  String get running_action;
 }
 
 class _AppLocalizationsDelegate
