@@ -322,14 +322,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fstrim_title => 'Fstrim';
 
   @override
-  String get fstrim_description =>
-      'Trim Android partitions. Please wait, the process may take some time.';
+  String get fstrim_description => 'Trim Android partitions.';
 
   @override
   String get clear_cache_title => 'Clear Cache';
 
   @override
-  String get clear_cache_description => 'Clear the device\'s cache.';
+  String get clear_cache_description =>
+      'Clear the device\'s cache. Please wait, the process may take some time.';
 
   @override
   String get action_successful => 'Action completed successfully.';

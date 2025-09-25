@@ -312,14 +312,14 @@ class AppLocalizationsJa extends AppLocalizations {
   String get fstrim_title => 'Fstrim';
 
   @override
-  String get fstrim_description =>
-      'Androidパーティションをトリムします。処理には時間がかかる場合がありますので、しばらくお待ちください。';
+  String get fstrim_description => 'Androidパーティションをトリムします。';
 
   @override
   String get clear_cache_title => 'キャッシュをクリア';
 
   @override
-  String get clear_cache_description => 'デバイスのキャッシュをクリアします。';
+  String get clear_cache_description =>
+      'デバイスのキャッシュをクリアします。処理には時間がかかる場合がありますので、しばらくお待ちください。';
 
   @override
   String get action_successful => 'アクションは正常に完了しました。';

@@ -325,14 +325,14 @@ class AppLocalizationsId extends AppLocalizations {
   String get fstrim_title => 'Fstrim';
 
   @override
-  String get fstrim_description =>
-      'Pangkas partisi Android. Harap tunggu, proses ini mungkin memakan waktu.';
+  String get fstrim_description => 'Pangkas partisi Android.';
 
   @override
   String get clear_cache_title => 'Bersihkan Cache';
 
   @override
-  String get clear_cache_description => 'Bersihkan cache perangkat.';
+  String get clear_cache_description =>
+      'Bersihkan cache perangkat. Harap tunggu, proses ini mungkin memakan waktu.';
 
   @override
   String get action_successful => 'Tindakan berhasil diselesaikan.';

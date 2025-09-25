@@ -697,7 +697,7 @@ abstract class AppLocalizations {
   /// No description provided for @fstrim_description.
   ///
   /// In en, this message translates to:
-  /// **'Trim Android partitions. Please wait, the process may take some time.'**
+  /// **'Trim Android partitions.'**
   String get fstrim_description;
 
   /// No description provided for @clear_cache_title.
@@ -709,7 +709,7 @@ abstract class AppLocalizations {
   /// No description provided for @clear_cache_description.
   ///
   /// In en, this message translates to:
-  /// **'Clear the device\'s cache.'**
+  /// **'Clear the device\'s cache. Please wait, the process may take some time.'**
   String get clear_cache_description;
 
   /// No description provided for @action_successful.
