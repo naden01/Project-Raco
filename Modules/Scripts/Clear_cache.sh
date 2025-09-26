@@ -11,8 +11,8 @@ for DIR in /data/data/*; do
 done
 
 # Cache cleaner by Taka
-find /data/data/*/cache/* -delete &>/dev/null
-find /data/data/*/code_cache/* -delete &>/dev/null
-find /data/user_de/*/*/cache/* -delete &>/dev/null
-find /data/user_de/*/*/code_cache/* -delete &>/dev/null
-find /sdcard/Android/data/*/cache/* -delete &>/dev/null
+find /data/data/*/cache/* -delete 
+find /data/data/*/code_cache/* -delete 
+find /data/user_de/*/*/cache/* -delete 
+find /data/user_de/*/*/code_cache/* -delete 
+find /sdcard/Android/data/*/cache/* -delete 

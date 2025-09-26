@@ -106,9 +106,5 @@
     "system_actions_title": "System Actions",
     "fstrim_title": "Fstrim",
     "fstrim_description": "Trim Android partitions.",
-    "clear_cache_title": "Clear Cache",
-    "clear_cache_description": "Clear the device's cache. Please wait, the process may take some time.",
-    "action_successful": "Action completed successfully.",
-    "action_failed": "Action failed.",
-    "running_action": "Running..."
+    "clear_cache_title": "Clear Cache"
 }

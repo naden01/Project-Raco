@@ -1950,36 +1950,17 @@ class _SystemActionsCardState extends State<SystemActionsCard> {
   Future<void> _runAction({
     required String command,
     required Function(bool) setLoadingState,
-    required AppLocalizations localization,
   }) async {
     if (!await _checkRootAccess()) return;
     if (mounted) setState(() => setLoadingState(true));
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(localization.running_action)));
-
     try {
       final result = await _runRootCommandAndWait(command);
-      if (mounted) {
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        if (result.exitCode == 0) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(localization.action_successful)),
-          );
-        } else {
-          throw Exception(result.stderr);
-        }
+      if (result.exitCode != 0) {
+        throw Exception(result.stderr);
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${localization.action_failed}: $e'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
-      }
+      // Errors can be logged or handled here if necessary.
     } finally {
       if (mounted) setState(() => setLoadingState(false));
     }
@@ -2030,7 +2011,6 @@ class _SystemActionsCardState extends State<SystemActionsCard> {
                         command:
                             'su -c sh /data/adb/modules/ProjectRaco/Scripts/Fstrim.sh',
                         setLoadingState: (val) => _isFstrimRunning = val,
-                        localization: localization,
                       ),
                 child: const Icon(Icons.play_arrow),
               ),
@@ -2047,10 +2027,6 @@ class _SystemActionsCardState extends State<SystemActionsCard> {
                     )
                   : const Icon(Icons.delete_sweep_outlined),
               title: Text(localization.clear_cache_title),
-              subtitle: Text(
-                localization.clear_cache_description,
-                style: textTheme.bodySmall,
-              ),
               trailing: ElevatedButton(
                 onPressed: isBusy
                     ? null
@@ -2058,7 +2034,6 @@ class _SystemActionsCardState extends State<SystemActionsCard> {
                         command:
                             'su -c sh /data/adb/modules/ProjectRaco/Scripts/Clear_cache.sh',
                         setLoadingState: (val) => _isClearCacheRunning = val,
-                        localization: localization,
                       ),
                 child: const Icon(Icons.play_arrow),
               ),
