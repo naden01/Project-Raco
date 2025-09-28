@@ -235,16 +235,10 @@ if [ "$USE_SAVED_CONFIG" = false ]; then
   fi
 fi
 
-ui_print " "
-ui_print "- Writing final configuration..."
 if [ -f "$RACO_MODULE_CONFIG" ]; then
     ui_print "- Finalizing SOC Code ($SOC) in raco.txt"
     sed -i "s/^SOC=.*/SOC=$SOC/" "$RACO_MODULE_CONFIG"
-else
-    ui_print "! raco.txt not found, cannot write SOC value."
 fi
-ui_print " "
-sleep 1.5
 
 ui_print " "
 ui_print "     INSTALLING Project Raco App      "
