@@ -47,6 +47,8 @@ move_with_retry() {
 
 LATESTARTSERVICE=true
 SOC=0
+RACO_PERSIST_CONFIG="/data/ProjectRaco/raco.txt"
+
 
 ui_print "------------------------------------"
 ui_print "             Project Raco           "
@@ -62,16 +64,28 @@ ui_print "------------------------------------"
 ui_print " "
 sleep 1.5
 
-soc_recognition_extra() {
-	[ -d /sys/class/kgsl/kgsl-3d0/devfreq ] && { SOC=2; return 0; }
-	[ -d /sys/devices/platform/kgsl-2d0.0/kgsl ] && { SOC=2; return 0; }
-	[ -d /sys/kernel/ged/hal ] && { SOC=1; return 0; }
-	[ -d /sys/kernel/tegra_gpu ] && { SOC=6; return 0; }
-	return 1
-}
+if [ -f "$RACO_PERSIST_CONFIG" ]; then
+  SAVED_SOC=$(grep '^SOC=' "$RACO_PERSIST_CONFIG" | cut -d'=' -f2)
+  if [ -n "$SAVED_SOC" ] && [ "$SAVED_SOC" -gt 0 ]; then
+    ui_print "------------------------------------"
+    ui_print "- Found saved SOC Code: $SAVED_SOC"
+    ui_print "- Skipping chipset recognition."
+    ui_print "------------------------------------"
+    SOC=$SAVED_SOC
+  fi
+fi
 
-get_soc_getprop() {
-	local SOC_PROP="
+if [ $SOC -eq 0 ]; then
+  soc_recognition_extra() {
+    [ -d /sys/class/kgsl/kgsl-3d0/devfreq ] && { SOC=2; return 0; }
+    [ -d /sys/devices/platform/kgsl-2d0.0/kgsl ] && { SOC=2; return 0; }
+    [ -d /sys/kernel/ged/hal ] && { SOC=1; return 0; }
+    [ -d /sys/kernel/tegra_gpu ] && { SOC=6; return 0; }
+    return 1
+  }
+
+  get_soc_getprop() {
+    local SOC_PROP="
 ro.board.platform
 ro.soc.model
 ro.hardware
@@ -82,34 +96,35 @@ ro.vendor.qti.soc_name
 ro.vendor.soc.model.part_name
 ro.vendor.soc.model
 "
-	for prop in $SOC_PROP; do
-		getprop "$prop"
-	done
-}
+    for prop in $SOC_PROP; do
+      getprop "$prop"
+    done
+  }
 
-recognize_soc() {
-	case "$1" in
-	*mt* | *MT*) SOC=1 ;;
-	*sm* | *qcom* | *SM* | *QCOM* | *Qualcomm*) SOC=2 ;;
-	*exynos* | *Exynos* | *EXYNOS* | *universal* | *samsung* | *erd* | *s5e*) SOC=3 ;;
-	*Unisoc* | *unisoc* | *ums*) SOC=4 ;;
-	*gs* | *Tensor* | *tensor*) SOC=5 ;;
-	*kirin*) SOC=7 ;;
-	esac
-	[ $SOC -eq 0 ] && return 1
-}
+  recognize_soc() {
+    case "$1" in
+    *mt* | *MT*) SOC=1 ;;
+    *sm* | *qcom* | *SM* | *QCOM* | *Qualcomm*) SOC=2 ;;
+    *exynos* | *Exynos* | *EXYNOS* | *universal* | *samsung* | *erd* | *s5e*) SOC=3 ;;
+    *Unisoc* | *unisoc* | *ums*) SOC=4 ;;
+    *gs* | *Tensor* | *tensor*) SOC=5 ;;
+    *kirin*) SOC=7 ;;
+    esac
+    [ $SOC -eq 0 ] && return 1
+  }
 
-ui_print "------------------------------------"
-ui_print "        RECOGNIZING CHIPSET         "
-ui_print "------------------------------------"
-soc_recognition_extra
-[ $SOC -eq 0 ] && recognize_soc "$(get_soc_getprop)"
-[ $SOC -eq 0 ] && recognize_soc "$(grep -E "Hardware|Processor" /proc/cpuinfo | uniq | cut -d ':' -f 2 | sed 's/^[ \t]*//')"
-[ $SOC -eq 0 ] && recognize_soc "$(grep "model\sname" /proc/cpuinfo | uniq | cut -d ':' -f 2 | sed 's/^[ \t]*//')"
-[ $SOC -eq 0 ] && {
-  ui_print "! Unable to detect your SoC (Chipset)."
-  abort "! Installation cannot continue. Aborting."
-}
+  ui_print "------------------------------------"
+  ui_print "        RECOGNIZING CHIPSET         "
+  ui_print "------------------------------------"
+  soc_recognition_extra
+  [ $SOC -eq 0 ] && recognize_soc "$(get_soc_getprop)"
+  [ $SOC -eq 0 ] && recognize_soc "$(grep -E "Hardware|Processor" /proc/cpuinfo | uniq | cut -d ':' -f 2 | sed 's/^[ \t]*//')"
+  [ $SOC -eq 0 ] && recognize_soc "$(grep "model\sname" /proc/cpuinfo | uniq | cut -d ':' -f 2 | sed 's/^[ \t]*//')"
+  [ $SOC -eq 0 ] && {
+    ui_print "! Unable to detect your SoC (Chipset)."
+    abort "! Installation cannot continue. Aborting."
+  }
+fi
 
 ui_print "------------------------------------"
 ui_print "            MODULE INFO             "
@@ -155,7 +170,6 @@ choose() {
   done
 }
 
-RACO_PERSIST_CONFIG="/data/ProjectRaco/raco.txt"
 RACO_MODULE_CONFIG="$MODPATH/raco.txt"
 
 ui_print "------------------------------------"
@@ -206,14 +220,14 @@ if [ "$USE_SAVED_CONFIG" = false ]; then
   sed -i "s/^INCLUDE_ANYA=.*/INCLUDE_ANYA=$INCLUDE_ANYA/" "$RACO_MODULE_CONFIG"
   sed -i "s/^INCLUDE_KOBO=.*/INCLUDE_KOBO=$INCLUDE_KOBO/" "$RACO_MODULE_CONFIG"
   sed -i "s/^INCLUDE_SANDEV=.*/INCLUDE_SANDEV=$INCLUDE_SANDEV/" "$RACO_MODULE_CONFIG"
+  ui_print "- Adding SOC Code ($SOC) to module config..."
+  sed -i "s/^SOC=.*/SOC=$SOC/" "$RACO_MODULE_CONFIG"
 
   ui_print " "
   ui_print "- Save these choices for future installations?"
   ui_print "  Vol+ = Yes  |  Vol- = No"
   if choose; then
     ui_print "- Saving configuration for next time."
-    ui_print "  - Adding SOC Code ($SOC) to persistent config."
-    sed -i "s/^SOC=.*/SOC=$SOC/" "$RACO_MODULE_CONFIG"
     copy_with_retry "$RACO_MODULE_CONFIG" "/data/ProjectRaco"
   else
     ui_print "- Choices will not be saved."
@@ -224,7 +238,7 @@ fi
 ui_print " "
 ui_print "- Writing final configuration..."
 if [ -f "$RACO_MODULE_CONFIG" ]; then
-    ui_print "- Writing SOC Code ($SOC) to raco.txt"
+    ui_print "- Finalizing SOC Code ($SOC) in raco.txt"
     sed -i "s/^SOC=.*/SOC=$SOC/" "$RACO_MODULE_CONFIG"
 else
     ui_print "! raco.txt not found, cannot write SOC value."
@@ -251,37 +265,33 @@ ui_print " "
 BIN_PATH=$MODPATH/system/bin
 TARGET_BIN_NAME=HamadaAI
 TARGET_BIN_PATH=$BIN_PATH/$TARGET_BIN_NAME
+PLACEHOLDER_FILE=$BIN_PATH/Kakangkuh
 
 mkdir -p $BIN_PATH
+
+if [ -f "$PLACEHOLDER_FILE" ]; then
+  rm -f "$PLACEHOLDER_FILE"
+fi
 
 ARCH=$(getprop ro.product.cpu.abi)
 if [[ "$ARCH" == *"arm64"* ]]; then
   ui_print "- Detected 64-bit ARM architecture ($ARCH)"
-  SOURCE_BIN_IN_ZIP='HamadaAI/hamadaAI_arm64'
+  SOURCE_BIN=$MODPATH/HamadaAI/hamadaAI_arm64
 else
   ui_print "- Detected 32-bit ARM architecture or other ($ARCH)"
-  SOURCE_BIN_IN_ZIP='HamadaAI/hamadaAI_arm32'
+  SOURCE_BIN=$MODPATH/HamadaAI/hamadaAI_arm32
 fi
 
-ui_print "- Extracting HamadaAI binary..."
-unzip -j -o "$ZIPFILE" "$SOURCE_BIN_IN_ZIP" -d $TMPDIR >&2
-EXTRACTED_FILE_NAME=$(basename "$SOURCE_BIN_IN_ZIP")
-EXTRACTED_FILE_PATH="$TMPDIR/$EXTRACTED_FILE_NAME"
-
-if [ -f "$EXTRACTED_FILE_PATH" ]; then
-  move_with_retry "$EXTRACTED_FILE_PATH" "$TARGET_BIN_PATH"
+if [ -f "$SOURCE_BIN" ]; then
+  ui_print "- Installing HamadaAI binary..."
+  move_with_retry "$SOURCE_BIN" "$TARGET_BIN_PATH"
 
   ui_print "- Setting permissions for $TARGET_BIN_NAME"
   set_perm $TARGET_BIN_PATH 0 0 0755
-  chmod 755 $TARGET_BIN_PATH
 else
-  ui_print "! ERROR: Failed to extract binary from $SOURCE_BIN_IN_ZIP"
+  ui_print "! ERROR: Source binary not found at $SOURCE_BIN"
   abort "! Aborting installation."
 fi
 
-#############################
-# Celestial Render FlowX (@Kzuyoo)
-# Version 1.5G
-#############################
-
 set_perm_recursive $MODPATH/system/lib/libncurses.so 0 0 0644 0644
+}
