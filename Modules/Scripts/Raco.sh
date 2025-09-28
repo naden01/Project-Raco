@@ -31,6 +31,7 @@ ipv4="/proc/sys/net/ipv4"
 ##############################
 MODULE_PATH="/data/adb/modules/ProjectRaco"
 source "$MODULE_PATH/Scripts/corin.sh"
+source "$MODULE_PATH/Scripts/Kcpu.sh"
 
 ##############################
 # Begin Functions
@@ -817,6 +818,7 @@ performance_basic() {
     esac
 
     dnd_on
+	pemboy_perf
     corin_perf
     bypass_on
     anyamelfissa
@@ -880,8 +882,9 @@ balanced_basic() {
         6) tegra_normal ;;
     esac
     
+	dnd_off
+	pemboy_balanced
     corin_balanced
-    dnd_off
     bypass_off
     anyakawaii
 }
@@ -922,9 +925,10 @@ powersave_basic() {
         5) tensor_powersave ;;
         6) tegra_powersave ;;
     esac
-    
-    corin_powersave
+
     dnd_off
+	pemboy_powersave
+    corin_powersave
     bypass_off
     anyakawaii
 }
