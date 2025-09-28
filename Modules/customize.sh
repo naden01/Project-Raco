@@ -67,10 +67,6 @@ sleep 1.5
 if [ -f "$RACO_PERSIST_CONFIG" ]; then
   SAVED_SOC=$(grep '^SOC=' "$RACO_PERSIST_CONFIG" | cut -d'=' -f2)
   if [ -n "$SAVED_SOC" ] && [ "$SAVED_SOC" -gt 0 ]; then
-    ui_print "------------------------------------"
-    ui_print "- Found saved SOC Code: $SAVED_SOC"
-    ui_print "- Skipping chipset recognition."
-    ui_print "------------------------------------"
     SOC=$SAVED_SOC
   fi
 fi
