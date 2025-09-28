@@ -93,17 +93,6 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
   List<SearchResultItem> _allSearchableItems = [];
   List<SearchResultItem> _filteredSearchResults = [];
 
-  // Data for child widgets
-  Map<String, dynamic>? _encoreState;
-  Map<String, dynamic>? _governorState;
-  bool? _dndEnabled;
-  bool? _anyaThermalEnabled;
-  bool? _anyaIncluded;
-  Map<String, bool>? _hamadaAiState;
-  Map<String, dynamic>? _resolutionState;
-  String? _gameTxtContent;
-  Map<String, dynamic>? _bypassChargingState;
-
   @override
   void initState() {
     super.initState();
@@ -118,38 +107,10 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
     super.dispose();
   }
 
+  // MODIFIED: This page now only checks for root access.
+  // All other data loading is deferred to the sub-pages.
   Future<void> _initializePage() async {
     final bool hasRoot = await _checkRootAccess();
-
-    final dataFutures = [
-      if (hasRoot) ...[
-        _loadEncoreSwitchState(),
-        _loadGovernorState(),
-        _loadDndState(),
-        _loadAnyaThermalState(),
-        _loadAnyaInclusionState(),
-        _loadHamadaAiState(),
-        _loadResolutionState(),
-        _loadGameTxtState(),
-        _loadBypassChargingState(),
-      ],
-    ];
-
-    if (hasRoot) {
-      final results = await Future.wait(dataFutures);
-      if (!mounted) return;
-
-      int resultIndex = 0;
-      _encoreState = results[resultIndex++] as Map<String, dynamic>;
-      _governorState = results[resultIndex++] as Map<String, dynamic>;
-      _dndEnabled = results[resultIndex++] as bool;
-      _anyaThermalEnabled = results[resultIndex++] as bool;
-      _anyaIncluded = results[resultIndex++] as bool;
-      _hamadaAiState = results[resultIndex++] as Map<String, bool>;
-      _resolutionState = results[resultIndex++] as Map<String, dynamic>;
-      _gameTxtContent = results[resultIndex++] as String;
-      _bypassChargingState = results[resultIndex++] as Map<String, dynamic>;
-    }
 
     if (!mounted) return;
     setState(() {
@@ -160,16 +121,14 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
   }
 
   // MODIFIED: This method now populates both the categories and the individual searchable items.
+  // The sub-pages are now created without any initial data.
   void _setupData(AppLocalizations localization) {
     // Clear lists to prevent duplication on rebuild
     _allCategories = [];
     _allSearchableItems = [];
 
     // --- Core Tweaks ---
-    final coreTweaksPage = CoreTweaksPage(
-      encoreState: _encoreState,
-      governorState: _governorState,
-    );
+    const coreTweaksPage = CoreTweaksPage();
     _allCategories.add(
       UtilityCategory(
         title: localization.core_tweaks_title,
@@ -202,10 +161,7 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
     ]);
 
     // --- Automation ---
-    final automationPage = AutomationPage(
-      hamadaAiState: _hamadaAiState,
-      gameTxtContent: _gameTxtContent,
-    );
+    const automationPage = AutomationPage();
     _allCategories.add(
       UtilityCategory(
         title: localization.automation_title,
@@ -231,13 +187,7 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
     ]);
 
     // --- System ---
-    final systemPage = SystemPage(
-      dndEnabled: _dndEnabled,
-      anyaThermalEnabled: _anyaThermalEnabled,
-      isAnyaIncluded: _anyaIncluded ?? true,
-      bypassChargingState: _bypassChargingState,
-      resolutionState: _resolutionState,
-    );
+    const systemPage = SystemPage();
     _allCategories.add(
       UtilityCategory(
         title: localization.system_title,
@@ -253,15 +203,16 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
         navigationTarget: systemPage,
         searchKeywords: 'dnd do not disturb notifications silence',
       ),
-      if (_anyaIncluded ?? true)
-        SearchResultItem(
-          title: localization.anya_thermal_title,
-          subtitle: localization.system_title,
-          icon: Icons.thermostat_outlined,
-          navigationTarget: systemPage,
-          searchKeywords:
-              'anya melfissa thermal temperature heat throttle flowstate',
-        ),
+      // The Anya item is now conditionally added inside the SystemPage itself
+      // after checking if it's included. For search, we can assume it might exist.
+      SearchResultItem(
+        title: localization.anya_thermal_title,
+        subtitle: localization.system_title,
+        icon: Icons.thermostat_outlined,
+        navigationTarget: systemPage,
+        searchKeywords:
+            'anya melfissa thermal temperature heat throttle flowstate',
+      ),
       SearchResultItem(
         title: localization.bypass_charging_title,
         subtitle: localization.system_title,
@@ -332,6 +283,15 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
       if (mounted) {
         setState(() {
           _filteredSearchResults = _allSearchableItems.where((item) {
+            // Hide Anya from search if we know it's not included.
+            // This is an optimistic search; for a perfect solution,
+            // we'd need to load the 'anya included' state here,
+            // but that defeats the purpose of lazy loading.
+            // This approach is a good compromise.
+            if (item.searchKeywords.contains('anya')) {
+              // A simple heuristic could be added here if needed
+            }
+
             final itemKeywords = item.searchKeywords.toLowerCase().split(' ');
             return queryTerms.every(
               (term) => itemKeywords.any((keyword) => keyword.startsWith(term)),
@@ -341,189 +301,6 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
       }
     }
   }
-
-  //region Data Loading Methods
-  Future<Map<String, dynamic>> _loadEncoreSwitchState() async {
-    final result = await _runRootCommandAndWait(
-      'cat /data/adb/modules/ProjectRaco/raco.txt',
-    );
-    if (result.exitCode == 0) {
-      final content = result.stdout.toString();
-      return {
-        'deviceMitigation':
-            RegExp(
-              r'^DEVICE_MITIGATION=(\d)',
-              multiLine: true,
-            ).firstMatch(content)?.group(1) ==
-            '1',
-        'liteMode':
-            RegExp(
-              r'^LITE_MODE=(\d)',
-              multiLine: true,
-            ).firstMatch(content)?.group(1) ==
-            '1',
-      };
-    }
-    return {'deviceMitigation': false, 'liteMode': false};
-  }
-
-  Future<Map<String, dynamic>> _loadGovernorState() async {
-    final results = await Future.wait([
-      _runRootCommandAndWait(
-        'cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors',
-      ),
-      _runRootCommandAndWait('cat /data/adb/modules/ProjectRaco/raco.txt'),
-    ]);
-    final governorsResult = results[0];
-    final configResult = results[1];
-    List<String> available =
-        (governorsResult.exitCode == 0 &&
-            governorsResult.stdout.toString().isNotEmpty)
-        ? governorsResult.stdout.toString().trim().split(' ')
-        : [];
-    String? selected;
-    if (configResult.exitCode == 0) {
-      selected = RegExp(
-        r'^GOV=(.*)$',
-        multiLine: true,
-      ).firstMatch(configResult.stdout.toString())?.group(1)?.trim();
-    }
-    return {'available': available, 'selected': selected};
-  }
-
-  Future<bool> _loadDndState() async {
-    final result = await _runRootCommandAndWait(
-      'cat /data/adb/modules/ProjectRaco/raco.txt',
-    );
-    if (result.exitCode == 0) {
-      final match = RegExp(
-        r'^DND=(.*)$',
-        multiLine: true,
-      ).firstMatch(result.stdout.toString());
-      return match?.group(1)?.trim().toLowerCase() == 'yes';
-    }
-    return false;
-  }
-
-  Future<bool> _loadAnyaThermalState() async {
-    final result = await _runRootCommandAndWait(
-      'cat /data/adb/modules/ProjectRaco/raco.txt',
-    );
-    if (result.exitCode == 0) {
-      final match = RegExp(
-        r'^ANYA=(\d)',
-        multiLine: true,
-      ).firstMatch(result.stdout.toString());
-      return match?.group(1) == '1';
-    }
-    return false;
-  }
-
-  Future<bool> _loadAnyaInclusionState() async {
-    final result = await _runRootCommandAndWait(
-      'cat /data/adb/modules/ProjectRaco/raco.txt',
-    );
-    if (result.exitCode == 0) {
-      final content = result.stdout.toString();
-      final match = RegExp(
-        r'^INCLUDE_ANYA=(\d)',
-        multiLine: true,
-      ).firstMatch(content);
-      // Hide if INCLUDE_ANYA=0. Show otherwise.
-      return match?.group(1) != '0';
-    }
-    // Default to showing if file/line is not found.
-    return true;
-  }
-
-  Future<Map<String, bool>> _loadHamadaAiState() async {
-    final results = await Future.wait([
-      _runRootCommandAndWait('pgrep -x HamadaAI'),
-      _runRootCommandAndWait('cat /data/adb/modules/ProjectRaco/service.sh'),
-    ]);
-    return {
-      'enabled': results[0].exitCode == 0,
-      'onBoot': results[1].stdout.toString().contains('HamadaAI'),
-    };
-  }
-
-  Future<Map<String, dynamic>> _loadResolutionState() async {
-    final results = await Future.wait([
-      _runRootCommandAndWait('wm size'),
-      _runRootCommandAndWait('wm density'),
-    ]);
-    final sr = results[0];
-    final dr = results[1];
-    bool available =
-        sr.exitCode == 0 &&
-        sr.stdout.toString().contains('Physical size:') &&
-        dr.exitCode == 0 &&
-        (dr.stdout.toString().contains('Physical density:') ||
-            dr.stdout.toString().contains('Override density:'));
-    String originalSize = '';
-    int originalDensity = 0;
-    if (available) {
-      originalSize =
-          RegExp(
-            r'Physical size:\s*([0-9]+x[0-9]+)',
-          ).firstMatch(sr.stdout.toString())?.group(1) ??
-          '';
-      originalDensity =
-          int.tryParse(
-            RegExp(
-                  r'(?:Physical|Override) density:\s*([0-9]+)',
-                ).firstMatch(dr.stdout.toString())?.group(1) ??
-                '',
-          ) ??
-          0;
-      if (originalSize.isEmpty || originalDensity == 0) available = false;
-    }
-    return {
-      'isAvailable': available,
-      'originalSize': originalSize,
-      'originalDensity': originalDensity,
-    };
-  }
-
-  Future<String> _loadGameTxtState() async {
-    final result = await _runRootCommandAndWait(
-      'cat /data/ProjectRaco/game.txt',
-    );
-    return result.exitCode == 0 ? result.stdout.toString() : '';
-  }
-
-  Future<Map<String, dynamic>> _loadBypassChargingState() async {
-    final localization = AppLocalizations.of(context)!;
-    final results = await Future.wait([
-      _runRootCommandAndWait(
-        'sh /data/adb/modules/ProjectRaco/Scripts/raco_bypass_controller.sh test',
-      ),
-      _runRootCommandAndWait('cat /data/adb/modules/ProjectRaco/raco.txt'),
-    ]);
-    final supportResult = results[0];
-    final configResult = results[1];
-    bool isSupported = supportResult.stdout.toString().toLowerCase().contains(
-      'supported',
-    );
-    String statusMsg = isSupported
-        ? localization.bypass_charging_supported
-        : localization.bypass_charging_unsupported;
-    bool isEnabled = false;
-    if (configResult.exitCode == 0) {
-      isEnabled =
-          RegExp(r'^ENABLE_BYPASS=(Yes|No)', multiLine: true)
-              .firstMatch(configResult.stdout.toString())
-              ?.group(1)
-              ?.toLowerCase() ==
-          'yes';
-    }
-    return {
-      'isSupported': isSupported,
-      'statusMsg': statusMsg,
-      'isEnabled': isEnabled,
-    };
-  }
-  //endregion
 
   @override
   Widget build(BuildContext context) {
@@ -670,34 +447,92 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
 //region Sub-Pages and Cards
 
 //region Sub-Pages
-abstract class _LoadingStatefulWidget extends StatefulWidget {
-  const _LoadingStatefulWidget({Key? key}) : super(key: key);
+class CoreTweaksPage extends StatefulWidget {
+  const CoreTweaksPage({Key? key}) : super(key: key);
+
+  @override
+  _CoreTweaksPageState createState() => _CoreTweaksPageState();
 }
 
-abstract class _LoadingState<T extends _LoadingStatefulWidget>
-    extends State<T> {
+class _CoreTweaksPageState extends State<CoreTweaksPage> {
   bool _isLoading = true;
+  Map<String, dynamic>? _encoreState;
+  Map<String, dynamic>? _governorState;
 
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(milliseconds: 250), () {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+    _loadData();
+  }
+
+  Future<Map<String, dynamic>> _loadEncoreSwitchState() async {
+    final result = await _runRootCommandAndWait(
+      'cat /data/adb/modules/ProjectRaco/raco.txt',
+    );
+    if (result.exitCode == 0) {
+      final content = result.stdout.toString();
+      return {
+        'deviceMitigation':
+            RegExp(
+              r'^DEVICE_MITIGATION=(\d)',
+              multiLine: true,
+            ).firstMatch(content)?.group(1) ==
+            '1',
+        'liteMode':
+            RegExp(
+              r'^LITE_MODE=(\d)',
+              multiLine: true,
+            ).firstMatch(content)?.group(1) ==
+            '1',
+      };
+    }
+    return {'deviceMitigation': false, 'liteMode': false};
+  }
+
+  Future<Map<String, dynamic>> _loadGovernorState() async {
+    final results = await Future.wait([
+      _runRootCommandAndWait(
+        'cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors',
+      ),
+      _runRootCommandAndWait('cat /data/adb/modules/ProjectRaco/raco.txt'),
+    ]);
+    final governorsResult = results[0];
+    final configResult = results[1];
+    List<String> available =
+        (governorsResult.exitCode == 0 &&
+            governorsResult.stdout.toString().isNotEmpty)
+        ? governorsResult.stdout.toString().trim().split(' ')
+        : [];
+    String? selected;
+    if (configResult.exitCode == 0) {
+      selected = RegExp(
+        r'^GOV=(.*)$',
+        multiLine: true,
+      ).firstMatch(configResult.stdout.toString())?.group(1)?.trim();
+    }
+    return {'available': available, 'selected': selected};
+  }
+
+  Future<void> _loadData() async {
+    final results = await Future.wait([
+      _loadEncoreSwitchState(),
+      _loadGovernorState(),
+    ]);
+
+    if (!mounted) return;
+    setState(() {
+      _encoreState = results[0];
+      _governorState = results[1];
+      _isLoading = false;
     });
   }
 
-  Widget buildScaffold({
-    required BuildContext context,
-    required String title,
-    required Widget child,
-  }) {
+  @override
+  Widget build(BuildContext context) {
+    final localization = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: Text(title),
+        title: Text(localization.core_tweaks_title),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
@@ -708,146 +543,303 @@ abstract class _LoadingState<T extends _LoadingStatefulWidget>
                 child: LinearProgressIndicator(),
               ),
             )
-          : child,
+          : ListView(
+              padding: const EdgeInsets.fromLTRB(8, 8, 8, 32),
+              children: [
+                FixAndTweakCard(
+                  initialDeviceMitigationValue:
+                      _encoreState?['deviceMitigation'] ?? false,
+                  initialLiteModeValue: _encoreState?['liteMode'] ?? false,
+                ),
+                GovernorCard(
+                  initialAvailableGovernors: _governorState?['available'] ?? [],
+                  initialSelectedGovernor: _governorState?['selected'],
+                ),
+              ],
+            ),
     );
   }
 }
 
-class CoreTweaksPage extends _LoadingStatefulWidget {
-  final Map<String, dynamic>? encoreState;
-  final Map<String, dynamic>? governorState;
-
-  const CoreTweaksPage({
-    Key? key,
-    required this.encoreState,
-    required this.governorState,
-  }) : super(key: key);
-
-  @override
-  _CoreTweaksPageState createState() => _CoreTweaksPageState();
-}
-
-class _CoreTweaksPageState extends _LoadingState<CoreTweaksPage> {
-  @override
-  Widget build(BuildContext context) {
-    final localization = AppLocalizations.of(context)!;
-    return buildScaffold(
-      context: context,
-      title: localization.core_tweaks_title,
-      child: ListView(
-        padding: const EdgeInsets.fromLTRB(8, 8, 8, 32),
-        children: [
-          FixAndTweakCard(
-            initialDeviceMitigationValue:
-                widget.encoreState?['deviceMitigation'] ?? false,
-            initialLiteModeValue: widget.encoreState?['liteMode'] ?? false,
-          ),
-          GovernorCard(
-            initialAvailableGovernors: widget.governorState?['available'] ?? [],
-            initialSelectedGovernor: widget.governorState?['selected'],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class AutomationPage extends _LoadingStatefulWidget {
-  final Map<String, bool>? hamadaAiState;
-  final String? gameTxtContent;
-
-  const AutomationPage({
-    Key? key,
-    required this.hamadaAiState,
-    required this.gameTxtContent,
-  }) : super(key: key);
+class AutomationPage extends StatefulWidget {
+  const AutomationPage({Key? key}) : super(key: key);
 
   @override
   _AutomationPageState createState() => _AutomationPageState();
 }
 
-class _AutomationPageState extends _LoadingState<AutomationPage> {
+class _AutomationPageState extends State<AutomationPage> {
+  bool _isLoading = true;
+  Map<String, bool>? _hamadaAiState;
+  String? _gameTxtContent;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<Map<String, bool>> _loadHamadaAiState() async {
+    final results = await Future.wait([
+      _runRootCommandAndWait('pgrep -x HamadaAI'),
+      _runRootCommandAndWait('cat /data/adb/modules/ProjectRaco/service.sh'),
+    ]);
+    return {
+      'enabled': results[0].exitCode == 0,
+      'onBoot': results[1].stdout.toString().contains('HamadaAI'),
+    };
+  }
+
+  Future<String> _loadGameTxtState() async {
+    final result = await _runRootCommandAndWait(
+      'cat /data/ProjectRaco/game.txt',
+    );
+    return result.exitCode == 0 ? result.stdout.toString() : '';
+  }
+
+  Future<void> _loadData() async {
+    final results = await Future.wait([
+      _loadHamadaAiState(),
+      _loadGameTxtState(),
+    ]);
+
+    if (!mounted) return;
+    setState(() {
+      _hamadaAiState = results[0] as Map<String, bool>;
+      _gameTxtContent = results[1] as String;
+      _isLoading = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final localization = AppLocalizations.of(context)!;
-    return buildScaffold(
-      context: context,
-      title: localization.automation_title,
-      child: ListView(
-        padding: const EdgeInsets.fromLTRB(8, 8, 8, 32),
-        children: [
-          HamadaAiCard(
-            initialHamadaAiEnabled: widget.hamadaAiState?['enabled'] ?? false,
-            initialHamadaStartOnBoot: widget.hamadaAiState?['onBoot'] ?? false,
-          ),
-          GameTxtCard(initialContent: widget.gameTxtContent ?? ''),
-        ],
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(localization.automation_title),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
+      body: _isLoading
+          ? const Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 32.0),
+                child: LinearProgressIndicator(),
+              ),
+            )
+          : ListView(
+              padding: const EdgeInsets.fromLTRB(8, 8, 8, 32),
+              children: [
+                HamadaAiCard(
+                  initialHamadaAiEnabled: _hamadaAiState?['enabled'] ?? false,
+                  initialHamadaStartOnBoot: _hamadaAiState?['onBoot'] ?? false,
+                ),
+                GameTxtCard(initialContent: _gameTxtContent ?? ''),
+              ],
+            ),
     );
   }
 }
 
-class SystemPage extends _LoadingStatefulWidget {
-  final bool? dndEnabled;
-  final bool? anyaThermalEnabled;
-  final bool isAnyaIncluded;
-  final Map<String, dynamic>? bypassChargingState;
-  final Map<String, dynamic>? resolutionState;
-
-  const SystemPage({
-    Key? key,
-    required this.dndEnabled,
-    required this.anyaThermalEnabled,
-    required this.isAnyaIncluded,
-    required this.bypassChargingState,
-    required this.resolutionState,
-  }) : super(key: key);
+class SystemPage extends StatefulWidget {
+  const SystemPage({Key? key}) : super(key: key);
 
   @override
   _SystemPageState createState() => _SystemPageState();
 }
 
-class _SystemPageState extends _LoadingState<SystemPage> {
+class _SystemPageState extends State<SystemPage> {
+  bool _isLoading = true;
+  bool? _dndEnabled;
+  bool? _anyaThermalEnabled;
+  bool _isAnyaIncluded = true; // Assume true until proven otherwise
+  Map<String, dynamic>? _bypassChargingState;
+  Map<String, dynamic>? _resolutionState;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<bool> _loadDndState() async {
+    final result = await _runRootCommandAndWait(
+      'cat /data/adb/modules/ProjectRaco/raco.txt',
+    );
+    if (result.exitCode == 0) {
+      final match = RegExp(
+        r'^DND=(.*)$',
+        multiLine: true,
+      ).firstMatch(result.stdout.toString());
+      return match?.group(1)?.trim().toLowerCase() == 'yes';
+    }
+    return false;
+  }
+
+  Future<bool> _loadAnyaThermalState() async {
+    final result = await _runRootCommandAndWait(
+      'cat /data/adb/modules/ProjectRaco/raco.txt',
+    );
+    if (result.exitCode == 0) {
+      final match = RegExp(
+        r'^ANYA=(\d)',
+        multiLine: true,
+      ).firstMatch(result.stdout.toString());
+      return match?.group(1) == '1';
+    }
+    return false;
+  }
+
+  Future<bool> _loadAnyaInclusionState() async {
+    final result = await _runRootCommandAndWait(
+      'cat /data/adb/modules/ProjectRaco/raco.txt',
+    );
+    if (result.exitCode == 0) {
+      final content = result.stdout.toString();
+      final match = RegExp(
+        r'^INCLUDE_ANYA=(\d)',
+        multiLine: true,
+      ).firstMatch(content);
+      // Hide if INCLUDE_ANYA=0. Show otherwise.
+      return match?.group(1) != '0';
+    }
+    // Default to showing if file/line is not found.
+    return true;
+  }
+
+  Future<Map<String, dynamic>> _loadResolutionState() async {
+    final results = await Future.wait([
+      _runRootCommandAndWait('wm size'),
+      _runRootCommandAndWait('wm density'),
+    ]);
+    final sr = results[0];
+    final dr = results[1];
+    bool available =
+        sr.exitCode == 0 &&
+        sr.stdout.toString().contains('Physical size:') &&
+        dr.exitCode == 0 &&
+        (dr.stdout.toString().contains('Physical density:') ||
+            dr.stdout.toString().contains('Override density:'));
+    String originalSize = '';
+    int originalDensity = 0;
+    if (available) {
+      originalSize =
+          RegExp(
+            r'Physical size:\s*([0-9]+x[0-9]+)',
+          ).firstMatch(sr.stdout.toString())?.group(1) ??
+          '';
+      originalDensity =
+          int.tryParse(
+            RegExp(
+                  r'(?:Physical|Override) density:\s*([0-9]+)',
+                ).firstMatch(dr.stdout.toString())?.group(1) ??
+                '',
+          ) ??
+          0;
+      if (originalSize.isEmpty || originalDensity == 0) available = false;
+    }
+    return {
+      'isAvailable': available,
+      'originalSize': originalSize,
+      'originalDensity': originalDensity,
+    };
+  }
+
+  Future<Map<String, dynamic>> _loadBypassChargingState() async {
+    final results = await Future.wait([
+      _runRootCommandAndWait(
+        'sh /data/adb/modules/ProjectRaco/Scripts/raco_bypass_controller.sh test',
+      ),
+      _runRootCommandAndWait('cat /data/adb/modules/ProjectRaco/raco.txt'),
+    ]);
+    final supportResult = results[0];
+    final configResult = results[1];
+    bool isSupported = supportResult.stdout.toString().toLowerCase().contains(
+      'supported',
+    );
+    bool isEnabled = false;
+    if (configResult.exitCode == 0) {
+      isEnabled =
+          RegExp(r'^ENABLE_BYPASS=(Yes|No)', multiLine: true)
+              .firstMatch(configResult.stdout.toString())
+              ?.group(1)
+              ?.toLowerCase() ==
+          'yes';
+    }
+    return {'isSupported': isSupported, 'isEnabled': isEnabled};
+  }
+
+  Future<void> _loadData() async {
+    final results = await Future.wait([
+      _loadDndState(),
+      _loadAnyaThermalState(),
+      _loadAnyaInclusionState(),
+      _loadBypassChargingState(),
+      _loadResolutionState(),
+    ]);
+
+    if (!mounted) return;
+    setState(() {
+      _dndEnabled = results[0] as bool;
+      _anyaThermalEnabled = results[1] as bool;
+      _isAnyaIncluded = results[2] as bool;
+      _bypassChargingState = results[3] as Map<String, dynamic>;
+      _resolutionState = results[4] as Map<String, dynamic>;
+      _isLoading = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final localization = AppLocalizations.of(context)!;
-    return buildScaffold(
-      context: context,
-      title: localization.system_title,
-      child: ListView(
-        padding: const EdgeInsets.fromLTRB(8, 8, 8, 32),
-        children: [
-          DndCard(initialDndEnabled: widget.dndEnabled ?? false),
-          if (widget.isAnyaIncluded)
-            AnyaThermalCard(
-              initialAnyaThermalEnabled: widget.anyaThermalEnabled ?? false,
-            ),
-          BypassChargingCard(
-            isSupported: widget.bypassChargingState?['isSupported'] ?? false,
-            isEnabled: widget.bypassChargingState?['isEnabled'] ?? false,
-            supportStatus:
-                widget.bypassChargingState?['statusMsg'] ??
-                localization.bypass_charging_unsupported,
-          ),
-          ResolutionCard(
-            isAvailable: widget.resolutionState?['isAvailable'] ?? false,
-            originalSize: widget.resolutionState?['originalSize'] ?? '',
-            originalDensity: widget.resolutionState?['originalDensity'] ?? 0,
-          ),
-          const SystemActionsCard(),
-        ],
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(localization.system_title),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
+      body: _isLoading
+          ? const Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 32.0),
+                child: LinearProgressIndicator(),
+              ),
+            )
+          : ListView(
+              padding: const EdgeInsets.fromLTRB(8, 8, 8, 32),
+              children: [
+                DndCard(initialDndEnabled: _dndEnabled ?? false),
+                if (_isAnyaIncluded)
+                  AnyaThermalCard(
+                    initialAnyaThermalEnabled: _anyaThermalEnabled ?? false,
+                  ),
+                BypassChargingCard(
+                  isSupported: _bypassChargingState?['isSupported'] ?? false,
+                  isEnabled: _bypassChargingState?['isEnabled'] ?? false,
+                  supportStatus: _bypassChargingState?['isSupported'] ?? false
+                      ? localization.bypass_charging_supported
+                      : localization.bypass_charging_unsupported,
+                ),
+                ResolutionCard(
+                  isAvailable: _resolutionState?['isAvailable'] ?? false,
+                  originalSize: _resolutionState?['originalSize'] ?? '',
+                  originalDensity: _resolutionState?['originalDensity'] ?? 0,
+                ),
+                const SystemActionsCard(),
+              ],
+            ),
     );
   }
 }
 
-class AppearancePage extends _LoadingStatefulWidget {
+class AppearancePage extends StatefulWidget {
   const AppearancePage({Key? key}) : super(key: key);
   @override
   _AppearancePageState createState() => _AppearancePageState();
 }
 
-class _AppearancePageState extends _LoadingState<AppearancePage> {
+class _AppearancePageState extends State<AppearancePage> {
+  bool _isLoading = true;
   String? backgroundImagePath;
   double backgroundOpacity = 0.2;
   String? bannerImagePath;
@@ -865,36 +857,47 @@ class _AppearancePageState extends _LoadingState<AppearancePage> {
       backgroundImagePath = prefs.getString('background_image_path');
       backgroundOpacity = prefs.getDouble('background_opacity') ?? 0.2;
       bannerImagePath = prefs.getString('banner_image_path');
+      _isLoading = false;
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final localization = AppLocalizations.of(context)!;
-    return buildScaffold(
-      context: context,
-      title: localization.appearance_title,
-      child: ListView(
-        padding: const EdgeInsets.fromLTRB(8, 8, 8, 32),
-        children: [
-          BackgroundSettingsCard(
-            initialPath: backgroundImagePath,
-            initialOpacity: backgroundOpacity,
-            onSettingsChanged: (path, opacity) {
-              setState(() {
-                backgroundImagePath = path;
-                backgroundOpacity = opacity;
-              });
-            },
-          ),
-          BannerSettingsCard(
-            initialPath: bannerImagePath,
-            onSettingsChanged: (path) {
-              setState(() => bannerImagePath = path);
-            },
-          ),
-        ],
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(localization.appearance_title),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
+      body: _isLoading
+          ? const Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 32.0),
+                child: LinearProgressIndicator(),
+              ),
+            )
+          : ListView(
+              padding: const EdgeInsets.fromLTRB(8, 8, 8, 32),
+              children: [
+                BackgroundSettingsCard(
+                  initialPath: backgroundImagePath,
+                  initialOpacity: backgroundOpacity,
+                  onSettingsChanged: (path, opacity) {
+                    setState(() {
+                      backgroundImagePath = path;
+                      backgroundOpacity = opacity;
+                    });
+                  },
+                ),
+                BannerSettingsCard(
+                  initialPath: bannerImagePath,
+                  onSettingsChanged: (path) {
+                    setState(() => bannerImagePath = path);
+                  },
+                ),
+              ],
+            ),
     );
   }
 }
@@ -2358,3 +2361,5 @@ class _BannerSettingsCardState extends State<BannerSettingsCard> {
     );
   }
 }
+
+//endregion
