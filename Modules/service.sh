@@ -417,7 +417,7 @@ su -lp 2000 -c "cmd notification post -S bigtext -t 'Project Raco' -i file:///da
 
 # Revert CPU governor to default after 20 seconds, only if INCLUDE_SANDEV=1
 if grep -q "INCLUDE_SANDEV=1" "$CONFIG_FILE"; then
-    sleep 20
+    sleep 10
     
     DEFAULT_CPU_GOV=$(grep '^GOV=' "$CONFIG_FILE" | cut -d'=' -f2)
 
