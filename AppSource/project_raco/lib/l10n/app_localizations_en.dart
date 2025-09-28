@@ -94,10 +94,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get credits_4 => 'RiProG';
 
   @override
-  String get credits_5 => 'KanaDev_IS';
+  String get credits_5 => 'HoyoSlave';
 
   @override
-  String get credits_6 => 'And All Testers That I Can\'t Mentioned One by One';
+  String get credits_6 => 'Koneko_dev';
+
+  @override
+  String get credits_7 => 'KanaDev_IS';
+
+  @override
+  String get credits_8 => 'And All Testers That I Can\'t Mentioned One by One';
 
   @override
   String get yes => 'Yes';
@@ -326,17 +332,4 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get clear_cache_title => 'Clear Cache';
-
-  @override
-  String get clear_cache_description =>
-      'Clear the device\'s cache. Please wait, the process may take some time.';
-
-  @override
-  String get action_successful => 'Action completed successfully.';
-
-  @override
-  String get action_failed => 'Action failed.';
-
-  @override
-  String get running_action => 'Running...';
 }

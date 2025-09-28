@@ -94,10 +94,16 @@ class AppLocalizationsId extends AppLocalizations {
   String get credits_4 => 'RiProG';
 
   @override
-  String get credits_5 => 'KanaDev_IS';
+  String get credits_5 => 'HoyoSlave';
 
   @override
-  String get credits_6 =>
+  String get credits_6 => 'Koneko_dev';
+
+  @override
+  String get credits_7 => 'KanaDev_IS';
+
+  @override
+  String get credits_8 =>
       'Dan Semua Penguji yang Tidak Bisa Disebutkan Satu per Satu';
 
   @override
@@ -329,17 +335,4 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get clear_cache_title => 'Bersihkan Cache';
-
-  @override
-  String get clear_cache_description =>
-      'Bersihkan cache perangkat. Harap tunggu, proses ini mungkin memakan waktu.';
-
-  @override
-  String get action_successful => 'Tindakan berhasil diselesaikan.';
-
-  @override
-  String get action_failed => 'Tindakan gagal.';
-
-  @override
-  String get running_action => 'Menjalankan...';
 }

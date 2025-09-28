@@ -90,10 +90,16 @@ class AppLocalizationsJa extends AppLocalizations {
   String get credits_4 => 'RiProG';
 
   @override
-  String get credits_5 => 'KanaDev_IS';
+  String get credits_5 => 'HoyoSlave';
 
   @override
-  String get credits_6 => '名前を挙げられなかったすべてのテスター';
+  String get credits_6 => 'Koneko_dev';
+
+  @override
+  String get credits_7 => 'KanaDev_IS';
+
+  @override
+  String get credits_8 => '名前を挙げられなかったすべてのテスター';
 
   @override
   String get yes => 'はい';
@@ -316,17 +322,4 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get clear_cache_title => 'キャッシュをクリア';
-
-  @override
-  String get clear_cache_description =>
-      'デバイスのキャッシュをクリアします。処理には時間がかかる場合がありますので、しばらくお待ちください。';
-
-  @override
-  String get action_successful => 'アクションは正常に完了しました。';
-
-  @override
-  String get action_failed => 'アクションが失敗しました。';
-
-  @override
-  String get running_action => '実行中...';
 }

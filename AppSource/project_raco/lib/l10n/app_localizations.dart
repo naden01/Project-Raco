@@ -265,14 +265,26 @@ abstract class AppLocalizations {
   /// No description provided for @credits_5.
   ///
   /// In en, this message translates to:
-  /// **'KanaDev_IS'**
+  /// **'HoyoSlave'**
   String get credits_5;
 
   /// No description provided for @credits_6.
   ///
   /// In en, this message translates to:
-  /// **'And All Testers That I Can\'t Mentioned One by One'**
+  /// **'Koneko_dev'**
   String get credits_6;
+
+  /// No description provided for @credits_7.
+  ///
+  /// In en, this message translates to:
+  /// **'KanaDev_IS'**
+  String get credits_7;
+
+  /// No description provided for @credits_8.
+  ///
+  /// In en, this message translates to:
+  /// **'And All Testers That I Can\'t Mentioned One by One'**
+  String get credits_8;
 
   /// No description provided for @yes.
   ///
@@ -705,30 +717,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Clear Cache'**
   String get clear_cache_title;
-
-  /// No description provided for @clear_cache_description.
-  ///
-  /// In en, this message translates to:
-  /// **'Clear the device\'s cache. Please wait, the process may take some time.'**
-  String get clear_cache_description;
-
-  /// No description provided for @action_successful.
-  ///
-  /// In en, this message translates to:
-  /// **'Action completed successfully.'**
-  String get action_successful;
-
-  /// No description provided for @action_failed.
-  ///
-  /// In en, this message translates to:
-  /// **'Action failed.'**
-  String get action_failed;
-
-  /// No description provided for @running_action.
-  ///
-  /// In en, this message translates to:
-  /// **'Running...'**
-  String get running_action;
 }
 
 class _AppLocalizationsDelegate
