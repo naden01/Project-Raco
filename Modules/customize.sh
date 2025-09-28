@@ -294,4 +294,3 @@ else
 fi
 
 set_perm_recursive $MODPATH/system/lib/libncurses.so 0 0 0644 0644
-}
