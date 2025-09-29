@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:process_run/process_run.dart';
 import 'dart:async';
 import 'dart:io';
-import 'dart:ui'; // Required for ImageFiltered
+import 'dart:ui';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'about_page.dart';
@@ -12,13 +12,10 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import '/l10n/app_localizations.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-/// Manages reading and writing configuration settings using SharedPreferences.
-/// The app will remember the last selected mode locally.
 class ConfigManager {
   static const String _modeKey = 'current_mode';
   static const String _defaultMode = 'NONE';
 
-  /// Reads the current mode from SharedPreferences.
   static Future<Map<String, String>> readConfig() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -29,7 +26,6 @@ class ConfigManager {
     }
   }
 
-  /// Saves the current mode to SharedPreferences.
   static Future<void> saveMode(String mode) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -146,6 +142,9 @@ class _MyAppState extends State<MyApp> {
                       onLocaleChange: _updateLocale,
                       onUtilitiesClosed: _loadAllPreferences,
                       bannerImagePath: _bannerImagePath,
+                      backgroundImagePath: _backgroundImagePath,
+                      backgroundOpacity: _backgroundOpacity,
+                      backgroundBlur: _backgroundBlur,
                     ),
                   ],
                 ),
@@ -168,11 +167,17 @@ class MainScreen extends StatefulWidget {
   final Function(Locale) onLocaleChange;
   final VoidCallback onUtilitiesClosed;
   final String? bannerImagePath;
+  final String? backgroundImagePath;
+  final double backgroundOpacity;
+  final double backgroundBlur;
 
   MainScreen({
     required this.onLocaleChange,
     required this.onUtilitiesClosed,
     required this.bannerImagePath,
+    required this.backgroundImagePath,
+    required this.backgroundOpacity,
+    required this.backgroundBlur,
   });
 
   @override
@@ -361,14 +366,10 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
 
     try {
       await ConfigManager.saveMode(targetMode);
-      var result = await run('su', [
+      await run('su', [
         '-c',
         'sh /data/adb/modules/ProjectRaco/Scripts/Raco.sh $scriptArg',
       ], verbose: false);
-
-      if (result.exitCode != 0) {
-        await _refreshStateFromConfig();
-      }
     } catch (e) {
       await _refreshStateFromConfig();
     } finally {
@@ -413,39 +414,32 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     Navigator.push(
       context,
       PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => AboutPage(),
+        opaque: false,
+        pageBuilder: (context, animation, secondaryAnimation) => AboutPage(
+          backgroundImagePath: widget.backgroundImagePath,
+          backgroundOpacity: widget.backgroundOpacity,
+          backgroundBlur: widget.backgroundBlur,
+        ),
         transitionDuration: Duration.zero,
         reverseTransitionDuration: Duration.zero,
       ),
     );
   }
 
-  // UPDATED: This method now loads preferences before navigating
   void _navigateToUtilitiesPage() async {
-    // 1. Load the preferences first
-    final prefs = await SharedPreferences.getInstance();
-    final String? path = prefs.getString('background_image_path');
-    final double opacity = prefs.getDouble('background_opacity') ?? 0.2;
-    final double blur = prefs.getDouble('background_blur') ?? 0.0;
-
-    if (!mounted) return;
-
-    // 2. Navigate and pass the loaded values
     await Navigator.push(
       context,
       PageRouteBuilder(
-        opaque: false, // Make the route itself transparent
+        opaque: false,
         pageBuilder: (context, animation, secondaryAnimation) => UtilitiesPage(
-          initialBackgroundImagePath: path,
-          initialBackgroundOpacity: opacity,
-          initialBackgroundBlur: blur,
+          initialBackgroundImagePath: widget.backgroundImagePath,
+          initialBackgroundOpacity: widget.backgroundOpacity,
+          initialBackgroundBlur: widget.backgroundBlur,
         ),
         transitionDuration: Duration.zero,
         reverseTransitionDuration: Duration.zero,
       ),
     );
-
-    // After returning from UtilitiesPage, refresh the main screen state
     _initializeState();
     widget.onUtilitiesClosed();
   }

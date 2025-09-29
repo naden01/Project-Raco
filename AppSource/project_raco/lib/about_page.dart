@@ -2,11 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:process_run/process_run.dart';
 import '/l10n/app_localizations.dart';
 import 'dart:io';
-import 'dart:ui'; // Required for ImageFiltered
-import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:ui';
 
 class AboutPage extends StatefulWidget {
-  const AboutPage({Key? key}) : super(key: key);
+  final String? backgroundImagePath;
+  final double backgroundOpacity;
+  final double backgroundBlur;
+
+  const AboutPage({
+    Key? key,
+    required this.backgroundImagePath,
+    required this.backgroundOpacity,
+    required this.backgroundBlur,
+  }) : super(key: key);
 
   @override
   _AboutPageState createState() => _AboutPageState();
@@ -19,13 +27,7 @@ class _AboutPageState extends State<AboutPage> {
   String _storageInfo = '';
   String _batteryInfo = '';
   bool _isLoading = true;
-
-  // --- UPDATE: New state variable to control visibility of the spec section ---
   bool _deviceInfoAvailable = false;
-
-  String? _backgroundImagePath;
-  double _backgroundOpacity = 0.2;
-  double _backgroundBlur = 0.0; // Added background blur state
 
   @override
   void initState() {
@@ -34,29 +36,12 @@ class _AboutPageState extends State<AboutPage> {
   }
 
   Future<void> _loadAllData() async {
-    await Future.wait([_loadBackgroundSettings(), _loadDeviceInfo()]);
+    await _loadDeviceInfo();
 
     if (mounted) {
       setState(() {
         _isLoading = false;
       });
-    }
-  }
-
-  Future<void> _loadBackgroundSettings() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      if (!mounted) return;
-      final path = prefs.getString('background_image_path');
-      final opacity = prefs.getDouble('background_opacity') ?? 0.2;
-      final blur = prefs.getDouble('background_blur') ?? 0.0; // Load blur value
-      setState(() {
-        _backgroundImagePath = path;
-        _backgroundOpacity = opacity;
-        _backgroundBlur = blur; // Set blur state
-      });
-    } catch (e) {
-      // Error loading background settings
     }
   }
 
@@ -77,48 +62,38 @@ class _AboutPageState extends State<AboutPage> {
     String ramInfo = '';
     String storageInfo = '';
     String batteryInfo = '';
-    bool isSuccess = false; // Flag to track if fetching was successful
+    bool isSuccess = false;
 
     if (rootGranted) {
       try {
         final results = await Future.wait([
-          // 0: Device Model
           run('su', ['-c', 'getprop ro.product.model'], verbose: false),
-          // 1: CPU Platform
           run('su', ['-c', 'getprop ro.board.platform'], verbose: false),
-          // 2: CPU Hardware
           run('su', ['-c', 'getprop ro.hardware'], verbose: false),
-          // 3: CPU Hardware from /proc/cpuinfo
           run('su', [
             '-c',
             'cat /proc/cpuinfo | grep Hardware | cut -d: -f2',
           ], verbose: false),
-          // 4: CPU Max Freq
           run('su', [
             '-c',
             'cat /sys/devices/system/cpu/cpu*/cpufreq/cpuinfo_max_freq | sort -nr | head -n 1',
           ], verbose: false),
-          // 5: Total RAM
           run('su', [
             '-c',
             r"cat /proc/meminfo | grep MemTotal | awk '{print $2}'",
           ], verbose: false),
-          // 6: Total Storage
           run('su', [
             '-c',
             r"df /data | tail -n 1 | awk '{print $2}'",
           ], verbose: false),
-          // 7: Battery Capacity
           run('su', [
             '-c',
             'cat /sys/class/power_supply/battery/charge_full_design',
           ], verbose: false),
         ]);
 
-        // Device Model
         deviceModel = results[0].stdout.toString().trim();
 
-        // CPU Info
         String cpuName = results[1].stdout.toString().trim();
         if (cpuName.isEmpty || cpuName.toLowerCase() == 'unknown') {
           cpuName = results[2].stdout.toString().trim();
@@ -135,18 +110,15 @@ class _AboutPageState extends State<AboutPage> {
           cpuInfo = cpuName;
         }
 
-        // RAM Info
         String totalRamKb = results[5].stdout.toString().trim();
         if (totalRamKb.isNotEmpty && int.tryParse(totalRamKb) != null) {
           double totalRamGb = int.parse(totalRamKb) / (1024 * 1024);
           ramInfo = '${totalRamGb.ceil()} GB';
         }
 
-        // Storage Info
         String totalStorageKb = results[6].stdout.toString().trim();
         if (totalStorageKb.isNotEmpty && int.tryParse(totalStorageKb) != null) {
           double totalStorageGb = int.parse(totalStorageKb) / (1024 * 1024);
-          // Use powers of 1000 for storage as is common marketing practice
           if (totalStorageGb > 500) {
             storageInfo = '1 TB';
           } else if (totalStorageGb > 240) {
@@ -162,7 +134,6 @@ class _AboutPageState extends State<AboutPage> {
           }
         }
 
-        // Battery Info
         String batteryUah = results[7].stdout.toString().trim();
         if (batteryUah.isNotEmpty && int.tryParse(batteryUah) != null) {
           int mah = (int.parse(batteryUah) / 1000).round();
@@ -172,21 +143,16 @@ class _AboutPageState extends State<AboutPage> {
           batteryInfo = '${mah}mAh';
         }
 
-        // --- UPDATE: Check if essential data was actually fetched ---
-        // If device model is empty, we consider it a failure.
         if (deviceModel.isNotEmpty && cpuInfo.isNotEmpty) {
           isSuccess = true;
         }
       } catch (e) {
-        // Any error during the process means failure
         isSuccess = false;
       }
     }
-    // If root is not granted, isSuccess remains false
 
     if (mounted) {
       setState(() {
-        // --- UPDATE: Set the visibility flag and only update values on success ---
         _deviceInfoAvailable = isSuccess;
         if (isSuccess) {
           _deviceModel = deviceModel;
@@ -216,8 +182,6 @@ class _AboutPageState extends State<AboutPage> {
   Widget build(BuildContext context) {
     final localization = AppLocalizations.of(context)!;
     final credits = _getCredits(localization);
-
-    // Define text styles for consistency
     final valueStyle = Theme.of(
       context,
     ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold);
@@ -233,200 +197,175 @@ class _AboutPageState extends State<AboutPage> {
       ),
     );
 
-    return Scaffold(
-      // UPDATED: Allow body to draw behind the AppBar
+    final Widget pageContent = Scaffold(
       extendBodyBehindAppBar: true,
       backgroundColor: Colors.transparent,
       appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          Container(color: Theme.of(context).colorScheme.background),
-          if (_backgroundImagePath != null && _backgroundImagePath!.isNotEmpty)
-            // UPDATED: Added ImageFiltered to apply blur effect
-            ImageFiltered(
-              imageFilter: ImageFilter.blur(
-                sigmaX: _backgroundBlur,
-                sigmaY: _backgroundBlur,
-              ),
-              child: Opacity(
-                opacity: _backgroundOpacity,
-                child: Image.file(
-                  File(_backgroundImagePath!),
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(color: Colors.transparent);
-                  },
-                ),
-              ),
-            ),
-          // UPDATED: Wrapped content in SafeArea
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 20.0,
-                vertical: 10.0,
-              ),
-              child: _isLoading
-                  ? const Center(
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 32.0),
-                        child: LinearProgressIndicator(),
-                      ),
-                    )
-                  : AnimatedOpacity(
-                      opacity: _isLoading ? 0.0 : 1.0,
-                      duration: const Duration(milliseconds: 500),
-                      child: SingleChildScrollView(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // --- UPDATE: Conditionally build the device spec layout ---
-                            if (_deviceInfoAvailable)
-                              Align(
-                                alignment: Alignment.centerRight,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.baseline,
-                                      textBaseline: TextBaseline.alphabetic,
-                                      children: [
-                                        Text(_deviceModel, style: valueStyle),
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          localization.device_name,
-                                          style: labelStyle,
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Icon(
-                                          Icons.chevron_right,
-                                          size: 18,
-                                          color: Theme.of(
-                                            context,
-                                          ).colorScheme.onSurfaceVariant,
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 24),
-                                    Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.baseline,
-                                      textBaseline: TextBaseline.alphabetic,
-                                      children: [
-                                        Text(_cpuInfo, style: valueStyle),
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          localization.processor,
-                                          style: labelStyle,
-                                        ),
-                                        const SizedBox(width: 8),
-                                        separator,
-                                      ],
-                                    ),
-                                    const SizedBox(height: 24),
-                                    Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.baseline,
-                                      textBaseline: TextBaseline.alphabetic,
-                                      children: [
-                                        Text(_ramInfo, style: valueStyle),
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          localization.ram,
-                                          style: labelStyle,
-                                        ),
-                                        const SizedBox(width: 8),
-                                        separator,
-                                        const SizedBox(width: 16),
-                                        Text(_storageInfo, style: valueStyle),
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          localization.phone_storage,
-                                          style: labelStyle,
-                                        ),
-                                        const SizedBox(width: 8),
-                                        separator,
-                                      ],
-                                    ),
-                                    const SizedBox(height: 24),
-                                    Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.baseline,
-                                      textBaseline: TextBaseline.alphabetic,
-                                      children: [
-                                        Text(_batteryInfo, style: valueStyle),
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          localization.battery_capacity,
-                                          style: labelStyle,
-                                        ),
-                                        const SizedBox(width: 8),
-                                        separator,
-                                      ],
-                                    ),
-                                    const SizedBox(
-                                      height: 40,
-                                    ), // Add spacing after the block
-                                  ],
-                                ),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+          child: AnimatedOpacity(
+            opacity: _isLoading ? 0.0 : 1.0,
+            duration: const Duration(milliseconds: 500),
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (_deviceInfoAvailable)
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.baseline,
+                            textBaseline: TextBaseline.alphabetic,
+                            children: [
+                              Text(_deviceModel, style: valueStyle),
+                              const SizedBox(width: 8),
+                              Text(localization.device_name, style: labelStyle),
+                              const SizedBox(width: 4),
+                              Icon(
+                                Icons.chevron_right,
+                                size: 18,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
                               ),
-
-                            // End of device spec layout
-                            Text(
-                              localization.about_title,
-                              style: Theme.of(context).textTheme.titleMedium
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    decoration: TextDecoration.underline,
-                                  ),
-                            ),
-                            const SizedBox(height: 15),
-                            ...credits.map(
-                              (creditText) => Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 3,
-                                ),
-                                child: Text(
-                                  '• $creditText',
-                                  style: Theme.of(context).textTheme.bodyMedium,
-                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 24),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.baseline,
+                            textBaseline: TextBaseline.alphabetic,
+                            children: [
+                              Text(_cpuInfo, style: valueStyle),
+                              const SizedBox(width: 8),
+                              Text(localization.processor, style: labelStyle),
+                              const SizedBox(width: 8),
+                              separator,
+                            ],
+                          ),
+                          const SizedBox(height: 24),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.baseline,
+                            textBaseline: TextBaseline.alphabetic,
+                            children: [
+                              Text(_ramInfo, style: valueStyle),
+                              const SizedBox(width: 8),
+                              Text(localization.ram, style: labelStyle),
+                              const SizedBox(width: 8),
+                              separator,
+                              const SizedBox(width: 16),
+                              Text(_storageInfo, style: valueStyle),
+                              const SizedBox(width: 8),
+                              Text(
+                                localization.phone_storage,
+                                style: labelStyle,
                               ),
-                            ),
-                            const SizedBox(height: 20),
-                            Text(
-                              localization.about_note,
-                              style: Theme.of(context).textTheme.bodyMedium
-                                  ?.copyWith(fontStyle: FontStyle.italic),
-                            ),
-                            const SizedBox(height: 20),
-                            Center(
-                              child: Text(
-                                localization.about_quote,
-                                style: Theme.of(context).textTheme.bodyMedium
-                                    ?.copyWith(
-                                      fontStyle: FontStyle.italic,
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.primary,
-                                    ),
-                                textAlign: TextAlign.center,
+                              const SizedBox(width: 8),
+                              separator,
+                            ],
+                          ),
+                          const SizedBox(height: 24),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.baseline,
+                            textBaseline: TextBaseline.alphabetic,
+                            children: [
+                              Text(_batteryInfo, style: valueStyle),
+                              const SizedBox(width: 8),
+                              Text(
+                                localization.battery_capacity,
+                                style: labelStyle,
                               ),
-                            ),
-                            const SizedBox(height: 20),
-                          ],
-                        ),
+                              const SizedBox(width: 8),
+                              separator,
+                            ],
+                          ),
+                          const SizedBox(height: 40),
+                        ],
                       ),
                     ),
+                  Text(
+                    localization.about_title,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
+                  const SizedBox(height: 15),
+                  ...credits.map(
+                    (creditText) => Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 3),
+                      child: Text(
+                        '• $creditText',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    localization.about_note,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Center(
+                    child: Text(
+                      localization.about_quote,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontStyle: FontStyle.italic,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
+              ),
             ),
           ),
-        ],
+        ),
       ),
+    );
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Container(color: Theme.of(context).colorScheme.background),
+        if (widget.backgroundImagePath != null &&
+            widget.backgroundImagePath!.isNotEmpty)
+          ImageFiltered(
+            imageFilter: ImageFilter.blur(
+              sigmaX: widget.backgroundBlur,
+              sigmaY: widget.backgroundBlur,
+            ),
+            child: Opacity(
+              opacity: widget.backgroundOpacity,
+              child: Image.file(
+                File(widget.backgroundImagePath!),
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(color: Colors.transparent);
+                },
+              ),
+            ),
+          ),
+        if (_isLoading)
+          const Center(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 32.0),
+              child: LinearProgressIndicator(),
+            ),
+          )
+        else
+          pageContent,
+      ],
     );
   }
 }
