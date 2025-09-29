@@ -70,18 +70,12 @@ class _MyAppState extends State<MyApp> {
     final prefs = await SharedPreferences.getInstance();
     if (!mounted) return;
 
-    final languageCode = prefs.getString('language_code') ?? 'en';
-    final path = prefs.getString('background_image_path');
-    final opacity = prefs.getDouble('background_opacity') ?? 0.2;
-    final blur = prefs.getDouble('background_blur') ?? 0.0;
-    final bannerPath = prefs.getString('banner_image_path');
-
     setState(() {
-      _locale = Locale(languageCode);
-      _backgroundImagePath = path;
-      _backgroundOpacity = opacity;
-      _backgroundBlur = blur;
-      _bannerImagePath = bannerPath;
+      _locale = Locale(prefs.getString('language_code') ?? 'en');
+      _backgroundImagePath = prefs.getString('background_image_path');
+      _backgroundOpacity = prefs.getDouble('background_opacity') ?? 0.2;
+      _backgroundBlur = prefs.getDouble('background_blur') ?? 0.0;
+      _bannerImagePath = prefs.getString('banner_image_path');
     });
   }
 
@@ -140,7 +134,7 @@ class _MyAppState extends State<MyApp> {
                       ),
                     MainScreen(
                       onLocaleChange: _updateLocale,
-                      onUtilitiesClosed: _loadAllPreferences,
+                      onSettingsChanged: _loadAllPreferences,
                       bannerImagePath: _bannerImagePath,
                       backgroundImagePath: _backgroundImagePath,
                       backgroundOpacity: _backgroundOpacity,
@@ -165,7 +159,7 @@ class _MyAppState extends State<MyApp> {
 
 class MainScreen extends StatefulWidget {
   final Function(Locale) onLocaleChange;
-  final VoidCallback onUtilitiesClosed;
+  final VoidCallback onSettingsChanged;
   final String? bannerImagePath;
   final String? backgroundImagePath;
   final double backgroundOpacity;
@@ -173,7 +167,7 @@ class MainScreen extends StatefulWidget {
 
   MainScreen({
     required this.onLocaleChange,
-    required this.onUtilitiesClosed,
+    required this.onSettingsChanged,
     required this.bannerImagePath,
     required this.backgroundImagePath,
     required this.backgroundOpacity,
@@ -193,20 +187,22 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   String _executingScript = '';
   bool _isLoading = true;
   bool _isHamadaAiRunning = false;
-  Timer? _hamadaCheckTimer;
+  // --- REMOVED --- The periodic timer is no longer needed.
+  // Timer? _hamadaCheckTimer;
   bool _isContentVisible = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _initializeState();
+    _initialize();
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _hamadaCheckTimer?.cancel();
+    // --- REMOVED --- No timer to cancel.
+    // _hamadaCheckTimer?.cancel();
     super.dispose();
   }
 
@@ -214,119 +210,132 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     if (state == AppLifecycleState.resumed) {
-      _initializeState();
+      // Refresh dynamic data (process status) when app is brought to foreground.
+      _refreshDynamicState();
+      // --- REMOVED --- No timer to restart.
+      // _startHamadaTimer();
     } else if (state == AppLifecycleState.paused) {
-      _hamadaCheckTimer?.cancel();
+      // --- REMOVED --- No timer to cancel.
+      // _hamadaCheckTimer?.cancel();
     }
   }
 
+  // --- REMOVED --- The entire timer management method is no longer necessary.
+  /*
   void _startHamadaTimer() {
-    _hamadaCheckTimer?.cancel();
+    _hamadaCheckTimer?.cancel(); 
     if (mounted) {
       _hamadaCheckTimer = Timer.periodic(Duration(seconds: 3), (timer) {
-        if (mounted) {
-          _checkHamadaProcessStatus();
-        }
+        _checkHamadaProcessStatus();
       });
     }
   }
+  */
 
-  Future<void> _loadSelectedLanguage() async {
-    final prefs = await SharedPreferences.getInstance();
+  Future<void> _initialize() async {
     if (!mounted) return;
-    final languageCode = prefs.getString('language_code') ?? 'en';
-    const codeMap = {'en': 'EN', 'id': 'ID', 'ja': 'JP'};
-    setState(() {
-      _selectedLanguage = codeMap[languageCode] ?? 'EN';
-    });
-  }
-
-  Future<void> _initializeState() async {
-    if (!mounted) return;
-    setState(() => _isLoading = true);
 
     await _loadSelectedLanguage();
 
     final rootGranted = await _checkRootAccess();
-    if (rootGranted) {
-      final config = await ConfigManager.readConfig();
-      await _checkHamadaProcessStatus();
-      await _checkModuleInstalled();
-      if (_moduleInstalled) await _getModuleVersion();
-
+    if (!rootGranted) {
       if (mounted) {
         setState(() {
-          _currentMode = config['current_mode'] ?? 'NONE';
-        });
-      }
-    } else {
-      if (mounted) {
-        setState(() {
+          _hasRootAccess = false;
           _moduleInstalled = false;
           _moduleVersion = 'Root Required';
           _currentMode = 'Root Required';
+          _isLoading = false;
+          _isContentVisible = true;
         });
       }
+      return;
     }
+
+    _hasRootAccess = true;
+    final moduleIsInstalled = await _checkModuleInstalled();
+    _moduleInstalled = moduleIsInstalled;
+
+    await Future.wait([
+      if (moduleIsInstalled) _getModuleVersion(),
+      _refreshDynamicState(),
+    ]);
 
     if (mounted) {
       setState(() {
         _isLoading = false;
         _isContentVisible = true;
       });
-      _startHamadaTimer();
+      // --- REMOVED --- No timer to start.
+      // _startHamadaTimer();
+    }
+  }
+
+  Future<void> _refreshDynamicState() async {
+    if (!_hasRootAccess) return;
+
+    final results = await Future.wait([
+      ConfigManager.readConfig(),
+      _isHamadaProcessRunning(),
+    ]);
+
+    final config = results[0] as Map<String, String>;
+    final isRunning = results[1] as bool;
+
+    if (mounted) {
+      setState(() {
+        _currentMode = config['current_mode'] ?? 'NONE';
+        _isHamadaAiRunning = isRunning;
+      });
     }
   }
 
   Future<bool> _checkRootAccess() async {
     try {
       var result = await run('su', ['-c', 'id'], verbose: false);
-      bool hasAccess = result.exitCode == 0;
-      if (mounted) setState(() => _hasRootAccess = hasAccess);
-      return hasAccess;
+      return result.exitCode == 0;
     } catch (e) {
-      if (mounted) setState(() => _hasRootAccess = false);
       return false;
     }
   }
 
-  Future<void> _checkHamadaProcessStatus() async {
-    if (!_hasRootAccess) return;
+  Future<bool> _isHamadaProcessRunning() async {
+    if (!_hasRootAccess) return false;
     try {
       final result = await run('su', [
         '-c',
         'pgrep -x HamadaAI',
       ], verbose: false);
-      bool isRunning = result.exitCode == 0;
-      if (mounted && _isHamadaAiRunning != isRunning) {
-        setState(() => _isHamadaAiRunning = isRunning);
-      }
+      return result.exitCode == 0;
     } catch (e) {
-      if (mounted && _isHamadaAiRunning) {
-        setState(() => _isHamadaAiRunning = false);
-      }
+      return false;
     }
   }
 
-  Future<void> _checkModuleInstalled() async {
-    if (!_hasRootAccess) return;
+  // --- REMOVED --- This method was only used by the timer and is no longer needed.
+  /*
+  Future<void> _checkHamadaProcessStatus() async {
+    final isRunning = await _isHamadaProcessRunning();
+    if (mounted && _isHamadaAiRunning != isRunning) {
+      setState(() => _isHamadaAiRunning = isRunning);
+    }
+  }
+  */
+
+  Future<bool> _checkModuleInstalled() async {
+    if (!_hasRootAccess) return false;
     try {
       var result = await run('su', [
         '-c',
         'test -d /data/adb/modules/ProjectRaco && echo "yes"',
       ], verbose: false);
-      if (mounted) {
-        setState(
-          () => _moduleInstalled = result.stdout.toString().trim() == 'yes',
-        );
-      }
+      return result.stdout.toString().trim() == 'yes';
     } catch (e) {
-      if (mounted) setState(() => _moduleInstalled = false);
+      return false;
     }
   }
 
   Future<void> _getModuleVersion() async {
-    if (!_hasRootAccess || !_moduleInstalled) return;
     try {
       var result = await run('su', [
         '-c',
@@ -344,6 +353,16 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     } catch (e) {
       if (mounted) setState(() => _moduleVersion = 'Error');
     }
+  }
+
+  Future<void> _loadSelectedLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    final languageCode = prefs.getString('language_code') ?? 'en';
+    const codeMap = {'en': 'EN', 'id': 'ID', 'ja': 'JP'};
+    setState(() {
+      _selectedLanguage = codeMap[languageCode] ?? 'EN';
+    });
   }
 
   Future<void> executeScript(String scriptArg, String modeKey) async {
@@ -371,19 +390,9 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
         'sh /data/adb/modules/ProjectRaco/Scripts/Raco.sh $scriptArg',
       ], verbose: false);
     } catch (e) {
-      await _refreshStateFromConfig();
+      await _refreshDynamicState();
     } finally {
       if (mounted) setState(() => _executingScript = '');
-    }
-  }
-
-  Future<void> _refreshStateFromConfig() async {
-    if (!_hasRootAccess) return;
-    var config = await ConfigManager.readConfig();
-    if (mounted) {
-      setState(() {
-        _currentMode = config['current_mode'] ?? 'NONE';
-      });
     }
   }
 
@@ -440,9 +449,11 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
         reverseTransitionDuration: Duration.zero,
       ),
     );
-    _initializeState();
-    widget.onUtilitiesClosed();
+    _initialize();
+    widget.onSettingsChanged();
   }
+
+  // --- BUILD METHODS: No changes needed below this line. ---
 
   @override
   Widget build(BuildContext context) {
