@@ -83,6 +83,8 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
   bool _isLoading = true;
   bool _hasRootAccess = false;
   bool _isContentVisible = false;
+  String? _backgroundImagePath;
+  double _backgroundOpacity = 0.2;
 
   final TextEditingController _searchController = TextEditingController();
 
@@ -107,9 +109,19 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
     super.dispose();
   }
 
+  Future<void> _loadBackgroundPreferences() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    setState(() {
+      _backgroundImagePath = prefs.getString('background_image_path');
+      _backgroundOpacity = prefs.getDouble('background_opacity') ?? 0.2;
+    });
+  }
+
   // MODIFIED: This page now only checks for root access.
   // All other data loading is deferred to the sub-pages.
   Future<void> _initializePage() async {
+    await _loadBackgroundPreferences();
     final bool hasRoot = await _checkRootAccess();
 
     if (!mounted) return;
@@ -311,8 +323,13 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
     final colorScheme = Theme.of(context).colorScheme;
     final bool isSearching = _searchController.text.isNotEmpty;
 
-    return Scaffold(
-      appBar: AppBar(title: Text(localization.utilities_title)),
+    final Widget pageContent = Scaffold(
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        title: Text(localization.utilities_title),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
       body: _isLoading
           ? const Center(
               child: Padding(
@@ -365,6 +382,25 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
               ),
             ),
     );
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Container(color: Theme.of(context).colorScheme.background),
+        if (_backgroundImagePath != null && _backgroundImagePath!.isNotEmpty)
+          Opacity(
+            opacity: _backgroundOpacity,
+            child: Image.file(
+              File(_backgroundImagePath!),
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(color: Colors.transparent);
+              },
+            ),
+          ),
+        pageContent,
+      ],
+    );
   }
 
   /// Builds the default list of utility categories.
@@ -400,7 +436,7 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
                   transitionDuration: Duration.zero,
                   reverseTransitionDuration: Duration.zero,
                 ),
-              );
+              ).then((_) => _loadBackgroundPreferences());
             },
           ),
         );
@@ -436,7 +472,7 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
                 transitionDuration: Duration.zero,
                 reverseTransitionDuration: Duration.zero,
               ),
-            );
+            ).then((_) => _loadBackgroundPreferences());
           },
         );
       },
@@ -458,11 +494,22 @@ class _CoreTweaksPageState extends State<CoreTweaksPage> {
   bool _isLoading = true;
   Map<String, dynamic>? _encoreState;
   Map<String, dynamic>? _governorState;
+  String? _backgroundImagePath;
+  double _backgroundOpacity = 0.2;
 
   @override
   void initState() {
     super.initState();
     _loadData();
+  }
+
+  Future<void> _loadBackgroundPreferences() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    setState(() {
+      _backgroundImagePath = prefs.getString('background_image_path');
+      _backgroundOpacity = prefs.getDouble('background_opacity') ?? 0.2;
+    });
   }
 
   Future<Map<String, dynamic>> _loadEncoreSwitchState() async {
@@ -514,6 +561,7 @@ class _CoreTweaksPageState extends State<CoreTweaksPage> {
   }
 
   Future<void> _loadData() async {
+    await _loadBackgroundPreferences();
     final results = await Future.wait([
       _loadEncoreSwitchState(),
       _loadGovernorState(),
@@ -530,7 +578,9 @@ class _CoreTweaksPageState extends State<CoreTweaksPage> {
   @override
   Widget build(BuildContext context) {
     final localization = AppLocalizations.of(context)!;
-    return Scaffold(
+
+    final Widget pageContent = Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text(localization.core_tweaks_title),
         backgroundColor: Colors.transparent,
@@ -558,6 +608,25 @@ class _CoreTweaksPageState extends State<CoreTweaksPage> {
               ],
             ),
     );
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Container(color: Theme.of(context).colorScheme.background),
+        if (_backgroundImagePath != null && _backgroundImagePath!.isNotEmpty)
+          Opacity(
+            opacity: _backgroundOpacity,
+            child: Image.file(
+              File(_backgroundImagePath!),
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(color: Colors.transparent);
+              },
+            ),
+          ),
+        pageContent,
+      ],
+    );
   }
 }
 
@@ -572,11 +641,22 @@ class _AutomationPageState extends State<AutomationPage> {
   bool _isLoading = true;
   Map<String, bool>? _hamadaAiState;
   String? _gameTxtContent;
+  String? _backgroundImagePath;
+  double _backgroundOpacity = 0.2;
 
   @override
   void initState() {
     super.initState();
     _loadData();
+  }
+
+  Future<void> _loadBackgroundPreferences() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    setState(() {
+      _backgroundImagePath = prefs.getString('background_image_path');
+      _backgroundOpacity = prefs.getDouble('background_opacity') ?? 0.2;
+    });
   }
 
   Future<Map<String, bool>> _loadHamadaAiState() async {
@@ -598,6 +678,7 @@ class _AutomationPageState extends State<AutomationPage> {
   }
 
   Future<void> _loadData() async {
+    await _loadBackgroundPreferences();
     final results = await Future.wait([
       _loadHamadaAiState(),
       _loadGameTxtState(),
@@ -614,7 +695,9 @@ class _AutomationPageState extends State<AutomationPage> {
   @override
   Widget build(BuildContext context) {
     final localization = AppLocalizations.of(context)!;
-    return Scaffold(
+
+    final Widget pageContent = Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text(localization.automation_title),
         backgroundColor: Colors.transparent,
@@ -638,6 +721,25 @@ class _AutomationPageState extends State<AutomationPage> {
               ],
             ),
     );
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Container(color: Theme.of(context).colorScheme.background),
+        if (_backgroundImagePath != null && _backgroundImagePath!.isNotEmpty)
+          Opacity(
+            opacity: _backgroundOpacity,
+            child: Image.file(
+              File(_backgroundImagePath!),
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(color: Colors.transparent);
+              },
+            ),
+          ),
+        pageContent,
+      ],
+    );
   }
 }
 
@@ -655,11 +757,22 @@ class _SystemPageState extends State<SystemPage> {
   bool _isAnyaIncluded = true; // Assume true until proven otherwise
   Map<String, dynamic>? _bypassChargingState;
   Map<String, dynamic>? _resolutionState;
+  String? _backgroundImagePath;
+  double _backgroundOpacity = 0.2;
 
   @override
   void initState() {
     super.initState();
     _loadData();
+  }
+
+  Future<void> _loadBackgroundPreferences() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    setState(() {
+      _backgroundImagePath = prefs.getString('background_image_path');
+      _backgroundOpacity = prefs.getDouble('background_opacity') ?? 0.2;
+    });
   }
 
   Future<bool> _loadDndState() async {
@@ -770,6 +883,7 @@ class _SystemPageState extends State<SystemPage> {
   }
 
   Future<void> _loadData() async {
+    await _loadBackgroundPreferences();
     final results = await Future.wait([
       _loadDndState(),
       _loadAnyaThermalState(),
@@ -792,7 +906,9 @@ class _SystemPageState extends State<SystemPage> {
   @override
   Widget build(BuildContext context) {
     final localization = AppLocalizations.of(context)!;
-    return Scaffold(
+
+    final Widget pageContent = Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text(localization.system_title),
         backgroundColor: Colors.transparent,
@@ -829,6 +945,25 @@ class _SystemPageState extends State<SystemPage> {
               ],
             ),
     );
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Container(color: Theme.of(context).colorScheme.background),
+        if (_backgroundImagePath != null && _backgroundImagePath!.isNotEmpty)
+          Opacity(
+            opacity: _backgroundOpacity,
+            child: Image.file(
+              File(_backgroundImagePath!),
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(color: Colors.transparent);
+              },
+            ),
+          ),
+        pageContent,
+      ],
+    );
   }
 }
 
@@ -864,7 +999,8 @@ class _AppearancePageState extends State<AppearancePage> {
   @override
   Widget build(BuildContext context) {
     final localization = AppLocalizations.of(context)!;
-    return Scaffold(
+    final Widget pageContent = Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text(localization.appearance_title),
         backgroundColor: Colors.transparent,
@@ -898,6 +1034,24 @@ class _AppearancePageState extends State<AppearancePage> {
                 ),
               ],
             ),
+    );
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Container(color: Theme.of(context).colorScheme.background),
+        if (backgroundImagePath != null && backgroundImagePath!.isNotEmpty)
+          Opacity(
+            opacity: backgroundOpacity,
+            child: Image.file(
+              File(backgroundImagePath!),
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(color: Colors.transparent);
+              },
+            ),
+          ),
+        pageContent,
+      ],
     );
   }
 }
@@ -2361,5 +2515,3 @@ class _BannerSettingsCardState extends State<BannerSettingsCard> {
     );
   }
 }
-
-//endregion
