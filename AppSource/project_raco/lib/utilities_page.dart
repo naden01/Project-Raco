@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'dart:convert';
+import 'dart:ui';
 import 'package:process_run/process_run.dart';
 import '/l10n/app_localizations.dart';
 import 'package:image_picker/image_picker.dart';
@@ -85,6 +86,7 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
   bool _isContentVisible = false;
   String? _backgroundImagePath;
   double _backgroundOpacity = 0.2;
+  double _backgroundBlur = 0.0; // Added background blur state
 
   final TextEditingController _searchController = TextEditingController();
 
@@ -115,6 +117,8 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
     setState(() {
       _backgroundImagePath = prefs.getString('background_image_path');
       _backgroundOpacity = prefs.getDouble('background_opacity') ?? 0.2;
+      _backgroundBlur =
+          prefs.getDouble('background_blur') ?? 0.0; // Load blur value
     });
   }
 
@@ -270,7 +274,7 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
         subtitle: localization.appearance_title,
         icon: Icons.image_outlined,
         navigationTarget: appearancePage,
-        searchKeywords: 'background image wallpaper opacity theme',
+        searchKeywords: 'background image wallpaper opacity theme blur',
       ),
       SearchResultItem(
         title: localization.banner_settings_title,
@@ -388,14 +392,21 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
       children: [
         Container(color: Theme.of(context).colorScheme.background),
         if (_backgroundImagePath != null && _backgroundImagePath!.isNotEmpty)
-          Opacity(
-            opacity: _backgroundOpacity,
-            child: Image.file(
-              File(_backgroundImagePath!),
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(color: Colors.transparent);
-              },
+          // UPDATED: Added ImageFiltered to apply blur effect
+          ImageFiltered(
+            imageFilter: ImageFilter.blur(
+              sigmaX: _backgroundBlur,
+              sigmaY: _backgroundBlur,
+            ),
+            child: Opacity(
+              opacity: _backgroundOpacity,
+              child: Image.file(
+                File(_backgroundImagePath!),
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(color: Colors.transparent);
+                },
+              ),
             ),
           ),
         pageContent,
@@ -496,6 +507,7 @@ class _CoreTweaksPageState extends State<CoreTweaksPage> {
   Map<String, dynamic>? _governorState;
   String? _backgroundImagePath;
   double _backgroundOpacity = 0.2;
+  double _backgroundBlur = 0.0; // Added background blur state
 
   @override
   void initState() {
@@ -509,6 +521,8 @@ class _CoreTweaksPageState extends State<CoreTweaksPage> {
     setState(() {
       _backgroundImagePath = prefs.getString('background_image_path');
       _backgroundOpacity = prefs.getDouble('background_opacity') ?? 0.2;
+      _backgroundBlur =
+          prefs.getDouble('background_blur') ?? 0.0; // Load blur value
     });
   }
 
@@ -614,14 +628,20 @@ class _CoreTweaksPageState extends State<CoreTweaksPage> {
       children: [
         Container(color: Theme.of(context).colorScheme.background),
         if (_backgroundImagePath != null && _backgroundImagePath!.isNotEmpty)
-          Opacity(
-            opacity: _backgroundOpacity,
-            child: Image.file(
-              File(_backgroundImagePath!),
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(color: Colors.transparent);
-              },
+          ImageFiltered(
+            imageFilter: ImageFilter.blur(
+              sigmaX: _backgroundBlur,
+              sigmaY: _backgroundBlur,
+            ),
+            child: Opacity(
+              opacity: _backgroundOpacity,
+              child: Image.file(
+                File(_backgroundImagePath!),
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(color: Colors.transparent);
+                },
+              ),
             ),
           ),
         pageContent,
@@ -643,6 +663,7 @@ class _AutomationPageState extends State<AutomationPage> {
   String? _gameTxtContent;
   String? _backgroundImagePath;
   double _backgroundOpacity = 0.2;
+  double _backgroundBlur = 0.0;
 
   @override
   void initState() {
@@ -656,6 +677,7 @@ class _AutomationPageState extends State<AutomationPage> {
     setState(() {
       _backgroundImagePath = prefs.getString('background_image_path');
       _backgroundOpacity = prefs.getDouble('background_opacity') ?? 0.2;
+      _backgroundBlur = prefs.getDouble('background_blur') ?? 0.0;
     });
   }
 
@@ -727,14 +749,20 @@ class _AutomationPageState extends State<AutomationPage> {
       children: [
         Container(color: Theme.of(context).colorScheme.background),
         if (_backgroundImagePath != null && _backgroundImagePath!.isNotEmpty)
-          Opacity(
-            opacity: _backgroundOpacity,
-            child: Image.file(
-              File(_backgroundImagePath!),
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(color: Colors.transparent);
-              },
+          ImageFiltered(
+            imageFilter: ImageFilter.blur(
+              sigmaX: _backgroundBlur,
+              sigmaY: _backgroundBlur,
+            ),
+            child: Opacity(
+              opacity: _backgroundOpacity,
+              child: Image.file(
+                File(_backgroundImagePath!),
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(color: Colors.transparent);
+                },
+              ),
             ),
           ),
         pageContent,
@@ -759,6 +787,7 @@ class _SystemPageState extends State<SystemPage> {
   Map<String, dynamic>? _resolutionState;
   String? _backgroundImagePath;
   double _backgroundOpacity = 0.2;
+  double _backgroundBlur = 0.0;
 
   @override
   void initState() {
@@ -772,6 +801,7 @@ class _SystemPageState extends State<SystemPage> {
     setState(() {
       _backgroundImagePath = prefs.getString('background_image_path');
       _backgroundOpacity = prefs.getDouble('background_opacity') ?? 0.2;
+      _backgroundBlur = prefs.getDouble('background_blur') ?? 0.0;
     });
   }
 
@@ -951,14 +981,20 @@ class _SystemPageState extends State<SystemPage> {
       children: [
         Container(color: Theme.of(context).colorScheme.background),
         if (_backgroundImagePath != null && _backgroundImagePath!.isNotEmpty)
-          Opacity(
-            opacity: _backgroundOpacity,
-            child: Image.file(
-              File(_backgroundImagePath!),
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(color: Colors.transparent);
-              },
+          ImageFiltered(
+            imageFilter: ImageFilter.blur(
+              sigmaX: _backgroundBlur,
+              sigmaY: _backgroundBlur,
+            ),
+            child: Opacity(
+              opacity: _backgroundOpacity,
+              child: Image.file(
+                File(_backgroundImagePath!),
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(color: Colors.transparent);
+                },
+              ),
             ),
           ),
         pageContent,
@@ -977,6 +1013,7 @@ class _AppearancePageState extends State<AppearancePage> {
   bool _isLoading = true;
   String? backgroundImagePath;
   double backgroundOpacity = 0.2;
+  double backgroundBlur = 0.0;
   String? bannerImagePath;
 
   @override
@@ -991,6 +1028,7 @@ class _AppearancePageState extends State<AppearancePage> {
     setState(() {
       backgroundImagePath = prefs.getString('background_image_path');
       backgroundOpacity = prefs.getDouble('background_opacity') ?? 0.2;
+      backgroundBlur = prefs.getDouble('background_blur') ?? 0.0;
       bannerImagePath = prefs.getString('banner_image_path');
       _isLoading = false;
     });
@@ -1019,10 +1057,12 @@ class _AppearancePageState extends State<AppearancePage> {
                 BackgroundSettingsCard(
                   initialPath: backgroundImagePath,
                   initialOpacity: backgroundOpacity,
-                  onSettingsChanged: (path, opacity) {
+                  initialBlur: backgroundBlur,
+                  onSettingsChanged: (path, opacity, blur) {
                     setState(() {
                       backgroundImagePath = path;
                       backgroundOpacity = opacity;
+                      backgroundBlur = blur;
                     });
                   },
                 ),
@@ -1040,14 +1080,20 @@ class _AppearancePageState extends State<AppearancePage> {
       children: [
         Container(color: Theme.of(context).colorScheme.background),
         if (backgroundImagePath != null && backgroundImagePath!.isNotEmpty)
-          Opacity(
-            opacity: backgroundOpacity,
-            child: Image.file(
-              File(backgroundImagePath!),
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(color: Colors.transparent);
-              },
+          ImageFiltered(
+            imageFilter: ImageFilter.blur(
+              sigmaX: backgroundBlur,
+              sigmaY: backgroundBlur,
+            ),
+            child: Opacity(
+              opacity: backgroundOpacity,
+              child: Image.file(
+                File(backgroundImagePath!),
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(color: Colors.transparent);
+                },
+              ),
             ),
           ),
         pageContent,
@@ -2206,12 +2252,14 @@ class _SystemActionsCardState extends State<SystemActionsCard> {
 class BackgroundSettingsCard extends StatefulWidget {
   final String? initialPath;
   final double initialOpacity;
-  final Function(String?, double) onSettingsChanged;
+  final double initialBlur;
+  final Function(String?, double, double) onSettingsChanged;
 
   const BackgroundSettingsCard({
     Key? key,
     required this.initialPath,
     required this.initialOpacity,
+    required this.initialBlur,
     required this.onSettingsChanged,
   }) : super(key: key);
 
@@ -2222,27 +2270,40 @@ class BackgroundSettingsCard extends StatefulWidget {
 class _BackgroundSettingsCardState extends State<BackgroundSettingsCard> {
   late String? _path;
   late double _opacity;
+  late double _blurPercentage;
+  final double _maxSigma = 15.0;
 
   @override
   void initState() {
     super.initState();
     _path = widget.initialPath;
     _opacity = widget.initialOpacity;
+    _blurPercentage = (widget.initialBlur / _maxSigma * 100.0).clamp(
+      0.0,
+      100.0,
+    );
   }
 
   @override
   void didUpdateWidget(BackgroundSettingsCard oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.initialPath != oldWidget.initialPath ||
-        widget.initialOpacity != oldWidget.initialOpacity) {
+        widget.initialOpacity != oldWidget.initialOpacity ||
+        widget.initialBlur != oldWidget.initialBlur) {
       if (mounted) {
         setState(() {
           _path = widget.initialPath;
           _opacity = widget.initialOpacity;
+          _blurPercentage = (widget.initialBlur / _maxSigma * 100.0).clamp(
+            0.0,
+            100.0,
+          );
         });
       }
     }
   }
+
+  double get _currentSigmaValue => (_blurPercentage / 100.0 * _maxSigma);
 
   Future<void> _pickAndSetImage() async {
     try {
@@ -2255,7 +2316,7 @@ class _BackgroundSettingsCardState extends State<BackgroundSettingsCard> {
         if (mounted) {
           setState(() => _path = pickedFile.path);
         }
-        widget.onSettingsChanged(_path, _opacity);
+        widget.onSettingsChanged(_path, _opacity, _currentSigmaValue);
       }
     } catch (e) {
       if (mounted) {
@@ -2269,20 +2330,29 @@ class _BackgroundSettingsCardState extends State<BackgroundSettingsCard> {
   Future<void> _updateOpacity(double opacity) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble('background_opacity', opacity);
-    widget.onSettingsChanged(_path, opacity);
+    widget.onSettingsChanged(_path, opacity, _currentSigmaValue);
+  }
+
+  Future<void> _updateBlur(double percentage) async {
+    final sigmaValue = (percentage / 100.0 * _maxSigma);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble('background_blur', sigmaValue);
+    widget.onSettingsChanged(_path, _opacity, sigmaValue);
   }
 
   Future<void> _resetBackground() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('background_image_path');
     await prefs.setDouble('background_opacity', 0.2);
+    await prefs.remove('background_blur');
     if (mounted) {
       setState(() {
         _path = null;
         _opacity = 0.2;
+        _blurPercentage = 0.0;
       });
     }
-    widget.onSettingsChanged(null, 0.2);
+    widget.onSettingsChanged(null, 0.2, 0.0);
   }
 
   @override
@@ -2327,9 +2397,26 @@ class _BackgroundSettingsCardState extends State<BackgroundSettingsCard> {
                 if (mounted) {
                   setState(() => _opacity = value);
                 }
-                widget.onSettingsChanged(_path, value);
+                widget.onSettingsChanged(_path, value, _currentSigmaValue);
               },
               onChangeEnd: _updateOpacity,
+            ),
+            // UPDATED: Added blur slider
+            Text(localization.blur_slider_label, style: textTheme.bodyMedium),
+            Slider(
+              value: _blurPercentage,
+              min: 0.0,
+              max: 100.0,
+              divisions: 100,
+              label: '${_blurPercentage.round()}%',
+              onChanged: (value) {
+                if (mounted) {
+                  setState(() => _blurPercentage = value);
+                }
+                final currentSigma = (value / 100.0 * _maxSigma);
+                widget.onSettingsChanged(_path, _opacity, currentSigma);
+              },
+              onChangeEnd: _updateBlur,
             ),
             const SizedBox(height: 16),
             Row(

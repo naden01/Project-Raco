@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:process_run/process_run.dart';
 import 'dart:async';
 import 'dart:io';
+import 'dart:ui'; // Required for ImageFiltered
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'about_page.dart';
@@ -52,7 +53,8 @@ class _MyAppState extends State<MyApp> {
   Locale? _locale;
   String? _backgroundImagePath;
   double _backgroundOpacity = 0.2;
-  String? _bannerImagePath; // Added banner image path state
+  double _backgroundBlur = 0.0; // Added background blur state
+  String? _bannerImagePath;
 
   static final _defaultLightColorScheme = ColorScheme.fromSeed(
     seedColor: Colors.blue,
@@ -75,13 +77,15 @@ class _MyAppState extends State<MyApp> {
     final languageCode = prefs.getString('language_code') ?? 'en';
     final path = prefs.getString('background_image_path');
     final opacity = prefs.getDouble('background_opacity') ?? 0.2;
-    final bannerPath = prefs.getString('banner_image_path'); // Load banner path
+    final blur = prefs.getDouble('background_blur') ?? 0.0; // Load blur value
+    final bannerPath = prefs.getString('banner_image_path');
 
     setState(() {
       _locale = Locale(languageCode);
       _backgroundImagePath = path;
       _backgroundOpacity = opacity;
-      _bannerImagePath = bannerPath; // Set banner path state
+      _backgroundBlur = blur; // Set blur state
+      _bannerImagePath = bannerPath;
     });
   }
 
@@ -119,24 +123,30 @@ class _MyAppState extends State<MyApp> {
                 body: Stack(
                   fit: StackFit.expand,
                   children: [
-                    // UPDATED: Added a container for the default background color
                     Container(color: Theme.of(context).colorScheme.background),
                     if (_backgroundImagePath != null &&
                         _backgroundImagePath!.isNotEmpty)
-                      Opacity(
-                        opacity: _backgroundOpacity,
-                        child: Image.file(
-                          File(_backgroundImagePath!),
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(color: Colors.transparent);
-                          },
+                      // UPDATED: Added ImageFiltered to apply blur effect
+                      ImageFiltered(
+                        imageFilter: ImageFilter.blur(
+                          sigmaX: _backgroundBlur,
+                          sigmaY: _backgroundBlur,
+                        ),
+                        child: Opacity(
+                          opacity: _backgroundOpacity,
+                          child: Image.file(
+                            File(_backgroundImagePath!),
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(color: Colors.transparent);
+                            },
+                          ),
                         ),
                       ),
                     MainScreen(
                       onLocaleChange: _updateLocale,
                       onUtilitiesClosed: _loadAllPreferences,
-                      bannerImagePath: _bannerImagePath, // Pass banner path
+                      bannerImagePath: _bannerImagePath,
                     ),
                   ],
                 ),
@@ -148,7 +158,7 @@ class _MyAppState extends State<MyApp> {
             useMaterial3: true,
             colorScheme: darkColorScheme,
           ),
-          themeMode: ThemeMode.dark, // UPDATED: Forced dark theme
+          themeMode: ThemeMode.dark,
         );
       },
     );
@@ -158,12 +168,12 @@ class _MyAppState extends State<MyApp> {
 class MainScreen extends StatefulWidget {
   final Function(Locale) onLocaleChange;
   final VoidCallback onUtilitiesClosed;
-  final String? bannerImagePath; // Receive banner path
+  final String? bannerImagePath;
 
   MainScreen({
     required this.onLocaleChange,
     required this.onUtilitiesClosed,
-    required this.bannerImagePath, // Updated constructor
+    required this.bannerImagePath,
   });
 
   @override
@@ -604,7 +614,6 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
             '${localization.app_title} ${localization.module_not_installed}';
       }
     } else {
-      // UPDATED: This is the requested change
       bannerText = localization.error_no_root;
     }
 
@@ -684,7 +693,6 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     final colorScheme = Theme.of(context).colorScheme;
     return Card(
       elevation: 2.0,
-      // UPDATED: Changed card background color
       color: colorScheme.surfaceContainer,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
@@ -723,7 +731,6 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     return Card(
       elevation: 2.0,
       margin: EdgeInsets.zero,
-      // UPDATED: Changed card background color
       color: colorScheme.surfaceContainer,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       clipBehavior: Clip.antiAlias,
@@ -756,7 +763,6 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     return Card(
       elevation: 2.0,
       margin: EdgeInsets.zero,
-      // UPDATED: Changed card background color
       color: colorScheme.surfaceContainer,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Container(
@@ -783,7 +789,6 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
               style: Theme.of(
                 context,
               ).textTheme.bodyMedium?.copyWith(color: colorScheme.primary),
-              // UPDATED: Changed dropdown background color
               dropdownColor: colorScheme.surfaceContainer,
               underline: Container(),
               iconEnabledColor: colorScheme.primary,
@@ -811,7 +816,6 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
       opacity: isHamadaMode ? 0.6 : 1.0,
       child: Card(
         elevation: 2.0,
-        // UPDATED: Changed inactive card background color
         color: isCurrentMode && !isHamadaMode
             ? colorScheme.primaryContainer
             : colorScheme.surfaceContainer,

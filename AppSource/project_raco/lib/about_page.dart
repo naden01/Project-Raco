@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:process_run/process_run.dart';
 import '/l10n/app_localizations.dart';
 import 'dart:io';
+import 'dart:ui'; // Required for ImageFiltered
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AboutPage extends StatefulWidget {
@@ -24,6 +25,7 @@ class _AboutPageState extends State<AboutPage> {
 
   String? _backgroundImagePath;
   double _backgroundOpacity = 0.2;
+  double _backgroundBlur = 0.0; // Added background blur state
 
   @override
   void initState() {
@@ -47,9 +49,11 @@ class _AboutPageState extends State<AboutPage> {
       if (!mounted) return;
       final path = prefs.getString('background_image_path');
       final opacity = prefs.getDouble('background_opacity') ?? 0.2;
+      final blur = prefs.getDouble('background_blur') ?? 0.0; // Load blur value
       setState(() {
         _backgroundImagePath = path;
         _backgroundOpacity = opacity;
+        _backgroundBlur = blur; // Set blur state
       });
     } catch (e) {
       // Error loading background settings
@@ -239,14 +243,21 @@ class _AboutPageState extends State<AboutPage> {
         children: [
           Container(color: Theme.of(context).colorScheme.background),
           if (_backgroundImagePath != null && _backgroundImagePath!.isNotEmpty)
-            Opacity(
-              opacity: _backgroundOpacity,
-              child: Image.file(
-                File(_backgroundImagePath!),
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(color: Colors.transparent);
-                },
+            // UPDATED: Added ImageFiltered to apply blur effect
+            ImageFiltered(
+              imageFilter: ImageFilter.blur(
+                sigmaX: _backgroundBlur,
+                sigmaY: _backgroundBlur,
+              ),
+              child: Opacity(
+                opacity: _backgroundOpacity,
+                child: Image.file(
+                  File(_backgroundImagePath!),
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(color: Colors.transparent);
+                  },
+                ),
               ),
             ),
           // UPDATED: Wrapped content in SafeArea

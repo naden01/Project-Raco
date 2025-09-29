@@ -601,7 +601,7 @@ abstract class AppLocalizations {
   /// No description provided for @background_settings_description.
   ///
   /// In en, this message translates to:
-  /// **'Customize the app\'s background image and opacity.'**
+  /// **'Customize the app\'s background image, opacity, and blur effect.'**
   String get background_settings_description;
 
   /// No description provided for @opacity_slider_label.
@@ -609,6 +609,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Background Opacity'**
   String get opacity_slider_label;
+
+  /// No description provided for @blur_slider_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Background Blur'**
+  String get blur_slider_label;
 
   /// No description provided for @banner_settings_title.
   ///

@@ -274,10 +274,13 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get background_settings_description =>
-      'Sesuaikan gambar latar belakang dan opasitas aplikasi.';
+      'Sesuaikan gambar latar belakang, opasitas, dan efek blur aplikasi.';
 
   @override
   String get opacity_slider_label => 'Opasitas Latar Belakang';
+
+  @override
+  String get blur_slider_label => 'Tingkat Blur Latar';
 
   @override
   String get banner_settings_title => 'Pengaturan Banner';

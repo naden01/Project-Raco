@@ -271,10 +271,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get background_settings_description =>
-      'Customize the app\'s background image and opacity.';
+      'Customize the app\'s background image, opacity, and blur effect.';
 
   @override
   String get opacity_slider_label => 'Background Opacity';
+
+  @override
+  String get blur_slider_label => 'Background Blur';
 
   @override
   String get banner_settings_title => 'Banner Settings';
