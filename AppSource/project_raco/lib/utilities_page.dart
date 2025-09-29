@@ -144,7 +144,11 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
     _allSearchableItems = [];
 
     // --- Core Tweaks ---
-    const coreTweaksPage = CoreTweaksPage();
+    final coreTweaksPage = CoreTweaksPage(
+      backgroundImagePath: _backgroundImagePath,
+      backgroundOpacity: _backgroundOpacity,
+      backgroundBlur: _backgroundBlur,
+    );
     _allCategories.add(
       UtilityCategory(
         title: localization.core_tweaks_title,
@@ -177,7 +181,11 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
     ]);
 
     // --- Automation ---
-    const automationPage = AutomationPage();
+    final automationPage = AutomationPage(
+      backgroundImagePath: _backgroundImagePath,
+      backgroundOpacity: _backgroundOpacity,
+      backgroundBlur: _backgroundBlur,
+    );
     _allCategories.add(
       UtilityCategory(
         title: localization.automation_title,
@@ -203,7 +211,11 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
     ]);
 
     // --- System ---
-    const systemPage = SystemPage();
+    final systemPage = SystemPage(
+      backgroundImagePath: _backgroundImagePath,
+      backgroundOpacity: _backgroundOpacity,
+      backgroundBlur: _backgroundBlur,
+    );
     _allCategories.add(
       UtilityCategory(
         title: localization.system_title,
@@ -260,7 +272,11 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
     ]);
 
     // --- Appearance ---
-    const appearancePage = AppearancePage();
+    final appearancePage = AppearancePage(
+      initialBackgroundImagePath: _backgroundImagePath,
+      initialBackgroundOpacity: _backgroundOpacity,
+      initialBackgroundBlur: _backgroundBlur,
+    );
     _allCategories.add(
       UtilityCategory(
         title: localization.appearance_title,
@@ -321,6 +337,7 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
   @override
   Widget build(BuildContext context) {
     final localization = AppLocalizations.of(context)!;
+    // Data is set up here to ensure background state is available to pass to sub-pages
     if (_allCategories.isEmpty && !_isLoading) {
       _setupData(localization);
     }
@@ -442,6 +459,7 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
               Navigator.push(
                 context,
                 PageRouteBuilder(
+                  opaque: false,
                   pageBuilder: (context, animation, secondaryAnimation) =>
                       category.page,
                   transitionDuration: Duration.zero,
@@ -478,6 +496,7 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
             Navigator.push(
               context,
               PageRouteBuilder(
+                opaque: false,
                 pageBuilder: (context, animation, secondaryAnimation) =>
                     item.navigationTarget,
                 transitionDuration: Duration.zero,
@@ -495,7 +514,16 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
 
 //region Sub-Pages
 class CoreTweaksPage extends StatefulWidget {
-  const CoreTweaksPage({Key? key}) : super(key: key);
+  final String? backgroundImagePath;
+  final double backgroundOpacity;
+  final double backgroundBlur;
+
+  const CoreTweaksPage({
+    Key? key,
+    required this.backgroundImagePath,
+    required this.backgroundOpacity,
+    required this.backgroundBlur,
+  }) : super(key: key);
 
   @override
   _CoreTweaksPageState createState() => _CoreTweaksPageState();
@@ -505,25 +533,11 @@ class _CoreTweaksPageState extends State<CoreTweaksPage> {
   bool _isLoading = true;
   Map<String, dynamic>? _encoreState;
   Map<String, dynamic>? _governorState;
-  String? _backgroundImagePath;
-  double _backgroundOpacity = 0.2;
-  double _backgroundBlur = 0.0; // Added background blur state
 
   @override
   void initState() {
     super.initState();
     _loadData();
-  }
-
-  Future<void> _loadBackgroundPreferences() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (!mounted) return;
-    setState(() {
-      _backgroundImagePath = prefs.getString('background_image_path');
-      _backgroundOpacity = prefs.getDouble('background_opacity') ?? 0.2;
-      _backgroundBlur =
-          prefs.getDouble('background_blur') ?? 0.0; // Load blur value
-    });
   }
 
   Future<Map<String, dynamic>> _loadEncoreSwitchState() async {
@@ -575,7 +589,7 @@ class _CoreTweaksPageState extends State<CoreTweaksPage> {
   }
 
   Future<void> _loadData() async {
-    await _loadBackgroundPreferences();
+    // Background preferences are now passed in, so no need to load them here.
     final results = await Future.wait([
       _loadEncoreSwitchState(),
       _loadGovernorState(),
@@ -600,43 +614,37 @@ class _CoreTweaksPageState extends State<CoreTweaksPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
-      body: _isLoading
-          ? const Center(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 32.0),
-                child: LinearProgressIndicator(),
-              ),
-            )
-          : ListView(
-              padding: const EdgeInsets.fromLTRB(8, 8, 8, 32),
-              children: [
-                FixAndTweakCard(
-                  initialDeviceMitigationValue:
-                      _encoreState?['deviceMitigation'] ?? false,
-                  initialLiteModeValue: _encoreState?['liteMode'] ?? false,
-                ),
-                GovernorCard(
-                  initialAvailableGovernors: _governorState?['available'] ?? [],
-                  initialSelectedGovernor: _governorState?['selected'],
-                ),
-              ],
-            ),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(8, 8, 8, 32),
+        children: [
+          FixAndTweakCard(
+            initialDeviceMitigationValue:
+                _encoreState?['deviceMitigation'] ?? false,
+            initialLiteModeValue: _encoreState?['liteMode'] ?? false,
+          ),
+          GovernorCard(
+            initialAvailableGovernors: _governorState?['available'] ?? [],
+            initialSelectedGovernor: _governorState?['selected'],
+          ),
+        ],
+      ),
     );
 
     return Stack(
       fit: StackFit.expand,
       children: [
         Container(color: Theme.of(context).colorScheme.background),
-        if (_backgroundImagePath != null && _backgroundImagePath!.isNotEmpty)
+        if (widget.backgroundImagePath != null &&
+            widget.backgroundImagePath!.isNotEmpty)
           ImageFiltered(
             imageFilter: ImageFilter.blur(
-              sigmaX: _backgroundBlur,
-              sigmaY: _backgroundBlur,
+              sigmaX: widget.backgroundBlur,
+              sigmaY: widget.backgroundBlur,
             ),
             child: Opacity(
-              opacity: _backgroundOpacity,
+              opacity: widget.backgroundOpacity,
               child: Image.file(
-                File(_backgroundImagePath!),
+                File(widget.backgroundImagePath!),
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
                   return Container(color: Colors.transparent);
@@ -644,14 +652,31 @@ class _CoreTweaksPageState extends State<CoreTweaksPage> {
               ),
             ),
           ),
-        pageContent,
+        if (_isLoading)
+          const Center(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 32.0),
+              child: LinearProgressIndicator(),
+            ),
+          )
+        else
+          pageContent,
       ],
     );
   }
 }
 
 class AutomationPage extends StatefulWidget {
-  const AutomationPage({Key? key}) : super(key: key);
+  final String? backgroundImagePath;
+  final double backgroundOpacity;
+  final double backgroundBlur;
+
+  const AutomationPage({
+    Key? key,
+    required this.backgroundImagePath,
+    required this.backgroundOpacity,
+    required this.backgroundBlur,
+  }) : super(key: key);
 
   @override
   _AutomationPageState createState() => _AutomationPageState();
@@ -661,24 +686,11 @@ class _AutomationPageState extends State<AutomationPage> {
   bool _isLoading = true;
   Map<String, bool>? _hamadaAiState;
   String? _gameTxtContent;
-  String? _backgroundImagePath;
-  double _backgroundOpacity = 0.2;
-  double _backgroundBlur = 0.0;
 
   @override
   void initState() {
     super.initState();
     _loadData();
-  }
-
-  Future<void> _loadBackgroundPreferences() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (!mounted) return;
-    setState(() {
-      _backgroundImagePath = prefs.getString('background_image_path');
-      _backgroundOpacity = prefs.getDouble('background_opacity') ?? 0.2;
-      _backgroundBlur = prefs.getDouble('background_blur') ?? 0.0;
-    });
   }
 
   Future<Map<String, bool>> _loadHamadaAiState() async {
@@ -700,7 +712,6 @@ class _AutomationPageState extends State<AutomationPage> {
   }
 
   Future<void> _loadData() async {
-    await _loadBackgroundPreferences();
     final results = await Future.wait([
       _loadHamadaAiState(),
       _loadGameTxtState(),
@@ -725,39 +736,33 @@ class _AutomationPageState extends State<AutomationPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
-      body: _isLoading
-          ? const Center(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 32.0),
-                child: LinearProgressIndicator(),
-              ),
-            )
-          : ListView(
-              padding: const EdgeInsets.fromLTRB(8, 8, 8, 32),
-              children: [
-                HamadaAiCard(
-                  initialHamadaAiEnabled: _hamadaAiState?['enabled'] ?? false,
-                  initialHamadaStartOnBoot: _hamadaAiState?['onBoot'] ?? false,
-                ),
-                GameTxtCard(initialContent: _gameTxtContent ?? ''),
-              ],
-            ),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(8, 8, 8, 32),
+        children: [
+          HamadaAiCard(
+            initialHamadaAiEnabled: _hamadaAiState?['enabled'] ?? false,
+            initialHamadaStartOnBoot: _hamadaAiState?['onBoot'] ?? false,
+          ),
+          GameTxtCard(initialContent: _gameTxtContent ?? ''),
+        ],
+      ),
     );
 
     return Stack(
       fit: StackFit.expand,
       children: [
         Container(color: Theme.of(context).colorScheme.background),
-        if (_backgroundImagePath != null && _backgroundImagePath!.isNotEmpty)
+        if (widget.backgroundImagePath != null &&
+            widget.backgroundImagePath!.isNotEmpty)
           ImageFiltered(
             imageFilter: ImageFilter.blur(
-              sigmaX: _backgroundBlur,
-              sigmaY: _backgroundBlur,
+              sigmaX: widget.backgroundBlur,
+              sigmaY: widget.backgroundBlur,
             ),
             child: Opacity(
-              opacity: _backgroundOpacity,
+              opacity: widget.backgroundOpacity,
               child: Image.file(
-                File(_backgroundImagePath!),
+                File(widget.backgroundImagePath!),
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
                   return Container(color: Colors.transparent);
@@ -765,14 +770,31 @@ class _AutomationPageState extends State<AutomationPage> {
               ),
             ),
           ),
-        pageContent,
+        if (_isLoading)
+          const Center(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 32.0),
+              child: LinearProgressIndicator(),
+            ),
+          )
+        else
+          pageContent,
       ],
     );
   }
 }
 
 class SystemPage extends StatefulWidget {
-  const SystemPage({Key? key}) : super(key: key);
+  final String? backgroundImagePath;
+  final double backgroundOpacity;
+  final double backgroundBlur;
+
+  const SystemPage({
+    Key? key,
+    required this.backgroundImagePath,
+    required this.backgroundOpacity,
+    required this.backgroundBlur,
+  }) : super(key: key);
 
   @override
   _SystemPageState createState() => _SystemPageState();
@@ -785,24 +807,11 @@ class _SystemPageState extends State<SystemPage> {
   bool _isAnyaIncluded = true; // Assume true until proven otherwise
   Map<String, dynamic>? _bypassChargingState;
   Map<String, dynamic>? _resolutionState;
-  String? _backgroundImagePath;
-  double _backgroundOpacity = 0.2;
-  double _backgroundBlur = 0.0;
 
   @override
   void initState() {
     super.initState();
     _loadData();
-  }
-
-  Future<void> _loadBackgroundPreferences() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (!mounted) return;
-    setState(() {
-      _backgroundImagePath = prefs.getString('background_image_path');
-      _backgroundOpacity = prefs.getDouble('background_opacity') ?? 0.2;
-      _backgroundBlur = prefs.getDouble('background_blur') ?? 0.0;
-    });
   }
 
   Future<bool> _loadDndState() async {
@@ -913,7 +922,6 @@ class _SystemPageState extends State<SystemPage> {
   }
 
   Future<void> _loadData() async {
-    await _loadBackgroundPreferences();
     final results = await Future.wait([
       _loadDndState(),
       _loadAnyaThermalState(),
@@ -944,52 +952,46 @@ class _SystemPageState extends State<SystemPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
-      body: _isLoading
-          ? const Center(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 32.0),
-                child: LinearProgressIndicator(),
-              ),
-            )
-          : ListView(
-              padding: const EdgeInsets.fromLTRB(8, 8, 8, 32),
-              children: [
-                DndCard(initialDndEnabled: _dndEnabled ?? false),
-                if (_isAnyaIncluded)
-                  AnyaThermalCard(
-                    initialAnyaThermalEnabled: _anyaThermalEnabled ?? false,
-                  ),
-                BypassChargingCard(
-                  isSupported: _bypassChargingState?['isSupported'] ?? false,
-                  isEnabled: _bypassChargingState?['isEnabled'] ?? false,
-                  supportStatus: _bypassChargingState?['isSupported'] ?? false
-                      ? localization.bypass_charging_supported
-                      : localization.bypass_charging_unsupported,
-                ),
-                ResolutionCard(
-                  isAvailable: _resolutionState?['isAvailable'] ?? false,
-                  originalSize: _resolutionState?['originalSize'] ?? '',
-                  originalDensity: _resolutionState?['originalDensity'] ?? 0,
-                ),
-                const SystemActionsCard(),
-              ],
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(8, 8, 8, 32),
+        children: [
+          DndCard(initialDndEnabled: _dndEnabled ?? false),
+          if (_isAnyaIncluded)
+            AnyaThermalCard(
+              initialAnyaThermalEnabled: _anyaThermalEnabled ?? false,
             ),
+          BypassChargingCard(
+            isSupported: _bypassChargingState?['isSupported'] ?? false,
+            isEnabled: _bypassChargingState?['isEnabled'] ?? false,
+            supportStatus: _bypassChargingState?['isSupported'] ?? false
+                ? localization.bypass_charging_supported
+                : localization.bypass_charging_unsupported,
+          ),
+          ResolutionCard(
+            isAvailable: _resolutionState?['isAvailable'] ?? false,
+            originalSize: _resolutionState?['originalSize'] ?? '',
+            originalDensity: _resolutionState?['originalDensity'] ?? 0,
+          ),
+          const SystemActionsCard(),
+        ],
+      ),
     );
 
     return Stack(
       fit: StackFit.expand,
       children: [
         Container(color: Theme.of(context).colorScheme.background),
-        if (_backgroundImagePath != null && _backgroundImagePath!.isNotEmpty)
+        if (widget.backgroundImagePath != null &&
+            widget.backgroundImagePath!.isNotEmpty)
           ImageFiltered(
             imageFilter: ImageFilter.blur(
-              sigmaX: _backgroundBlur,
-              sigmaY: _backgroundBlur,
+              sigmaX: widget.backgroundBlur,
+              sigmaY: widget.backgroundBlur,
             ),
             child: Opacity(
-              opacity: _backgroundOpacity,
+              opacity: widget.backgroundOpacity,
               child: Image.file(
-                File(_backgroundImagePath!),
+                File(widget.backgroundImagePath!),
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
                   return Container(color: Colors.transparent);
@@ -997,14 +999,31 @@ class _SystemPageState extends State<SystemPage> {
               ),
             ),
           ),
-        pageContent,
+        if (_isLoading)
+          const Center(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 32.0),
+              child: LinearProgressIndicator(),
+            ),
+          )
+        else
+          pageContent,
       ],
     );
   }
 }
 
 class AppearancePage extends StatefulWidget {
-  const AppearancePage({Key? key}) : super(key: key);
+  final String? initialBackgroundImagePath;
+  final double initialBackgroundOpacity;
+  final double initialBackgroundBlur;
+
+  const AppearancePage({
+    Key? key,
+    required this.initialBackgroundImagePath,
+    required this.initialBackgroundOpacity,
+    required this.initialBackgroundBlur,
+  }) : super(key: key);
   @override
   _AppearancePageState createState() => _AppearancePageState();
 }
@@ -1019,6 +1038,10 @@ class _AppearancePageState extends State<AppearancePage> {
   @override
   void initState() {
     super.initState();
+    // Initialize local state from the passed-in widget properties
+    backgroundImagePath = widget.initialBackgroundImagePath;
+    backgroundOpacity = widget.initialBackgroundOpacity;
+    backgroundBlur = widget.initialBackgroundBlur;
     _loadAppearanceSettings();
   }
 
@@ -1026,9 +1049,7 @@ class _AppearancePageState extends State<AppearancePage> {
     final prefs = await SharedPreferences.getInstance();
     if (!mounted) return;
     setState(() {
-      backgroundImagePath = prefs.getString('background_image_path');
-      backgroundOpacity = prefs.getDouble('background_opacity') ?? 0.2;
-      backgroundBlur = prefs.getDouble('background_blur') ?? 0.0;
+      // Banner is not passed in, so it's loaded here.
       bannerImagePath = prefs.getString('banner_image_path');
       _isLoading = false;
     });
@@ -1044,36 +1065,29 @@ class _AppearancePageState extends State<AppearancePage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
-      body: _isLoading
-          ? const Center(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 32.0),
-                child: LinearProgressIndicator(),
-              ),
-            )
-          : ListView(
-              padding: const EdgeInsets.fromLTRB(8, 8, 8, 32),
-              children: [
-                BackgroundSettingsCard(
-                  initialPath: backgroundImagePath,
-                  initialOpacity: backgroundOpacity,
-                  initialBlur: backgroundBlur,
-                  onSettingsChanged: (path, opacity, blur) {
-                    setState(() {
-                      backgroundImagePath = path;
-                      backgroundOpacity = opacity;
-                      backgroundBlur = blur;
-                    });
-                  },
-                ),
-                BannerSettingsCard(
-                  initialPath: bannerImagePath,
-                  onSettingsChanged: (path) {
-                    setState(() => bannerImagePath = path);
-                  },
-                ),
-              ],
-            ),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(8, 8, 8, 32),
+        children: [
+          BackgroundSettingsCard(
+            initialPath: backgroundImagePath,
+            initialOpacity: backgroundOpacity,
+            initialBlur: backgroundBlur,
+            onSettingsChanged: (path, opacity, blur) {
+              setState(() {
+                backgroundImagePath = path;
+                backgroundOpacity = opacity;
+                backgroundBlur = blur;
+              });
+            },
+          ),
+          BannerSettingsCard(
+            initialPath: bannerImagePath,
+            onSettingsChanged: (path) {
+              setState(() => bannerImagePath = path);
+            },
+          ),
+        ],
+      ),
     );
     return Stack(
       fit: StackFit.expand,
@@ -1096,7 +1110,15 @@ class _AppearancePageState extends State<AppearancePage> {
               ),
             ),
           ),
-        pageContent,
+        if (_isLoading)
+          const Center(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 32.0),
+              child: LinearProgressIndicator(),
+            ),
+          )
+        else
+          pageContent,
       ],
     );
   }
