@@ -53,7 +53,7 @@ class _MyAppState extends State<MyApp> {
   Locale? _locale;
   String? _backgroundImagePath;
   double _backgroundOpacity = 0.2;
-  double _backgroundBlur = 0.0; // Added background blur state
+  double _backgroundBlur = 0.0;
   String? _bannerImagePath;
 
   static final _defaultLightColorScheme = ColorScheme.fromSeed(
@@ -77,14 +77,14 @@ class _MyAppState extends State<MyApp> {
     final languageCode = prefs.getString('language_code') ?? 'en';
     final path = prefs.getString('background_image_path');
     final opacity = prefs.getDouble('background_opacity') ?? 0.2;
-    final blur = prefs.getDouble('background_blur') ?? 0.0; // Load blur value
+    final blur = prefs.getDouble('background_blur') ?? 0.0;
     final bannerPath = prefs.getString('banner_image_path');
 
     setState(() {
       _locale = Locale(languageCode);
       _backgroundImagePath = path;
       _backgroundOpacity = opacity;
-      _backgroundBlur = blur; // Set blur state
+      _backgroundBlur = blur;
       _bannerImagePath = bannerPath;
     });
   }
@@ -126,7 +126,6 @@ class _MyAppState extends State<MyApp> {
                     Container(color: Theme.of(context).colorScheme.background),
                     if (_backgroundImagePath != null &&
                         _backgroundImagePath!.isNotEmpty)
-                      // UPDATED: Added ImageFiltered to apply blur effect
                       ImageFiltered(
                         imageFilter: ImageFilter.blur(
                           sigmaX: _backgroundBlur,
@@ -421,16 +420,32 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     );
   }
 
+  // UPDATED: This method now loads preferences before navigating
   void _navigateToUtilitiesPage() async {
+    // 1. Load the preferences first
+    final prefs = await SharedPreferences.getInstance();
+    final String? path = prefs.getString('background_image_path');
+    final double opacity = prefs.getDouble('background_opacity') ?? 0.2;
+    final double blur = prefs.getDouble('background_blur') ?? 0.0;
+
+    if (!mounted) return;
+
+    // 2. Navigate and pass the loaded values
     await Navigator.push(
       context,
       PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            UtilitiesPage(),
+        opaque: false, // Make the route itself transparent
+        pageBuilder: (context, animation, secondaryAnimation) => UtilitiesPage(
+          initialBackgroundImagePath: path,
+          initialBackgroundOpacity: opacity,
+          initialBackgroundBlur: blur,
+        ),
         transitionDuration: Duration.zero,
         reverseTransitionDuration: Duration.zero,
       ),
     );
+
+    // After returning from UtilitiesPage, refresh the main screen state
     _initializeState();
     widget.onUtilitiesClosed();
   }

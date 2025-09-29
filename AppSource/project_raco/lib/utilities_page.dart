@@ -55,10 +55,9 @@ class UtilityCategory {
   });
 }
 
-// NEW: A model for an individual search result item.
 class SearchResultItem {
   final String title;
-  final String subtitle; // The name of the parent category
+  final String subtitle;
   final IconData icon;
   final Widget navigationTarget;
   final String searchKeywords;
@@ -74,7 +73,16 @@ class SearchResultItem {
 //endregion
 
 class UtilitiesPage extends StatefulWidget {
-  const UtilitiesPage({Key? key}) : super(key: key);
+  final String? initialBackgroundImagePath;
+  final double initialBackgroundOpacity;
+  final double initialBackgroundBlur;
+
+  const UtilitiesPage({
+    Key? key,
+    required this.initialBackgroundImagePath,
+    required this.initialBackgroundOpacity,
+    required this.initialBackgroundBlur,
+  }) : super(key: key);
 
   @override
   _UtilitiesPageState createState() => _UtilitiesPageState();
@@ -86,20 +94,21 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
   bool _isContentVisible = false;
   String? _backgroundImagePath;
   double _backgroundOpacity = 0.2;
-  double _backgroundBlur = 0.0; // Added background blur state
+  double _backgroundBlur = 0.0;
 
   final TextEditingController _searchController = TextEditingController();
 
-  // Lists for the default category view
   List<UtilityCategory> _allCategories = [];
-
-  // NEW: Lists to manage individual searchable items and their filtered results
   List<SearchResultItem> _allSearchableItems = [];
   List<SearchResultItem> _filteredSearchResults = [];
 
   @override
   void initState() {
     super.initState();
+    _backgroundImagePath = widget.initialBackgroundImagePath;
+    _backgroundOpacity = widget.initialBackgroundOpacity;
+    _backgroundBlur = widget.initialBackgroundBlur;
+
     _initializePage();
     _searchController.addListener(_updateSearchResults);
   }
@@ -117,15 +126,11 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
     setState(() {
       _backgroundImagePath = prefs.getString('background_image_path');
       _backgroundOpacity = prefs.getDouble('background_opacity') ?? 0.2;
-      _backgroundBlur =
-          prefs.getDouble('background_blur') ?? 0.0; // Load blur value
+      _backgroundBlur = prefs.getDouble('background_blur') ?? 0.0;
     });
   }
 
-  // MODIFIED: This page now only checks for root access.
-  // All other data loading is deferred to the sub-pages.
   Future<void> _initializePage() async {
-    await _loadBackgroundPreferences();
     final bool hasRoot = await _checkRootAccess();
 
     if (!mounted) return;
@@ -136,14 +141,10 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
     });
   }
 
-  // MODIFIED: This method now populates both the categories and the individual searchable items.
-  // The sub-pages are now created without any initial data.
   void _setupData(AppLocalizations localization) {
-    // Clear lists to prevent duplication on rebuild
     _allCategories = [];
     _allSearchableItems = [];
 
-    // --- Core Tweaks ---
     final coreTweaksPage = CoreTweaksPage(
       backgroundImagePath: _backgroundImagePath,
       backgroundOpacity: _backgroundOpacity,
@@ -180,7 +181,6 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
       ),
     ]);
 
-    // --- Automation ---
     final automationPage = AutomationPage(
       backgroundImagePath: _backgroundImagePath,
       backgroundOpacity: _backgroundOpacity,
@@ -210,7 +210,6 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
       ),
     ]);
 
-    // --- System ---
     final systemPage = SystemPage(
       backgroundImagePath: _backgroundImagePath,
       backgroundOpacity: _backgroundOpacity,
@@ -231,8 +230,6 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
         navigationTarget: systemPage,
         searchKeywords: 'dnd do not disturb notifications silence',
       ),
-      // The Anya item is now conditionally added inside the SystemPage itself
-      // after checking if it's included. For search, we can assume it might exist.
       SearchResultItem(
         title: localization.anya_thermal_title,
         subtitle: localization.system_title,
@@ -271,7 +268,6 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
       ),
     ]);
 
-    // --- Appearance ---
     final appearancePage = AppearancePage(
       initialBackgroundImagePath: _backgroundImagePath,
       initialBackgroundOpacity: _backgroundOpacity,
@@ -315,14 +311,7 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
       if (mounted) {
         setState(() {
           _filteredSearchResults = _allSearchableItems.where((item) {
-            // Hide Anya from search if we know it's not included.
-            // This is an optimistic search; for a perfect solution,
-            // we'd need to load the 'anya included' state here,
-            // but that defeats the purpose of lazy loading.
-            // This approach is a good compromise.
-            if (item.searchKeywords.contains('anya')) {
-              // A simple heuristic could be added here if needed
-            }
+            if (item.searchKeywords.contains('anya')) {}
 
             final itemKeywords = item.searchKeywords.toLowerCase().split(' ');
             return queryTerms.every(
@@ -337,7 +326,6 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
   @override
   Widget build(BuildContext context) {
     final localization = AppLocalizations.of(context)!;
-    // Data is set up here to ensure background state is available to pass to sub-pages
     if (_allCategories.isEmpty && !_isLoading) {
       _setupData(localization);
     }
@@ -351,14 +339,7 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
-      body: _isLoading
-          ? const Center(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 32.0),
-                child: LinearProgressIndicator(),
-              ),
-            )
-          : !_hasRootAccess
+      body: !_hasRootAccess
           ? Center(
               child: Padding(
                 padding: const EdgeInsets.all(32.0),
@@ -394,7 +375,6 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
                     ),
                   ),
                   Expanded(
-                    // NEW: Conditionally show category list or search results list
                     child: isSearching
                         ? _buildSearchResultsList()
                         : _buildCategoryList(),
@@ -409,7 +389,6 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
       children: [
         Container(color: Theme.of(context).colorScheme.background),
         if (_backgroundImagePath != null && _backgroundImagePath!.isNotEmpty)
-          // UPDATED: Added ImageFiltered to apply blur effect
           ImageFiltered(
             imageFilter: ImageFilter.blur(
               sigmaX: _backgroundBlur,
@@ -426,12 +405,19 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
               ),
             ),
           ),
-        pageContent,
+        if (_isLoading)
+          const Center(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 32.0),
+              child: LinearProgressIndicator(),
+            ),
+          )
+        else
+          pageContent,
       ],
     );
   }
 
-  /// Builds the default list of utility categories.
   Widget _buildCategoryList() {
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -473,7 +459,6 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
     );
   }
 
-  /// Builds the list of individual search results.
   Widget _buildSearchResultsList() {
     if (_filteredSearchResults.isEmpty) {
       return Center(
@@ -509,8 +494,6 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
     );
   }
 }
-
-//region Sub-Pages and Cards
 
 //region Sub-Pages
 class CoreTweaksPage extends StatefulWidget {
@@ -589,7 +572,6 @@ class _CoreTweaksPageState extends State<CoreTweaksPage> {
   }
 
   Future<void> _loadData() async {
-    // Background preferences are now passed in, so no need to load them here.
     final results = await Future.wait([
       _loadEncoreSwitchState(),
       _loadGovernorState(),
@@ -804,7 +786,7 @@ class _SystemPageState extends State<SystemPage> {
   bool _isLoading = true;
   bool? _dndEnabled;
   bool? _anyaThermalEnabled;
-  bool _isAnyaIncluded = true; // Assume true until proven otherwise
+  bool _isAnyaIncluded = true;
   Map<String, dynamic>? _bypassChargingState;
   Map<String, dynamic>? _resolutionState;
 
@@ -852,10 +834,8 @@ class _SystemPageState extends State<SystemPage> {
         r'^INCLUDE_ANYA=(\d)',
         multiLine: true,
       ).firstMatch(content);
-      // Hide if INCLUDE_ANYA=0. Show otherwise.
       return match?.group(1) != '0';
     }
-    // Default to showing if file/line is not found.
     return true;
   }
 
@@ -1038,7 +1018,6 @@ class _AppearancePageState extends State<AppearancePage> {
   @override
   void initState() {
     super.initState();
-    // Initialize local state from the passed-in widget properties
     backgroundImagePath = widget.initialBackgroundImagePath;
     backgroundOpacity = widget.initialBackgroundOpacity;
     backgroundBlur = widget.initialBackgroundBlur;
@@ -1049,7 +1028,6 @@ class _AppearancePageState extends State<AppearancePage> {
     final prefs = await SharedPreferences.getInstance();
     if (!mounted) return;
     setState(() {
-      // Banner is not passed in, so it's loaded here.
       bannerImagePath = prefs.getString('banner_image_path');
       _isLoading = false;
     });
@@ -1123,7 +1101,6 @@ class _AppearancePageState extends State<AppearancePage> {
     );
   }
 }
-//endregion
 
 //region Card Widgets
 class FixAndTweakCard extends StatefulWidget {
@@ -1523,10 +1500,7 @@ class _AnyaThermalCardState extends State<AnyaThermalCard> {
         : '/data/adb/modules/ProjectRaco/Scripts/AnyaKawaii.sh';
 
     try {
-      // First, run the appropriate script to enable/disable the thermal mod
       await _runRootCommandAndWait(scriptPath);
-
-      // Then, update the configuration file to reflect the state
       final sedCommand =
           "sed -i 's|^ANYA=.*|ANYA=$valueString|' $_configFilePath";
       final result = await _runRootCommandAndWait(sedCommand);
@@ -1534,7 +1508,6 @@ class _AnyaThermalCardState extends State<AnyaThermalCard> {
       if (result.exitCode == 0) {
         if (mounted) setState(() => _isEnabled = enable);
       } else {
-        // If updating the config fails, consider the whole operation failed.
         throw Exception('Failed to write to config file.');
       }
     } catch (e) {
@@ -1542,7 +1515,6 @@ class _AnyaThermalCardState extends State<AnyaThermalCard> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to update thermal setting: $e')),
         );
-        // Revert the UI state if any part of the operation fails
         setState(() => _isEnabled = widget.initialAnyaThermalEnabled);
       }
     } finally {
@@ -2423,7 +2395,6 @@ class _BackgroundSettingsCardState extends State<BackgroundSettingsCard> {
               },
               onChangeEnd: _updateOpacity,
             ),
-            // UPDATED: Added blur slider
             Text(localization.blur_slider_label, style: textTheme.bodyMedium),
             Slider(
               value: _blurPercentage,
