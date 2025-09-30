@@ -341,4 +341,11 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get clear_cache_title => 'Bersihkan Cache';
+
+  @override
+  String get better_powersave_title => 'Powersave Lebih Baik';
+
+  @override
+  String get better_powersave_description =>
+      'Batasi Freq CPU ke Setengah, bukan Freq Minimum (Hanya Mode Powersave)';
 }

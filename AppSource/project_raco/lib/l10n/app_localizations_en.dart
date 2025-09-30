@@ -338,4 +338,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get clear_cache_title => 'Clear Cache';
+
+  @override
+  String get better_powersave_title => 'Better Powersave';
+
+  @override
+  String get better_powersave_description =>
+      'Cap the CPU Freq to Half instead of Minimum Freq (Powersave Mode Only)';
 }

@@ -329,4 +329,10 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get clear_cache_title => 'キャッシュをクリア';
+
+  @override
+  String get better_powersave_title => 'より良い省電力';
+
+  @override
+  String get better_powersave_description => 'CPU周波数を最小ではなく半分に制限します（省電力モードのみ）';
 }

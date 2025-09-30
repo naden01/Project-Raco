@@ -52,7 +52,7 @@
         "placeholders": {
             "resolution": {
                 "type": "String"
-            }
+          }
         }
     },
     "reset_resolution": "オリジナルに戻す",
@@ -110,5 +110,7 @@
     "system_actions_title": "システムアクション",
     "fstrim_title": "Fstrim",
     "fstrim_description": "Androidパーティションをトリムします。",
-    "clear_cache_title": "キャッシュをクリア"
+    "clear_cache_title": "キャッシュをクリア",
+    "better_powersave_title": "より良い省電力",
+    "better_powersave_description": "CPU周波数を最小ではなく半分に制限します（省電力モードのみ）"
 }

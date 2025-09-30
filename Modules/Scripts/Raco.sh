@@ -8,6 +8,7 @@ RACO_CONFIG="/data/adb/modules/ProjectRaco/raco.txt"
 # Format: 1=MTK, 2=SD, 3=Exynos, 4=Unisoc, 5=Tensor, 6=Tegra, 7=Kirin
 SOC=$(grep '^SOC=' "$RACO_CONFIG" | cut -d'=' -f2)
 LITE_MODE=$(grep '^LITE_MODE=' "$RACO_CONFIG" | cut -d'=' -f2)
+BETTER_POWERAVE=$(grep '^BETTER_POWERAVE=' "$RACO_CONFIG" | cut -d'=' -f2)
 
 DEFAULT_CPU_GOV=$(grep '^GOV=' "$RACO_CONFIG" | cut -d'=' -f2)
 if [ -z "$DEFAULT_CPU_GOV" ]; then
@@ -340,16 +341,28 @@ cpufreq_ppm_min_perf() {
     for path in /sys/devices/system/cpu/cpufreq/policy*; do
         ((cluster++))
         cpu_minfreq=$(<"$path/cpuinfo_min_freq")
-        tweak "$cluster $cpu_minfreq" /proc/ppm/policy/hard_userlimit_max_cpu_freq
-        tweak "$cluster $cpu_minfreq" /proc/ppm/policy/hard_userlimit_min_cpu_freq
+        if [ "$BETTER_POWERAVE" -eq 1 ]; then
+            cpu_midfreq=$(which_midfreq "$path/scaling_available_frequencies")
+            tweak "$cluster $cpu_midfreq" /proc/ppm/policy/hard_userlimit_max_cpu_freq
+            tweak "$cluster $cpu_minfreq" /proc/ppm/policy/hard_userlimit_min_cpu_freq
+        else
+            tweak "$cluster $cpu_minfreq" /proc/ppm/policy/hard_userlimit_max_cpu_freq
+            tweak "$cluster $cpu_minfreq" /proc/ppm/policy/hard_userlimit_min_cpu_freq
+        fi
     done
 }
 
 cpufreq_min_perf() {
     for path in /sys/devices/system/cpu/*/cpufreq; do
         cpu_minfreq=$(<"$path/cpuinfo_min_freq")
-        tweak "$cpu_minfreq" "$path/scaling_max_freq"
-        tweak "$cpu_minfreq" "$path/scaling_min_freq"
+        if [ "$BETTER_POWERAVE" -eq 1 ]; then
+            cpu_midfreq=$(which_midfreq "$path/scaling_available_frequencies")
+            tweak "$cpu_midfreq" "$path/scaling_max_freq"
+            tweak "$cpu_minfreq" "$path/scaling_min_freq"
+        else
+            tweak "$cpu_minfreq" "$path/scaling_max_freq"
+            tweak "$cpu_minfreq" "$path/scaling_min_freq"
+        fi
     done
     chmod -f 444 /sys/devices/system/cpu/cpufreq/policy*/scaling_*_freq
 }

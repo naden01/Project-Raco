@@ -183,6 +183,13 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
         navigationTarget: coreTweaksPage,
         searchKeywords: 'custom governor cpu performance',
       ),
+      SearchResultItem(
+        title: localization.better_powersave_title,
+        subtitle: localization.core_tweaks_title,
+        icon: Icons.battery_saver_outlined,
+        navigationTarget: coreTweaksPage,
+        searchKeywords: 'better powersave battery cpu frequency half minimum',
+      ),
     ]);
 
     final automationPage = AutomationPage(
@@ -545,9 +552,19 @@ class _CoreTweaksPageState extends State<CoreTweaksPage> {
               multiLine: true,
             ).firstMatch(content)?.group(1) ==
             '1',
+        'betterPowersave':
+            RegExp(
+              r'^BETTER_POWERAVE=(\d)',
+              multiLine: true,
+            ).firstMatch(content)?.group(1) ==
+            '1',
       };
     }
-    return {'deviceMitigation': false, 'liteMode': false};
+    return {
+      'deviceMitigation': false,
+      'liteMode': false,
+      'betterPowersave': false,
+    };
   }
 
   Future<Map<String, dynamic>> _loadGovernorState() async {
@@ -606,6 +623,8 @@ class _CoreTweaksPageState extends State<CoreTweaksPage> {
             initialDeviceMitigationValue:
                 _encoreState?['deviceMitigation'] ?? false,
             initialLiteModeValue: _encoreState?['liteMode'] ?? false,
+            initialBetterPowersaveValue:
+                _encoreState?['betterPowersave'] ?? false,
           ),
           GovernorCard(
             initialAvailableGovernors: _governorState?['available'] ?? [],
@@ -1109,11 +1128,13 @@ class _AppearancePageState extends State<AppearancePage> {
 class FixAndTweakCard extends StatefulWidget {
   final bool initialDeviceMitigationValue;
   final bool initialLiteModeValue;
+  final bool initialBetterPowersaveValue;
 
   const FixAndTweakCard({
     Key? key,
     required this.initialDeviceMitigationValue,
     required this.initialLiteModeValue,
+    required this.initialBetterPowersaveValue,
   }) : super(key: key);
 
   @override
@@ -1123,8 +1144,10 @@ class FixAndTweakCard extends StatefulWidget {
 class _FixAndTweakCardState extends State<FixAndTweakCard> {
   late bool _deviceMitigationEnabled;
   late bool _liteModeEnabled;
+  late bool _betterPowersaveEnabled;
   bool _isUpdatingMitigation = false;
   bool _isUpdatingLiteMode = false;
+  bool _isUpdatingBetterPowersave = false;
   final String _racoConfigFilePath = '/data/adb/modules/ProjectRaco/raco.txt';
 
   @override
@@ -1132,6 +1155,7 @@ class _FixAndTweakCardState extends State<FixAndTweakCard> {
     super.initState();
     _deviceMitigationEnabled = widget.initialDeviceMitigationValue;
     _liteModeEnabled = widget.initialLiteModeValue;
+    _betterPowersaveEnabled = widget.initialBetterPowersaveValue;
   }
 
   Future<void> _updateTweak({
@@ -1172,7 +1196,10 @@ class _FixAndTweakCardState extends State<FixAndTweakCard> {
     final localization = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    final bool isBusy = _isUpdatingMitigation || _isUpdatingLiteMode;
+    final bool isBusy =
+        _isUpdatingMitigation ||
+        _isUpdatingLiteMode ||
+        _isUpdatingBetterPowersave;
 
     return Card(
       elevation: 2.0,
@@ -1249,6 +1276,38 @@ class _FixAndTweakCardState extends State<FixAndTweakCard> {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.energy_savings_leaf_outlined),
+              activeColor: colorScheme.primary,
+              contentPadding: EdgeInsets.zero,
+            ),
+            SwitchListTile(
+              title: Text(
+                localization.better_powersave_title,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text(
+                localization.better_powersave_description,
+                style: textTheme.bodySmall?.copyWith(
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+              value: _betterPowersaveEnabled,
+              onChanged: isBusy
+                  ? null
+                  : (bool enable) => _updateTweak(
+                      key: 'BETTER_POWERAVE',
+                      enable: enable,
+                      stateSetter: (val) => _betterPowersaveEnabled = val,
+                      isUpdatingSetter: (val) =>
+                          _isUpdatingBetterPowersave = val,
+                      initialValue: widget.initialBetterPowersaveValue,
+                    ),
+              secondary: _isUpdatingBetterPowersave
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.battery_saver_outlined),
               activeColor: colorScheme.primary,
               contentPadding: EdgeInsets.zero,
             ),

@@ -51,8 +51,8 @@
     "@selected_resolution": {
         "placeholders": {
             "resolution": {
-                "type": "String"
-            }
+                "type": "String"     
+   }
         }
     },
     "reset_resolution": "Kembali ke Asli",
@@ -110,5 +110,7 @@
     "system_actions_title": "Tindakan Sistem",
     "fstrim_title": "Fstrim",
     "fstrim_description": "Pangkas partisi Android.",
-    "clear_cache_title": "Bersihkan Cache"
+    "clear_cache_title": "Bersihkan Cache",
+    "better_powersave_title": "Powersave Lebih Baik",
+    "better_powersave_description": "Batasi Freq CPU ke Setengah, bukan Freq Minimum (Hanya Mode Powersave)"
 }

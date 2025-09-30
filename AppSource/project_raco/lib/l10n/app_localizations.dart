@@ -729,6 +729,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Clear Cache'**
   String get clear_cache_title;
+
+  /// No description provided for @better_powersave_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Better Powersave'**
+  String get better_powersave_title;
+
+  /// No description provided for @better_powersave_description.
+  ///
+  /// In en, this message translates to:
+  /// **'Cap the CPU Freq to Half instead of Minimum Freq (Powersave Mode Only)'**
+  String get better_powersave_description;
 }
 
 class _AppLocalizationsDelegate
