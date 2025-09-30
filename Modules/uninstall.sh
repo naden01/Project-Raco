@@ -18,7 +18,7 @@ fi
 
 rm -rf /data/local/tmp/logo.png
 rm -rf /data/local/tmp/Anya.png
-pm uninstall com.kanagawa.yamada.project.raco
+pm uninstall --user 0 com.kanagawa.yamada.project.raco >/dev/null 2>&1
 rm -rf /data/ProjectRaco
 
 # Managed to read this? Thanks for using Project Raco
