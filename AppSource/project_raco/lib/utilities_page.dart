@@ -1,14 +1,18 @@
-import 'package:flutter/material.dart';
-import 'dart:io';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:ui';
-import 'package:process_run/process_run.dart';
-import '/l10n/app_localizations.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:image/image.dart' as img;
 import 'package:image_cropper/image_cropper.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:material_color_utilities/material_color_utilities.dart';
 import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
+import 'package:process_run/process_run.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../main.dart'; // NEW: Import to access the global themeNotifier
+import '/l10n/app_localizations.dart';
 
 //region Helper Functions
 Future<ProcessResult> _runRootCommandAndWait(String command) async {
@@ -2456,6 +2460,7 @@ class BannerSettingsCard extends StatefulWidget {
 
 class _BannerSettingsCardState extends State<BannerSettingsCard> {
   late String? _path;
+  bool _isProcessing = false;
 
   @override
   void initState() {
@@ -2473,6 +2478,37 @@ class _BannerSettingsCardState extends State<BannerSettingsCard> {
         });
       }
     }
+  }
+
+  // NEW: Calculate, save, and notify the app of the new seed color.
+  Future<void> _generateAndSaveSeedColor(String? imagePath) async {
+    final prefs = await SharedPreferences.getInstance();
+    const key = 'banner_seed_color';
+    Color? newColor;
+
+    if (imagePath == null || imagePath.isEmpty) {
+      await prefs.remove(key);
+      newColor = null;
+    } else {
+      try {
+        final int? seedColorValue = await compute(
+          _calculateSeedColor,
+          imagePath,
+        );
+        if (seedColorValue != null) {
+          await prefs.setInt(key, seedColorValue);
+          newColor = Color(seedColorValue);
+        } else {
+          await prefs.remove(key);
+          newColor = null;
+        }
+      } catch (e) {
+        await prefs.remove(key);
+        newColor = null;
+      }
+    }
+    // This notifies the listener in main.dart to rebuild the app with the new theme.
+    themeNotifier.value = newColor;
   }
 
   Future<void> _pickAndCropImage() async {
@@ -2498,15 +2534,12 @@ class _BannerSettingsCardState extends State<BannerSettingsCard> {
             aspectRatioLockEnabled: true,
             resetAspectRatioEnabled: false,
             aspectRatioPickerButtonHidden: true,
-            rectX: 1.0,
-            rectY: 1.0,
-            rectWidth: 1280,
-            rectHeight: 720,
           ),
         ],
       );
 
       if (croppedFile != null && mounted) {
+        setState(() => _isProcessing = true);
         final appDir = await getApplicationDocumentsDirectory();
         final fileName = 'banner_${DateTime.now().millisecondsSinceEpoch}.jpg';
         final savedImage = await File(
@@ -2515,13 +2548,21 @@ class _BannerSettingsCardState extends State<BannerSettingsCard> {
 
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('banner_image_path', savedImage.path);
+
+        // Calculate, save, and notify the app of the new seed color
+        await _generateAndSaveSeedColor(savedImage.path);
+
         if (mounted) {
-          setState(() => _path = savedImage.path);
+          setState(() {
+            _path = savedImage.path;
+            _isProcessing = false;
+          });
         }
         widget.onSettingsChanged(_path);
       }
     } catch (e) {
       if (mounted) {
+        setState(() => _isProcessing = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to pick or crop image: $e')),
         );
@@ -2530,11 +2571,17 @@ class _BannerSettingsCardState extends State<BannerSettingsCard> {
   }
 
   Future<void> _resetBanner() async {
+    setState(() => _isProcessing = true);
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('banner_image_path');
+
+    // Remove the saved seed color and notify the app
+    await _generateAndSaveSeedColor(null);
+
     if (mounted) {
       setState(() {
         _path = null;
+        _isProcessing = false;
       });
     }
     widget.onSettingsChanged(null);
@@ -2568,30 +2615,70 @@ class _BannerSettingsCardState extends State<BannerSettingsCard> {
               style: textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),
             ),
             const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: _pickAndCropImage,
-                    child: const Icon(Icons.image_outlined),
-                  ),
+            if (_isProcessing)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: CircularProgressIndicator(),
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: _resetBanner,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: colorScheme.errorContainer,
-                      foregroundColor: colorScheme.onErrorContainer,
+              )
+            else
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: _pickAndCropImage,
+                      child: const Icon(Icons.image_outlined),
                     ),
-                    child: const Icon(Icons.delete_outline),
                   ),
-                ),
-              ],
-            ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: _resetBanner,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: colorScheme.errorContainer,
+                        foregroundColor: colorScheme.onErrorContainer,
+                      ),
+                      child: const Icon(Icons.delete_outline),
+                    ),
+                  ),
+                ],
+              ),
           ],
         ),
       ),
     );
+  }
+}
+
+// NEW: Top-level function for isolate computation. It's safer this way.
+@visibleForTesting
+Future<int?> _calculateSeedColor(String imagePath) async {
+  try {
+    final file = File(imagePath);
+    final imageBytes = await file.readAsBytes();
+    final image = img.decodeImage(imageBytes);
+
+    if (image == null) {
+      throw Exception('Failed to decode image in isolate');
+    }
+
+    final rgbaBytes = image.getBytes(order: img.ChannelOrder.rgba);
+    final pixels = <int>[];
+    for (var i = 0; i < rgbaBytes.length; i += 4) {
+      final r = rgbaBytes[i];
+      final g = rgbaBytes[i + 1];
+      final b = rgbaBytes[i + 2];
+      final a = rgbaBytes[i + 3];
+      pixels.add((a << 24) | (r << 16) | (g << 8) | b);
+    }
+
+    final quantizer = QuantizerCelebi();
+    final quantizedColors = await quantizer.quantize(pixels, 128);
+    final rankedColors = Score.score(quantizedColors.colorToCount);
+    return rankedColors.first;
+  } catch (e) {
+    // Return null if any part of the calculation fails
+    return null;
   }
 }

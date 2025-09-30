@@ -1,16 +1,19 @@
-import 'package:flutter/material.dart';
-import 'package:process_run/process_run.dart';
 import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 import 'package:dynamic_color/dynamic_color.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:process_run/process_run.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '/l10n/app_localizations.dart';
 import 'about_page.dart';
 import 'utilities_page.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
-import '/l10n/app_localizations.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+
+// NEW: A simple global notifier to broadcast theme changes instantly.
+final themeNotifier = ValueNotifier<Color?>(null);
 
 class ConfigManager {
   static const String _modeKey = 'current_mode';
@@ -37,10 +40,12 @@ class ConfigManager {
 }
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatefulWidget {
+  const MyApp({Key? key}) : super(key: key);
+
   @override
   _MyAppState createState() => _MyAppState();
 }
@@ -51,6 +56,7 @@ class _MyAppState extends State<MyApp> {
   double _backgroundOpacity = 0.2;
   double _backgroundBlur = 0.0;
   String? _bannerImagePath;
+  Color? _seedColorFromBanner;
 
   static final _defaultLightColorScheme = ColorScheme.fromSeed(
     seedColor: Colors.blue,
@@ -63,12 +69,37 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
+    // Load initial preferences and set up a listener for theme changes.
     _loadAllPreferences();
+    themeNotifier.addListener(_onThemeChanged);
+  }
+
+  @override
+  void dispose() {
+    // Clean up the listener when the app is closed.
+    themeNotifier.removeListener(_onThemeChanged);
+    super.dispose();
+  }
+
+  // NEW: This method is called whenever a new banner color is set anywhere in the app.
+  void _onThemeChanged() {
+    if (mounted) {
+      setState(() {
+        _seedColorFromBanner = themeNotifier.value;
+      });
+    }
   }
 
   Future<void> _loadAllPreferences() async {
     final prefs = await SharedPreferences.getInstance();
     if (!mounted) return;
+
+    final int? seedValue = prefs.getInt('banner_seed_color');
+    final Color? bannerColor = seedValue != null ? Color(seedValue) : null;
+
+    // Set initial value for the notifier and local state
+    _seedColorFromBanner = bannerColor;
+    themeNotifier.value = bannerColor;
 
     setState(() {
       _locale = Locale(prefs.getString('language_code') ?? 'en');
@@ -92,16 +123,31 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return DynamicColorBuilder(
       builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
-        ColorScheme lightColorScheme =
-            lightDynamic?.harmonized() ?? _defaultLightColorScheme;
-        ColorScheme darkColorScheme =
-            darkDynamic?.harmonized() ?? _defaultDarkColorScheme;
+        ColorScheme lightColorScheme;
+        ColorScheme darkColorScheme;
+
+        // The logic remains the same, but now it's driven by the listener.
+        if (_seedColorFromBanner != null) {
+          lightColorScheme = ColorScheme.fromSeed(
+            seedColor: _seedColorFromBanner!,
+            brightness: Brightness.light,
+          );
+          darkColorScheme = ColorScheme.fromSeed(
+            seedColor: _seedColorFromBanner!,
+            brightness: Brightness.dark,
+          );
+        } else {
+          lightColorScheme =
+              lightDynamic?.harmonized() ?? _defaultLightColorScheme;
+          darkColorScheme =
+              darkDynamic?.harmonized() ?? _defaultDarkColorScheme;
+        }
 
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           locale: _locale,
           supportedLocales: AppLocalizations.supportedLocales,
-          localizationsDelegates: [
+          localizationsDelegates: const [
             AppLocalizations.delegate,
             GlobalMaterialLocalizations.delegate,
             GlobalWidgetsLocalizations.delegate,
@@ -165,14 +211,15 @@ class MainScreen extends StatefulWidget {
   final double backgroundOpacity;
   final double backgroundBlur;
 
-  MainScreen({
+  const MainScreen({
+    Key? key,
     required this.onLocaleChange,
     required this.onSettingsChanged,
     required this.bannerImagePath,
     required this.backgroundImagePath,
     required this.backgroundOpacity,
     required this.backgroundBlur,
-  });
+  }) : super(key: key);
 
   @override
   _MainScreenState createState() => _MainScreenState();
@@ -187,8 +234,6 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   String _executingScript = '';
   bool _isLoading = true;
   bool _isHamadaAiRunning = false;
-  // --- REMOVED --- The periodic timer is no longer needed.
-  // Timer? _hamadaCheckTimer;
   bool _isContentVisible = false;
 
   @override
@@ -201,8 +246,6 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    // --- REMOVED --- No timer to cancel.
-    // _hamadaCheckTimer?.cancel();
     super.dispose();
   }
 
@@ -210,27 +253,9 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     if (state == AppLifecycleState.resumed) {
-      // Refresh dynamic data (process status) when app is brought to foreground.
       _refreshDynamicState();
-      // --- REMOVED --- No timer to restart.
-      // _startHamadaTimer();
-    } else if (state == AppLifecycleState.paused) {
-      // --- REMOVED --- No timer to cancel.
-      // _hamadaCheckTimer?.cancel();
     }
   }
-
-  // --- REMOVED --- The entire timer management method is no longer necessary.
-  /*
-  void _startHamadaTimer() {
-    _hamadaCheckTimer?.cancel(); 
-    if (mounted) {
-      _hamadaCheckTimer = Timer.periodic(Duration(seconds: 3), (timer) {
-        _checkHamadaProcessStatus();
-      });
-    }
-  }
-  */
 
   Future<void> _initialize() async {
     if (!mounted) return;
@@ -266,8 +291,6 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
         _isLoading = false;
         _isContentVisible = true;
       });
-      // --- REMOVED --- No timer to start.
-      // _startHamadaTimer();
     }
   }
 
@@ -311,16 +334,6 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
       return false;
     }
   }
-
-  // --- REMOVED --- This method was only used by the timer and is no longer needed.
-  /*
-  Future<void> _checkHamadaProcessStatus() async {
-    final isRunning = await _isHamadaProcessRunning();
-    if (mounted && _isHamadaAiRunning != isRunning) {
-      setState(() => _isHamadaAiRunning = isRunning);
-    }
-  }
-  */
 
   Future<bool> _checkModuleInstalled() async {
     if (!_hasRootAccess) return false;
@@ -449,11 +462,9 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
         reverseTransitionDuration: Duration.zero,
       ),
     );
-    _initialize();
+    // Reload settings that aren't handled by the notifier (like background image)
     widget.onSettingsChanged();
   }
-
-  // --- BUILD METHODS: No changes needed below this line. ---
 
   @override
   Widget build(BuildContext context) {
@@ -466,23 +477,23 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: _isLoading
-              ? Center(
+              ? const Center(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                    padding: EdgeInsets.symmetric(horizontal: 32.0),
                     child: LinearProgressIndicator(),
                   ),
                 )
               : AnimatedOpacity(
                   opacity: _isContentVisible ? 1.0 : 0.0,
-                  duration: Duration(milliseconds: 500),
+                  duration: const Duration(milliseconds: 500),
                   child: SingleChildScrollView(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildTitleHeader(colorScheme, localization),
-                        SizedBox(height: 16),
+                        const SizedBox(height: 16),
                         _buildBannerAndStatus(localization),
-                        SizedBox(height: 10),
+                        const SizedBox(height: 10),
                         _buildControlRow(
                           localization.power_save_desc,
                           '3',
@@ -526,9 +537,9 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
                           'CLEAR',
                         ),
                         _buildUtilitiesCard(localization),
-                        SizedBox(height: 10),
+                        const SizedBox(height: 10),
                         _buildLanguageSelector(localization),
-                        SizedBox(height: 20),
+                        const SizedBox(height: 20),
                       ],
                     ),
                   ),
@@ -652,8 +663,8 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
               children: [
                 bannerImage,
                 Container(
-                  margin: EdgeInsets.all(12.0),
-                  padding: EdgeInsets.symmetric(
+                  margin: const EdgeInsets.all(12.0),
+                  padding: const EdgeInsets.symmetric(
                     horizontal: 12.0,
                     vertical: 6.0,
                   ),
@@ -663,7 +674,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
                   ),
                   child: Text(
                     bannerText,
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
@@ -674,7 +685,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
             ),
           ),
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         Row(
           children: [
             Expanded(
@@ -687,7 +698,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
                     : Theme.of(context).colorScheme.error,
               ),
             ),
-            SizedBox(width: 10),
+            const SizedBox(width: 10),
             Expanded(
               child: _buildStatusCard(
                 localization.mode_status_label,
@@ -722,7 +733,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(icon, color: colorScheme.primary, size: 24),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Text(
               label,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -840,7 +851,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
             ? colorScheme.primaryContainer
             : colorScheme.surfaceContainer,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: EdgeInsets.only(bottom: 10),
+        margin: const EdgeInsets.only(bottom: 10),
         child: InkWell(
           onTap: !isInteractable
               ? null
@@ -861,7 +872,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
                 },
           borderRadius: BorderRadius.circular(12),
           child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
               children: [
                 Icon(
@@ -871,7 +882,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
                       ? colorScheme.onPrimaryContainer
                       : colorScheme.onSurface,
                 ),
-                SizedBox(width: 16),
+                const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -891,7 +902,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
                                   : colorScheme.onSurface,
                             ),
                       ),
-                      SizedBox(height: 4),
+                      const SizedBox(height: 4),
                       Text(
                         description,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -905,7 +916,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
                     ],
                   ),
                 ),
-                SizedBox(width: 10),
+                const SizedBox(width: 10),
                 if (isExecutingThis)
                   SizedBox(
                     height: 20,
