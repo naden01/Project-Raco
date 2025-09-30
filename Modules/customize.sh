@@ -126,7 +126,7 @@ ui_print "------------------------------------"
 ui_print "            MODULE INFO             "
 ui_print "------------------------------------"
 ui_print "Name : Project Raco"
-ui_print "Version : CBT 5.0"
+ui_print "Version : CBT 6.0"
 ui_print " "
 sleep 1.5
 
