@@ -11,7 +11,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:process_run/process_run.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../main.dart'; // NEW: Import to access the global themeNotifier
+import '../main.dart'; // Import to access the global themeNotifier
 import '/l10n/app_localizations.dart';
 
 //region Helper Functions
@@ -315,8 +315,6 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
       if (mounted) {
         setState(() {
           _filteredSearchResults = _allSearchableItems.where((item) {
-            if (item.searchKeywords.contains('anya')) {}
-
             final itemKeywords = item.searchKeywords.toLowerCase().split(' ');
             return queryTerms.every(
               (term) => itemKeywords.any((keyword) => keyword.startsWith(term)),
@@ -500,6 +498,7 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
 }
 
 //region Sub-Pages
+// ... (All other sub-pages and cards remain the same)
 class CoreTweaksPage extends StatefulWidget {
   final String? backgroundImagePath;
   final double backgroundOpacity;
@@ -2616,10 +2615,22 @@ class _BannerSettingsCardState extends State<BannerSettingsCard> {
             ),
             const SizedBox(height: 16),
             if (_isProcessing)
-              const Center(
+              Center(
                 child: Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: CircularProgressIndicator(),
+                  padding: const EdgeInsets.all(8.0),
+                  // UPDATED: Show text with a loading spinner
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const CircularProgressIndicator(),
+                      const SizedBox(height: 16),
+                      Text(
+                        localization.applying_new_color,
+                        style: textTheme.bodyMedium,
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
                 ),
               )
             else

@@ -76,6 +76,7 @@
     "game_txt_hint": "ゲームパッケージ名を1行に1つずつ入力...",
     "resolution_unavailable_message": "このデバイスでは解像度制御は利用できません。",
     "applying_changes": "変更を適用中...",
+    "applying_new_color": "新しい色を適用しています、お待ちください...",
     "dnd_title": "DND スイッチ",
     "dnd_description": "DND の自動オン/オフ切り替え",
     "dnd_toggle_title": "DND 自動スイッチを有効にする",

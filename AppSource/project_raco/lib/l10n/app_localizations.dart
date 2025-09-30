@@ -520,6 +520,12 @@ abstract class AppLocalizations {
   /// **'Applying changes...'**
   String get applying_changes;
 
+  /// No description provided for @applying_new_color.
+  ///
+  /// In en, this message translates to:
+  /// **'Applying New Color, Please Wait...'**
+  String get applying_new_color;
+
   /// No description provided for @dnd_title.
   ///
   /// In en, this message translates to:

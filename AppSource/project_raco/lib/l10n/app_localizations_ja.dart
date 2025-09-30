@@ -221,6 +221,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get applying_changes => '変更を適用中...';
 
   @override
+  String get applying_new_color => '新しい色を適用しています、お待ちください...';
+
+  @override
   String get dnd_title => 'DND スイッチ';
 
   @override

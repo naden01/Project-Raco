@@ -230,6 +230,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get applying_changes => 'Menerapkan perubahan...';
 
   @override
+  String get applying_new_color => 'Menerapkan Warna Baru, Harap Tunggu...';
+
+  @override
   String get dnd_title => 'Saklar DND';
 
   @override

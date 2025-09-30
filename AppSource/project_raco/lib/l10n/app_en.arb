@@ -76,6 +76,7 @@
     "game_txt_hint": "Enter game package names, one per line...",
     "resolution_unavailable_message": "Resolution control is not available on this device.",
     "applying_changes": "Applying changes...",
+    "applying_new_color": "Applying New Color, Please Wait...",
     "dnd_title": "DND Switch",
     "dnd_description": "Automatically Turn DND on / off",
     "dnd_toggle_title": "Enable DND Auto Switch",

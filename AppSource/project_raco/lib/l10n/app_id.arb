@@ -76,6 +76,7 @@
     "game_txt_hint": "Masukkan nama paket game, satu per baris...",
     "resolution_unavailable_message": "Kontrol resolusi tidak tersedia di perangkat ini.",
     "applying_changes": "Menerapkan perubahan...",
+    "applying_new_color": "Menerapkan Warna Baru, Harap Tunggu...",
     "dnd_title": "Saklar DND",
     "dnd_description": "Otomatis Nyalakan / Matikan DND",
     "dnd_toggle_title": "Aktifkan Saklar Otomatis DND",

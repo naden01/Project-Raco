@@ -228,6 +228,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get applying_changes => 'Applying changes...';
 
   @override
+  String get applying_new_color => 'Applying New Color, Please Wait...';
+
+  @override
   String get dnd_title => 'DND Switch';
 
   @override
