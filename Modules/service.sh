@@ -54,6 +54,11 @@ if grep -q "INCLUDE_KOBO=1" "$CONFIG_FILE"; then
     sh /data/adb/modules/ProjectRaco/Scripts/KoboKanaeru.sh
 fi
 
+# Run Zeta.sh if INCLUDE_ZETA=1
+if grep -q "INCLUDE_ZETA=1" "$CONFIG_FILE"; then
+    sh /data/adb/modules/ProjectRaco/Scripts/Zeta.sh
+fi
+
 ###################################
 # Celestial Render FlowX (@Kzuyoo)
 # Version: 1.5G 

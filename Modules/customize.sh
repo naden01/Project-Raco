@@ -206,6 +206,12 @@ if [ "$USE_SAVED_CONFIG" = false ]; then
   if choose; then INCLUDE_KOBO=1; ui_print "  > Yes"; else INCLUDE_KOBO=0; ui_print "  > No"; fi
 
   ui_print " "
+  ui_print "- Include Vestia Zeta Display?"
+  ui_print "Maximize Screen Refresh Rate"
+  ui_print "  Vol+ = Yes  |  Vol- = No"
+  if choose; then INCLUDE_ZETA=1; ui_print "  > Yes"; else INCLUDE_ZETA=0; ui_print "  > No"; fi
+
+  ui_print " "
   ui_print "- Include Sandevistan Boot?"
   ui_print "An Attempt to Make Boot Faster"
   ui_print "  Vol+ = Yes  |  Vol- = No"
@@ -215,6 +221,7 @@ if [ "$USE_SAVED_CONFIG" = false ]; then
   ui_print "- Updating module configuration..."
   sed -i "s/^INCLUDE_ANYA=.*/INCLUDE_ANYA=$INCLUDE_ANYA/" "$RACO_MODULE_CONFIG"
   sed -i "s/^INCLUDE_KOBO=.*/INCLUDE_KOBO=$INCLUDE_KOBO/" "$RACO_MODULE_CONFIG"
+  sed -i "s/^INCLUDE_ZETA=.*/INCLUDE_ZETA=$INCLUDE_ZETA/" "$RACO_MODULE_CONFIG"
   sed -i "s/^INCLUDE_SANDEV=.*/INCLUDE_SANDEV=$INCLUDE_SANDEV/" "$RACO_MODULE_CONFIG"
   ui_print "- Adding SOC Code ($SOC) to module config..."
   sed -i "s/^SOC=.*/SOC=$SOC/" "$RACO_MODULE_CONFIG"
