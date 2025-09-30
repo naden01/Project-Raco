@@ -60,6 +60,37 @@ if grep -q "INCLUDE_ZETA=1" "$CONFIG_FILE"; then
 fi
 
 ###################################
+# Carlotta Render (@Koneko_Dev)
+###################################
+refresh_rate="$(cmd display dump | grep -Eo 'fps=[0-9.]+' | cut -f2 -d= | sort -nr | head -n1)"
+
+frame_duration_ns="$(echo "scale=10; 1000000000 / $refresh_rate" | bc)"
+app_duration="$(echo "scale=0; ($frame_duration_ns * 1.1666666667) / 1" | bc)"
+sf_duration="$(echo "scale=0; ($frame_duration_ns * 0.8333333333) / 1" | bc)"
+app_phase_offset_ns="$(echo "scale=0; (-$frame_duration_ns * 0.5833333333) / 1" | bc)" 
+phase_offset_ns="$(echo "scale=0; (-$frame_duration_ns * 0.4166666667) / 1" | bc)"      
+# Ensure positive values for durations
+app_duration="${app_duration%.*}"
+sf_duration="${sf_duration%.*}"
+app_phase_offset_ns="${app_phase_offset_ns%.*}"
+phase_offset_ns="${phase_offset_ns%.*}"
+setprop debug.sf.early.app.duration "$app_duration"
+setprop debug.sf.earlyGl.app.duration "$app_duration"
+setprop debug.sf.late.app.duration "$app_duration"
+# Set SF duration properties
+setprop debug.sf.early.sf.duration "$sf_duration"
+setprop debug.sf.earlyGl.sf.duration "$sf_duration"
+setprop debug.sf.late.sf.duration "$sf_duration"
+# Set app phase offset properties
+setprop debug.sf.early_app_phase_offset_ns "$app_phase_offset_ns"
+setprop debug.sf.high_fps_early_app_phase_offset_ns "$app_phase_offset_ns"
+setprop debug.sf.high_fps_late_app_phase_offset_ns "$app_phase_offset_ns"
+setprop debug.sf.early_phase_offset_ns "$phase_offset_ns"
+setprop debug.sf.high_fps_early_phase_offset_ns "$phase_offset_ns"
+
+echo "$refresh_rate"
+
+###################################
 # Celestial Render FlowX (@Kzuyoo)
 # Version: 1.5G 
 # Note: Notification Disabled
