@@ -44,11 +44,9 @@ move_with_retry() {
   abort "! Aborting installation."
 }
 
-
 LATESTARTSERVICE=true
 SOC=0
 RACO_PERSIST_CONFIG="/data/ProjectRaco/raco.txt"
-
 
 ui_print "------------------------------------"
 ui_print "             Project Raco           "
@@ -244,15 +242,13 @@ if [ -f "$RACO_MODULE_CONFIG" ]; then
 fi
 
 ui_print " "
-ui_print "     INSTALLING Project Raco App      "
+ui_print "   INSTALLING/UPDATING Project Raco App   "
 ui_print " "
 
-if pm list packages | grep -q "com.kanagawa.yamada.project.raco"; then
-    pm uninstall --user 0 com.kanagawa.yamada.project.raco >/dev/null 2>&1
-fi
-
 copy_with_retry "$MODPATH/ProjectRaco.apk" "/data/local/tmp"
-pm install /data/local/tmp/ProjectRaco.apk >/dev/null 2>&1
+
+pm install -r -g /data/local/tmp/ProjectRaco.apk >/dev/null 2>&1
+
 rm /data/local/tmp/ProjectRaco.apk >/dev/null 2>&1
 
 ui_print " "
