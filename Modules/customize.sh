@@ -44,6 +44,25 @@ move_with_retry() {
   abort "! Aborting installation."
 }
 
+check_for_new_addons() {
+  local new_config="$1"
+  local saved_config="$2"
+  
+  # Get all INCLUDE keys from the new config
+  new_keys=$(grep '^INCLUDE_' "$new_config" | cut -d'=' -f1)
+  
+  for key in $new_keys; do
+    # Check if the key exists in the saved config
+    if ! grep -q "^$key=" "$saved_config"; then
+      ui_print "- New addon detected: $key"
+      return 0 # 0 means true (new addons found)
+    fi
+  done
+  
+  return 1 # 1 means false (no new addons found)
+}
+
+
 LATESTARTSERVICE=true
 SOC=0
 RACO_PERSIST_CONFIG="/data/ProjectRaco/raco.txt"
@@ -176,17 +195,38 @@ USE_SAVED_CONFIG=false
 if [ -f "$RACO_PERSIST_CONFIG" ]; then
   ui_print " "
   ui_print "- Saved configuration found."
-  ui_print "  Do you want to use it?"
-  ui_print " "
-  ui_print "  Vol+ = Yes, use saved config"
-  ui_print "  Vol- = No, choose again"
-  ui_print " "
-  if choose; then
-    ui_print "- Using saved configuration."
-    copy_with_retry "$RACO_PERSIST_CONFIG" "$MODPATH"
-    USE_SAVED_CONFIG=true
+  
+  # NEW LOGIC: Check for new addons
+  if check_for_new_addons "$RACO_MODULE_CONFIG" "$RACO_PERSIST_CONFIG"; then
+    ui_print " "
+    ui_print "! New Addon Available, Reconfigure?"
+    ui_print " "
+    ui_print "  Vol+ = Yes, Reconfigure"
+    ui_print "  Vol- = No, use saved values"
+    ui_print " "
+    if choose; then
+      ui_print "- User chose to reconfigure."
+      # By doing nothing here, USE_SAVED_CONFIG remains false
+      # and the script will proceed to the manual selection.
+    else
+      ui_print "- Using saved configuration and ignoring new addons."
+      copy_with_retry "$RACO_PERSIST_CONFIG" "$MODPATH"
+      USE_SAVED_CONFIG=true
+    fi
   else
-    ui_print "- Re-configuring addons."
+    # ORIGINAL LOGIC: No new addons found, ask to use saved config
+    ui_print "  Do you want to use it?"
+    ui_print " "
+    ui_print "  Vol+ = Yes, use saved config"
+    ui_print "  Vol- = No, choose again"
+    ui_print " "
+    if choose; then
+      ui_print "- Using saved configuration."
+      copy_with_retry "$RACO_PERSIST_CONFIG" "$MODPATH"
+      USE_SAVED_CONFIG=true
+    else
+      ui_print "- Re-configuring addons."
+    fi
   fi
 fi
 
