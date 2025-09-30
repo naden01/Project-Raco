@@ -8,7 +8,7 @@ copy_with_retry() {
 
   ui_print "- Copying $FILE_NAME..."
   for i in 1 2 3 4; do
-    cp -f "$SOURCE_FILE" "$DEST_PATH" >/dev/null 2>&1
+    su -c cp -f "$SOURCE_FILE" "$DEST_PATH" >/dev/null 2>&1
     if [ -s "$DEST_FILE" ]; then
       ui_print "  ...Success."
       return 0
@@ -29,7 +29,7 @@ move_with_retry() {
 
   ui_print "- Moving $(basename "$SOURCE_FILE")..."
   for i in 1 2 3 4; do
-    mv -f "$SOURCE_FILE" "$DEST_FILE" >/dev/null 2>&1
+    su -c mv -f "$SOURCE_FILE" "$DEST_FILE" >/dev/null 2>&1
     if [ -s "$DEST_FILE" ] && [ ! -f "$SOURCE_FILE" ]; then
       ui_print "  ...Success."
       return 0
@@ -285,9 +285,34 @@ ui_print " "
 ui_print "   INSTALLING/UPDATING Project Raco App   "
 ui_print " "
 
+PACKAGE_NAME="com.kanagawa.yamada.project.raco"
+
 copy_with_retry "$MODPATH/ProjectRaco.apk" "/data/local/tmp"
 
 pm install -r -g /data/local/tmp/ProjectRaco.apk >/dev/null 2>&1
+
+if ! pm path "$PACKAGE_NAME" >/dev/null 2>&1; then
+  ui_print "! Initial install failed. Retrying with root..."
+  
+  su -c pm install -r -g /data/local/tmp/ProjectRaco.apk >/dev/null 2>&1
+  
+  if ! pm path "$PACKAGE_NAME" >/dev/null 2>&1; then
+    ui_print "! Root install also failed. Attempting a clean install..."
+    
+    ui_print "- Uninstalling any existing version..."
+    su -c pm uninstall "$PACKAGE_NAME" >/dev/null 2>&1
+    sleep 1
+    
+    ui_print "- Attempting a fresh installation..."
+    su -c pm install -g /data/local/tmp/ProjectRaco.apk >/dev/null 2>&1
+  fi
+fi
+
+if pm path "$PACKAGE_NAME" >/dev/null 2>&1; then
+  ui_print "- Project Raco App installed/updated successfully."
+else
+  ui_print "! CRITICAL: Failed to install the Project Raco App after multiple attempts."
+fi
 
 rm /data/local/tmp/ProjectRaco.apk >/dev/null 2>&1
 
