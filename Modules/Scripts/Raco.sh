@@ -828,7 +828,7 @@ performance_basic() {
     esac
 
     dnd_on
-	pemboy_perf
+	# pemboy_perf
     corin_perf
     bypass_on
     anyamelfissa
@@ -893,7 +893,7 @@ balanced_basic() {
     esac
     
 	dnd_off
-	pemboy_balanced
+	# pemboy_balanced
     corin_balanced
     bypass_off
     anyakawaii
@@ -937,7 +937,7 @@ powersave_basic() {
     esac
 
     dnd_off
-	pemboy_powersave
+	# pemboy_powersave
     corin_powersave
     bypass_off
     anyakawaii
