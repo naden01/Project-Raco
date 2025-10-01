@@ -1,11 +1,7 @@
 service call SurfaceFlinger 1035 i32 0
 
-# Attempt to go universal
-# Get all available refresh rates
-rates=$(dumpsys display | tr ',' '\n' | awk -F= '/^ fps/ {v[$2]=1} END {for (r in v) print r}' | sort -nr)
-
-# Get highest rate and convert to integer
-max_rate=$(echo "$rates" | head -1 | cut -d. -f1)
+# Get highest rate By: Koneko_Dev
+max_rate=$(cmd display dump 2>/dev/null | grep -Eo 'fps=[0-9.]+' | cut -f2 -d= | awk '{printf "%.0f\n", $1}' | sort -nr | head -n1)
 
 # Apply settings
 settings put system min_refresh_rate $max_rate
