@@ -212,6 +212,10 @@ fi
 
 setprop debug.sf.layer_caching_active_layer_timeout_ms $timeout
 
+#####################################
+# End of Carlotta Render
+#####################################
+
 ###################################
 # Celestial Render FlowX (@Kzuyoo)
 # Version: 1.5G 
@@ -570,6 +574,10 @@ main() {
 
 # Main Execution
 sync && main
+
+############################
+# End of Celestial Render
+############################
 
 # This script will be executed in late_start service mode
 su -lp 2000 -c "cmd notification post -S bigtext -t 'Project Raco' -i file:///data/local/tmp/logo.png -I file:///data/local/tmp/logo.png TagRaco 'Project Raco - オンライン'"
