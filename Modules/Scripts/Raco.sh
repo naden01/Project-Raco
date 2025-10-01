@@ -9,6 +9,8 @@ RACO_CONFIG="/data/adb/modules/ProjectRaco/raco.txt"
 SOC=$(grep '^SOC=' "$RACO_CONFIG" | cut -d'=' -f2)
 LITE_MODE=$(grep '^LITE_MODE=' "$RACO_CONFIG" | cut -d'=' -f2)
 BETTER_POWERAVE=$(grep '^BETTER_POWERAVE=' "$RACO_CONFIG" | cut -d'=' -f2)
+ANYA=$(grep '^ANYA=' "$RACO_CONFIG" | cut -d'=' -f2)
+INCLUDE_ANYA=$(grep '^INCLUDE_ANYA=' "$RACO_CONFIG" | cut -d'=' -f2)
 
 DEFAULT_CPU_GOV=$(grep '^GOV=' "$RACO_CONFIG" | cut -d'=' -f2)
 if [ -z "$DEFAULT_CPU_GOV" ]; then
@@ -38,11 +40,15 @@ source "$MODULE_PATH/Scripts/corin.sh"
 ##############################
 
 anyamelfissa() {
-    sh /data/adb/modules/ProjectRaco/Scripts/AnyaMelfissa.sh
+    if [ "$INCLUDE_ANYA" = "1" ] && [ "$ANYA" = "1" ]; then
+        sh /data/adb/modules/ProjectRaco/Scripts/AnyaMelfissa.sh
+    fi
 }
 
 anyakawaii() {
-    sh /data/adb/modules/ProjectRaco/Scripts/AnyaKawaii.sh
+    if [ "$INCLUDE_ANYA" = "1" ] && [ "$ANYA" = "1" ]; then
+        sh /data/adb/modules/ProjectRaco/Scripts/AnyaKawaii.sh
+    fi
 }
 
 tweak() {
