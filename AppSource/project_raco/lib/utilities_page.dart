@@ -2180,10 +2180,6 @@ class _GameTxtEditorPageState extends State<GameTxtEditorPage> {
       _textController.matches = matches;
       _currentMatchIndex = matches.isNotEmpty ? 0 : -1;
     });
-
-    if (matches.isNotEmpty) {
-      _scrollToMatch(0);
-    }
   }
 
   void _scrollToMatch(int index) {
