@@ -2043,6 +2043,74 @@ class _GameTxtCardState extends State<GameTxtCard> {
   }
 }
 
+// Custom controller to handle search term highlighting
+class _HighlightingTextController extends TextEditingController {
+  List<TextRange> _matches;
+  final Color highlightColor;
+
+  _HighlightingTextController({
+    required this.highlightColor,
+    List<TextRange> matches = const [],
+    String? text,
+  }) : _matches = matches,
+       super(text: text);
+
+  void set matches(List<TextRange> newMatches) {
+    _matches = newMatches;
+    // This call is crucial to trigger a rebuild of the text span.
+    notifyListeners();
+  }
+
+  @override
+  TextSpan buildTextSpan({
+    required BuildContext context,
+    TextStyle? style,
+    required bool withComposing,
+  }) {
+    final List<InlineSpan> children = [];
+    int lastMatchEnd = 0;
+
+    // If there's no search query or no matches, return the plain text.
+    if (_matches.isEmpty || text.isEmpty) {
+      return TextSpan(text: text, style: style);
+    }
+
+    // Sort matches to process them in order.
+    _matches.sort((a, b) => a.start.compareTo(b.start));
+
+    for (final TextRange match in _matches) {
+      // Add the text before the current match
+      if (match.start > lastMatchEnd) {
+        children.add(
+          TextSpan(
+            text: text.substring(lastMatchEnd, match.start),
+            style: style,
+          ),
+        );
+      }
+
+      // Add the highlighted match
+      children.add(
+        TextSpan(
+          text: text.substring(match.start, match.end),
+          style: style?.copyWith(
+            backgroundColor: highlightColor.withOpacity(0.3), // Use theme color
+          ),
+        ),
+      );
+
+      lastMatchEnd = match.end;
+    }
+
+    // Add the remaining text after the last match
+    if (lastMatchEnd < text.length) {
+      children.add(TextSpan(text: text.substring(lastMatchEnd), style: style));
+    }
+
+    return TextSpan(style: style, children: children);
+  }
+}
+
 class GameTxtEditorPage extends StatefulWidget {
   final String initialContent;
   const GameTxtEditorPage({Key? key, required this.initialContent})
@@ -2052,19 +2120,32 @@ class GameTxtEditorPage extends StatefulWidget {
 }
 
 class _GameTxtEditorPageState extends State<GameTxtEditorPage> {
-  late TextEditingController _textController;
+  late _HighlightingTextController _textController;
   final ScrollController _scrollController = ScrollController();
   bool _isSaving = false;
   bool _isSearching = false;
   String _searchQuery = '';
   int _currentMatchIndex = -1;
-  List<TextRange> _matches = [];
   final String _gameTxtPath = '/data/ProjectRaco/game.txt';
 
   @override
   void initState() {
     super.initState();
-    _textController = TextEditingController(text: widget.initialContent);
+    _textController = _HighlightingTextController(
+      text: widget.initialContent,
+      highlightColor: Colors.transparent, // Placeholder color
+    );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Update the highlight color to match the current theme's primary color.
+    _textController = _HighlightingTextController(
+      text: _textController.text,
+      matches: _textController._matches,
+      highlightColor: Theme.of(context).colorScheme.primary,
+    );
   }
 
   @override
@@ -2077,7 +2158,7 @@ class _GameTxtEditorPageState extends State<GameTxtEditorPage> {
   void _performSearch(String query) {
     if (query.isEmpty) {
       setState(() {
-        _matches = [];
+        _textController.matches = [];
         _currentMatchIndex = -1;
       });
       return;
@@ -2085,7 +2166,7 @@ class _GameTxtEditorPageState extends State<GameTxtEditorPage> {
 
     final text = _textController.text.toLowerCase();
     final searchLower = query.toLowerCase();
-    final matches = <TextRange>[];
+    final List<TextRange> matches = <TextRange>[];
 
     int startIndex = 0;
     while (true) {
@@ -2096,7 +2177,7 @@ class _GameTxtEditorPageState extends State<GameTxtEditorPage> {
     }
 
     setState(() {
-      _matches = matches;
+      _textController.matches = matches;
       _currentMatchIndex = matches.isNotEmpty ? 0 : -1;
     });
 
@@ -2106,9 +2187,10 @@ class _GameTxtEditorPageState extends State<GameTxtEditorPage> {
   }
 
   void _scrollToMatch(int index) {
-    if (index < 0 || index >= _matches.length) return;
+    final matches = _textController._matches;
+    if (index < 0 || index >= matches.length) return;
 
-    final match = _matches[index];
+    final match = matches[index];
     final text = _textController.text.substring(0, match.start);
     final lines = text.split('\n').length;
 
@@ -2122,18 +2204,20 @@ class _GameTxtEditorPageState extends State<GameTxtEditorPage> {
   }
 
   void _nextMatch() {
-    if (_matches.isEmpty) return;
+    final matches = _textController._matches;
+    if (matches.isEmpty) return;
     setState(() {
-      _currentMatchIndex = (_currentMatchIndex + 1) % _matches.length;
+      _currentMatchIndex = (_currentMatchIndex + 1) % matches.length;
     });
     _scrollToMatch(_currentMatchIndex);
   }
 
   void _previousMatch() {
-    if (_matches.isEmpty) return;
+    final matches = _textController._matches;
+    if (matches.isEmpty) return;
     setState(() {
       _currentMatchIndex =
-          (_currentMatchIndex - 1 + _matches.length) % _matches.length;
+          (_currentMatchIndex - 1 + matches.length) % matches.length;
     });
     _scrollToMatch(_currentMatchIndex);
   }
@@ -2166,6 +2250,14 @@ class _GameTxtEditorPageState extends State<GameTxtEditorPage> {
   Widget build(BuildContext context) {
     final localization = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
+
+    if (_textController.highlightColor != colorScheme.primary) {
+      _textController = _HighlightingTextController(
+        text: _textController.text,
+        matches: _textController._matches,
+        highlightColor: colorScheme.primary,
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -2225,19 +2317,23 @@ class _GameTxtEditorPageState extends State<GameTxtEditorPage> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  if (_matches.isNotEmpty)
+                  if (_textController._matches.isNotEmpty)
                     Text(
-                      '${_currentMatchIndex + 1}/${_matches.length}',
+                      '${_currentMatchIndex + 1}/${_textController._matches.length}',
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                   IconButton(
                     icon: const Icon(Icons.keyboard_arrow_up),
-                    onPressed: _matches.isEmpty ? null : _previousMatch,
+                    onPressed: _textController._matches.isEmpty
+                        ? null
+                        : _previousMatch,
                     iconSize: 20,
                   ),
                   IconButton(
                     icon: const Icon(Icons.keyboard_arrow_down),
-                    onPressed: _matches.isEmpty ? null : _nextMatch,
+                    onPressed: _textController._matches.isEmpty
+                        ? null
+                        : _nextMatch,
                     iconSize: 20,
                   ),
                   IconButton(
@@ -2247,7 +2343,7 @@ class _GameTxtEditorPageState extends State<GameTxtEditorPage> {
                       setState(() {
                         _isSearching = false;
                         _searchQuery = '';
-                        _matches = [];
+                        _textController.matches = [];
                         _currentMatchIndex = -1;
                       });
                     },
