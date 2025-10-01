@@ -104,11 +104,9 @@ get_stable_refresh_rate() {
 
     echo "$median"
 }
-refresh_rate=$(get_stable_refresh_rate)
-echo "Detected stable refresh rate: ${refresh_rate}Hz"
 
+refresh_rate=$(get_stable_refresh_rate)
 frame_duration_ns=$(awk -v r="$refresh_rate" 'BEGIN { printf "%.0f", 1000000000 / r }')
-echo "Frame duration: ${frame_duration_ns}ns"
 
 calculate_dynamic_margin() {
     base_margin=0.07
@@ -125,7 +123,6 @@ calculate_dynamic_margin() {
 
 margin_ratio=$(calculate_dynamic_margin)
 min_margin=$(awk -v fd="$frame_duration_ns" -v m="$margin_ratio" 'BEGIN { printf "%.0f", fd * m }')
-echo "Dynamic margin: $(awk -v m="$margin_ratio" 'BEGIN { printf "%.2f", m*100 }')% (${min_margin}ns)"
 
 if [ "$refresh_rate" -ge 120 ]; then
     app_phase_ratio=0.68
@@ -162,7 +159,6 @@ adjust_needed=$(awk -v dt="$dead_time" -v mm="$min_margin" 'BEGIN { print (dt < 
 if [ "$adjust_needed" -eq 1 ]; then
     adjustment=$(awk -v mm="$min_margin" -v dt="$dead_time" 'BEGIN { print mm - dt }')
     new_app_duration=$(awk -v app_dur="$app_duration" -v adj="$adjustment" 'BEGIN { res = app_dur - adj; print (res > 0) ? res : 0 }')
-    echo "Optimization: Adjusted app duration by -${adjustment}ns for dynamic margin"
     app_duration=$new_app_duration
 fi
 
@@ -178,21 +174,6 @@ if [ "$sf_too_short" -eq 1 ]; then
     sf_duration=$min_phase_duration
 fi
 
-total_usage=$(awk -v app_dur="$app_duration" -v sf_dur="$sf_duration" -v fd="$frame_duration_ns" 'BEGIN { printf "%.2f", (app_dur + sf_dur) * 100 / fd }')
-pipeline_efficiency=$(awk -v app_off="$app_phase_offset_ns" -v sf_off="$sf_phase_offset_ns" -v fd="$frame_duration_ns" 'BEGIN { printf "%.2f", (1 - ((app_off + sf_off) / fd)) * 100 }')
-
-echo "=== ℂ𝔸ℝ𝕃𝕆𝕋𝕋𝔸-ℝ𝔼ℕ𝔻𝔼ℝ-𝕋𝕎𝔸𝕂𝕊 ==="
-echo "Refresh Rate: ${refresh_rate}Hz"
-echo "Frame Duration: ${frame_duration_ns}ns"
-echo "App Phase: ${app_duration}ns ($(awk -v dur="$app_duration" -v fd="$frame_duration_ns" 'BEGIN { printf "%.2f", dur * 100 / fd }')%) offset: ${app_phase_offset_ns}ns"
-echo "SF Phase:  ${sf_duration}ns ($(awk -v dur="$sf_duration" -v fd="$frame_duration_ns" 'BEGIN { printf "%.2f", dur * 100 / fd }')%) offset: ${sf_phase_offset_ns}ns"
-echo "Pipeline Efficiency: ${pipeline_efficiency}%"
-echo "Total Usage: ${total_usage}%"
-echo "Dead Time (System Margin): $(awk -v usage="$total_usage" 'BEGIN { printf "%.2f", 100 - usage }')%"
-
-echo ""
-echo "Applying optimized settings..."
-
 setprop debug.sf.early.app.duration "$app_duration"
 setprop debug.sf.earlyGl.app.duration "$app_duration"
 setprop debug.sf.late.app.duration "$app_duration"
@@ -207,6 +188,7 @@ setprop debug.sf.high_fps_late_app_phase_offset_ns "$app_phase_offset_ns"
 setprop debug.sf.early_phase_offset_ns "$sf_phase_offset_ns"
 setprop debug.sf.high_fps_early_phase_offset_ns "$sf_phase_offset_ns"
 setprop debug.sf.high_fps_late_sf_phase_offset_ns "$sf_phase_offset_ns"
+
 if [ "$refresh_rate" -ge 120 ]; then
     threshold_ratio=0.28
 elif [ "$refresh_rate" -ge 90 ]; then
@@ -233,15 +215,7 @@ BEGIN {
     }
 }')
 
-percent=$(awk -v val="$phase_offset_threshold_ns" -v fd="$frame_duration_ns" 'BEGIN { printf "%.2f", val * 100 / fd }')
-echo "=== ℂ𝔸ℝ𝕃𝕆𝕋𝕋𝔸-ℝ𝔼ℕ𝔻𝔼ℝ-𝕋𝕎𝔼𝔸𝕂 ==="
-echo "Refresh Rate: ${refresh_rate}Hz"
-echo "Frame Duration: ${frame_duration_ns}ns"
-echo "Phase Offset Threshold: ${phase_offset_threshold_ns}ns (${percent}%)"
-echo "Threshold Range: ${min_threshold}ns (22%) - ${max_threshold}ns (45%)"
-
 setprop debug.sf.phase_offset_threshold_for_next_vsync_ns "$phase_offset_threshold_ns"
-echo "System property debug.sf.phase_offset_threshold_for_next_vsync_ns set to $phase_offset_threshold_ns"
 
 setprop debug.sf.enable_advanced_sf_phase_offset 1
 setprop debug.sf.predict_hwc_composition_strategy 1
@@ -287,49 +261,6 @@ setprop debug.hwui.use_buffer_age true
 setprop debug.hwui.use_partial_updates true
 setprop debug.hwui.skip_eglmanager_telemetry true
 setprop debug.hwui.level 0
-echo ""
-echo "=== VERIFYING APPLIED SETTINGS ==="
-
-properties_to_check=(
-    "debug.sf.early.app.duration"
-    "debug.sf.early.sf.duration"
-    "debug.sf.earlyGl.app.duration"
-    "debug.sf.earlyGl.sf.duration"
-    "debug.sf.late.app.duration"
-    "debug.sf.late.sf.duration"
-    "debug.sf.early_app_phase_offset_ns"
-    "debug.sf.high_fps_early_app_phase_offset_ns"
-    "debug.sf.high_fps_late_app_phase_offset_ns"
-    "debug.sf.early_phase_offset_ns"
-    "debug.sf.high_fps_early_phase_offset_ns"
-    "debug.sf.high_fps_late_sf_phase_offset_ns"
-    "debug.sf.phase_offset_threshold_for_next_vsync_ns"
-    "debug.sf.enable_advanced_sf_phase_offset"
-
-)
-
-all_success=true
-for prop in "${properties_to_check[@]}"; do
-    value=$(getprop "$prop")
-    if [ -n "$value" ]; then
-        echo "✓ $prop = $value"
-    else
-        echo "✗ $prop = NOT SET"
-        all_success=false
-    fi
-done
-
-
-echo ""
-if $all_success; then
-    echo "ALL SETTINGS SUCCESSFULLY APPLIED!"
-    echo "Carlotta-Render-Tweak optimization active for ${refresh_rate}Hz"
-else
-    echo "Some settings failed to apply"
-    echo "Maybe the device doesn't support all debug.sf properties"
-fi 
-echo ""
-
 
 #####################################
 # End of Carlotta Render
