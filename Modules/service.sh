@@ -68,19 +68,14 @@ fi
 refresh_rate="$(cmd display dump 2>/dev/null | grep -Eo 'fps=[0-9.]+' | cut -f2 -d= | awk '{printf "%.0f\n", $1}' | sort -nr | head -n1)"
 
 if [ -z "$refresh_rate" ] || [ "$refresh_rate" -lt 1 ]; then
-    echo "Trying alternative method to detect refresh rate..."
     refresh_rate="$(dumpsys display | grep -E 'mRefreshRate|frameRate' | grep -Eo '[0-9.]+' | head -n1 | awk '{printf "%.0f\n", $1}')"
 fi
 
 if [ -z "$refresh_rate" ] || [ "$refresh_rate" -lt 1 ]; then
-    echo "Warning: Cannot determine refresh rate, using default 60Hz" 
     refresh_rate=60
 fi
 
-echo "Detected refresh rate: ${refresh_rate}Hz"
-
 frame_duration_ns=$(echo "scale=25; 1000000000 / $refresh_rate" | bc)
-echo "Frame duration: ${frame_duration_ns}ns"
 
 if [ "$refresh_rate" -ge 120 ]; then
     app_phase_ratio=0.72      
@@ -122,7 +117,6 @@ dead_time=$(echo "scale=0; -($app_end_time + $sf_phase_offset_ns)" | bc)
 if [ $(echo "$dead_time < $min_margin" | bc) -eq 1 ]; then
     adjustment=$(echo "scale=0; $min_margin - $dead_time" | bc)
     app_duration=$(echo "scale=0; $app_duration - $adjustment" | bc)
-    echo "Optimization: Adjusted app duration by -${adjustment}ns for system margin"
 fi
 
 min_phase_duration=$(echo "scale=0; $frame_duration_ns * 0.12 / 1" | bc)
@@ -138,19 +132,6 @@ sf_duration=$(printf "%.0f" "$sf_duration")
 app_phase_offset_ns=$(printf "%.0f" "$app_phase_offset_ns")
 sf_phase_offset_ns=$(printf "%.0f" "$sf_phase_offset_ns")
 
-total_usage=$(echo "scale=1; ($app_duration + $sf_duration) * 100 / $frame_duration_ns" | bc)
-pipeline_efficiency=$(echo "scale=1; (1 - (($app_phase_offset_ns + $sf_phase_offset_ns) / $frame_duration_ns)) * 100" | bc)
-
-echo "=== Catlotta-Render-tweaks==="
-echo "App Phase: ${app_duration}ns ($(echo "scale=1; $app_duration * 100 / $frame_duration_ns" | bc)%) offset: ${app_phase_offset_ns}ns"
-echo "SF Phase:  ${sf_duration}ns ($(echo "scale=1; $sf_duration * 100 / $frame_duration_ns" | bc)%) offset: ${sf_phase_offset_ns}ns"  
-echo "Pipeline Efficiency: ${pipeline_efficiency}%"
-echo "Total Usage: ${total_usage}% of frame time"
-echo "Dead Time: $(echo "scale=1; 100 - $total_usage" | bc)% (system margin)"
-
-echo ""
-echo "Applying optimized settings to system properties..."
-
 setprop debug.sf.early.app.duration "$app_duration"
 setprop debug.sf.earlyGl.app.duration "$app_duration" 
 setprop debug.sf.late.app.duration "$app_duration"
@@ -164,7 +145,6 @@ setprop debug.sf.high_fps_early_app_phase_offset_ns "$app_phase_offset_ns"
 setprop debug.sf.high_fps_late_app_phase_offset_ns "$app_phase_offset_ns"
 setprop debug.sf.early_phase_offset_ns "$sf_phase_offset_ns"
 setprop debug.sf.high_fps_early_phase_offset_ns "$sf_phase_offset_ns"
-
 setprop debug.sf.high_fps_late_sf_phase_offset_ns "$sf_phase_offset_ns"
 
 if [ "$refresh_rate" -ge 120 ]; then
@@ -184,19 +164,14 @@ min_threshold=$(echo "scale=0; $frame_duration_ns * 0.22 / 1" | bc)
 
 if [ $(echo "$phase_offset_threshold_ns > $max_threshold" | bc) -eq 1 ]; then
     phase_offset_threshold_ns=$max_threshold
-    echo "Optimization: Capped phase threshold to maximum safe value"
 elif [ $(echo "$phase_offset_threshold_ns < $min_threshold" | bc) -eq 1 ]; then
     phase_offset_threshold_ns=$min_threshold  
-    echo "Optimization: Raised phase threshold to minimum effective value"
 fi
 
 phase_offset_threshold_ns=$(printf "%.0f" "$phase_offset_threshold_ns")
 setprop debug.sf.phase_offset_threshold_for_next_vsync_ns "$phase_offset_threshold_ns"
 
-echo "Phase Offset Threshold: ${phase_offset_threshold_ns}ns ($(echo "scale=1; $phase_offset_threshold_ns * 100 / $frame_duration_ns" | bc)%)"
-
 setprop debug.sf.enable_advanced_sf_phase_offset 1
-
 setprop debug.sf.enable_cached_set_render_scheduling true
 setprop debug.sf.enable_egl_image_tracker false
 setprop debug.sf.enable_transaction_tracing false
@@ -205,7 +180,6 @@ setprop debug.sf.trace_hint_sessions false
 setprop debug.sf.vsp_trace false
 setprop debug.sf.layer_history_trace false
 setprop debug.sf.kernel_idle_timer_update_overlay false
-
 setprop debug.sf.enable_layer_caching 1
 setprop debug.sf.predict_hwc_composition_strategy 1
 setprop debug.sf.disable_client_composition_cache 0
@@ -237,80 +211,6 @@ elif [ "$timeout" -gt 1000 ]; then
 fi
 
 setprop debug.sf.layer_caching_active_layer_timeout_ms $timeout
-calculated_frames=$(echo "scale=2; $timeout * $refresh_rate / 1000" | bc)
-
-echo ""
-echo "VSync pipeline optimized for ${refresh_rate}Hz - Ultimate smoothness configured!"
-echo "Layer caching optimized: ${timeout}ms (≈${calculated_frames} frames)"
-
-if [ $(echo "$pipeline_efficiency >= 95 && $total_usage <= 92" | bc) -eq 1 ]; then
-    echo "Status: EXCELLENT - Optimal surprise finger configuration"
-elif [ $(echo "$pipeline_efficiency >= 90" | bc) -eq 1 ]; then
-    echo "Status: GOOD - Well balanced pipeline"
-else
-    echo "Status: OPTIMIZED - Stable configuration"
-fi
-
-echo ""
-echo "=== VERIFYING APPLIED SETTINGS ==="
-
-properties_to_check=(
-    "debug.sf.early.app.duration"
-    "debug.sf.early.sf.duration"
-    "debug.sf.earlyGl.app.duration"
-    "debug.sf.earlyGl.sf.duration"
-    "debug.sf.late.app.duration"
-    "debug.sf.late.sf.duration"
-    "debug.sf.early_app_phase_offset_ns"
-    "debug.sf.high_fps_early_app_phase_offset_ns"
-    "debug.sf.high_fps_late_app_phase_offset_ns"
-    "debug.sf.early_phase_offset_ns"
-    "debug.sf.high_fps_early_phase_offset_ns"
-    "debug.sf.high_fps_late_sf_phase_offset_ns"
-    "debug.sf.phase_offset_threshold_for_next_vsync_ns"
-    "debug.sf.enable_advanced_sf_phase_offset"
-    "debug.sf.layer_caching_active_layer_timeout_ms"
-)
-
-all_success=true
-for prop in "${properties_to_check[@]}"; do
-    value=$(getprop "$prop")
-    if [ -n "$value" ]; then
-        echo "✓ $prop = $value"
-    else
-        echo "✗ $prop = NOT SET"
-        all_success=false
-    fi
-done
-
-fps="$(cmd display dump 2>/dev/null | grep -Eo 'fps=[0-9.]+' | cut -f2 -d= | awk '{printf "%.0f\n", $1}' | sort -nr | head -n1)"
-fps_int=$(printf "%.0f" "$fps")
-if [ "$fps_int" -ge 120 ]; then
-    timeout=42 
-elif [ "$fps_int" -ge 90 ]; then
-    timeout=67  
-else
-    timeout=133
-fi
-if [ "$timeout" -lt 16 ]; then 
-   timeout=16
-elif [ "$timeout" -gt 1000 ]; then
-    timeout=1000
-fi
-setprop debug.sf.layer_caching_active_layer_timeout_ms $timeout
-calculated_frames=$(echo "scale=2; $timeout * $fps / 1000" | bc)
-echo "FPS: $fps, Timeout: ${timeout}ms, Approx Frames: $calculated_frames"
-echo "Layer caching optimized for $( [ "$fps_int" -ge 120 ] && echo "high" || [ "$fps_int" -ge 90 ] && echo "medium" || echo "standard" ) refresh rate"
-
-echo ""
-if $all_success; then
-    echo "ALL SETTINGS SUCCESSFULLY APPLIED!"
-    echo "Carlotta-Render-Tweak optimization active for ${refresh_rate}Hz"
-else
-    echo "Some settings failed to apply"
-    echo "Maybe the device doesn't support all debug.sf properties"
-fi 
-echo ""
 
 ###################################
 # Celestial Render FlowX (@Kzuyoo)
@@ -486,20 +386,20 @@ optimize_gpu_frequency() {
     fi
 
     # Optimize GPU frequency v2 configurations (Matt Yang)（吟惋兮改)
-    gpu_freq="$(cat $GPUF_PATH2/gpu_working_opp_table | awk '{print $3}' | sed 's/,//g' | sort -nr | head -n 1)"
-	gpu_volt="$(cat $GPUF_PATH2/gpu_working_opp_table | awk -v freq="$freq" '$0 ~ freq {gsub(/.*, volt: /, ""); gsub(/,.*/, ""); print}')"
-	write_val "$GPUF_PATH2/fix_custom_freq_volt" "${gpu_freq} ${gpu_volt}"
-    if [ -d "$GPUF_PATH2" ]; then
+    gpu_freq="$(cat $GPUF_PATHV2/gpu_working_opp_table | awk '{print $3}' | sed 's/,//g' | sort -nr | head -n 1)"
+	gpu_volt="$(cat $GPUF_PATHV2/gpu_working_opp_table | awk -v freq="$freq" '$0 ~ freq {gsub(/.*, volt: /, ""); gsub(/,.*/, ""); print}')"
+	write_val "$GPUF_PATHV2/fix_custom_freq_volt" "${gpu_freq} ${gpu_volt}"
+    if [ -d "$GPUF_PATHV2" ]; then
         for i in $(seq 0 10); do
             lock_val "$i 0 0" /proc/gpufreqv2/limit_table
         done
         # Enable only levels 1–3
         for i in 1 3; do
-            write_val "$GPUF_PATH2/limit_table" "$i 1 1"
+            write_val "$GPUF_PATHV2/limit_table" "$i 1 1"
         done
-        write_val "$GPUF_PATH2/aging_mode" "disable"
+        write_val "$GPUF_PATHV2/aging_mode" "disable"
     else
-        echo "Unknown $GPUF_PATH2 path. Skipping optimization."
+        echo "Unknown $GPUF_PATHV2 path. Skipping optimization."
     fi
 }
 
