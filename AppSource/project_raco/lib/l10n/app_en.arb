@@ -12,8 +12,7 @@
     "performance_desc": "Prioritizing Performance Over Battery",
     "clear_desc": "Clear RAM By Killing All Apps",
     "cooldown_desc": "Cool Down Your Device\n(Let It Rest for 2 Minutes)",
-    
-"gaming_desc": "Set to Performance and Kill All Apps",
+    "gaming_desc": "Set to Performance and Kill All Apps",
     "power_save": "Power Save",
     "balanced": "Balanced",
     "performance": "Performance",
@@ -25,8 +24,7 @@
     "about_note": "Project Raco Is Always Free, Open Source, and Open For Improvement",
     "credits_1": "Rem01 Gaming",
     "credits_2": "MiAzami",
-    "credits_3": 
-"Kazuyoo",
+    "credits_3": "Kazuyoo",
     "credits_4": "RiProG",
     "credits_5": "HoyoSlave",
     "credits_6": "Koneko_dev",
@@ -54,7 +52,7 @@
         "placeholders": {
             "resolution": {
                 "type": "String"
-      }
+    }
         }
     },
     "reset_resolution": "Reset to Original",
@@ -79,6 +77,10 @@
     "resolution_unavailable_message": "Resolution control is not available on this device.",
     "applying_changes": "Applying changes...",
     "applying_new_color": "Applying New Color, Please Wait...",
+    "search_title": "Search",
+    "save_tooltip": "Save",
+    "search_hint": "Search...",
+    "close_search_tooltip": "Close search",
     "dnd_title": "DND Switch",
     "dnd_description": "Automatically Turn DND on / off",
     "dnd_toggle_title": "Enable DND Auto Switch",
@@ -94,8 +96,7 @@
     "background_settings_title": "Background Settings",
     "background_settings_description": "Customize the app's background image, opacity, and blur effect.",
     "opacity_slider_label": "Background Opacity",
- 
-   "blur_slider_label": "Background Blur",
+    "blur_slider_label": "Background Blur",
     "banner_settings_title": "Banner Settings",
     "banner_settings_description": "Customize the main screen's banner image (16:9 aspect ratio).",
     "device_name": "Device name",

@@ -689,7 +689,6 @@ class AutomationPage extends StatefulWidget {
 class _AutomationPageState extends State<AutomationPage> {
   bool _isLoading = true;
   Map<String, bool>? _hamadaAiState;
-  String? _gameTxtContent;
 
   @override
   void initState() {
@@ -708,23 +707,12 @@ class _AutomationPageState extends State<AutomationPage> {
     };
   }
 
-  Future<String> _loadGameTxtState() async {
-    final result = await _runRootCommandAndWait(
-      'cat /data/ProjectRaco/game.txt',
-    );
-    return result.exitCode == 0 ? result.stdout.toString() : '';
-  }
-
   Future<void> _loadData() async {
-    final results = await Future.wait([
-      _loadHamadaAiState(),
-      _loadGameTxtState(),
-    ]);
+    final hamadaState = await _loadHamadaAiState();
 
     if (!mounted) return;
     setState(() {
-      _hamadaAiState = results[0] as Map<String, bool>;
-      _gameTxtContent = results[1] as String;
+      _hamadaAiState = hamadaState;
       _isLoading = false;
     });
   }
@@ -747,7 +735,7 @@ class _AutomationPageState extends State<AutomationPage> {
             initialHamadaAiEnabled: _hamadaAiState?['enabled'] ?? false,
             initialHamadaStartOnBoot: _hamadaAiState?['onBoot'] ?? false,
           ),
-          GameTxtCard(initialContent: _gameTxtContent ?? ''),
+          const EditGameTxtCard(),
         ],
       ),
     );
@@ -1983,110 +1971,49 @@ class _ResolutionCardState extends State<ResolutionCard> {
   }
 }
 
-class GameTxtCard extends StatefulWidget {
-  final String initialContent;
-  const GameTxtCard({Key? key, required this.initialContent}) : super(key: key);
-  @override
-  _GameTxtCardState createState() => _GameTxtCardState();
-}
-
-class _GameTxtCardState extends State<GameTxtCard> {
-  final _controller = TextEditingController();
-  bool _isSaving = false;
-  final String _gameTxtPath = '/data/ProjectRaco/game.txt';
-
-  @override
-  void initState() {
-    super.initState();
-    _controller.text = widget.initialContent;
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  Future<void> _saveContent() async {
-    if (!await _checkRootAccess()) return;
-    if (mounted) setState(() => _isSaving = true);
-    final newContent = _controller.text;
-    try {
-      String base64Content = base64Encode(utf8.encode(newContent));
-      final writeCmd = '''echo '$base64Content' | base64 -d > $_gameTxtPath''';
-      await _runRootCommandAndWait(writeCmd);
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Saved successfully!')));
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Error saving game.txt')));
-      }
-    } finally {
-      if (mounted) setState(() => _isSaving = false);
-    }
-  }
+class EditGameTxtCard extends StatelessWidget {
+  const EditGameTxtCard({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final localization = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
+
+    // Access the background settings from the parent AutomationPage
+    final automationPage = context
+        .findAncestorWidgetOfExactType<AutomationPage>();
+    final backgroundImagePath = automationPage?.backgroundImagePath;
+    final backgroundOpacity = automationPage?.backgroundOpacity ?? 0.2;
+    final backgroundBlur = automationPage?.backgroundBlur ?? 0.0;
 
     return Card(
       elevation: 2.0,
       margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       color: colorScheme.surfaceContainerHighest,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              localization.edit_game_txt_title,
-              style: textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _controller,
-              maxLines: 10,
-              minLines: 5,
-              enabled: !_isSaving,
-              decoration: InputDecoration(
-                hintText: localization.game_txt_hint,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                filled: true,
-                fillColor: colorScheme.surfaceContainerLow,
-                contentPadding: const EdgeInsets.all(12),
-              ),
-              style: textTheme.bodyMedium?.copyWith(fontSize: 14.0),
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: _isSaving ? null : _saveContent,
-                icon: _isSaving
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.save_outlined),
-                label: Text(localization.save_button),
-              ),
-            ),
-          ],
+      child: ListTile(
+        leading: const Icon(Icons.edit_note),
+        title: Text(
+          localization.edit_game_txt_title,
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () {
+          Navigator.push(
+            context,
+            PageRouteBuilder(
+              opaque: false,
+              pageBuilder: (context, animation, secondaryAnimation) =>
+                  GameTxtEditorPage(
+                    backgroundImagePath: backgroundImagePath,
+                    backgroundOpacity: backgroundOpacity,
+                    backgroundBlur: backgroundBlur,
+                  ),
+              transitionDuration: Duration.zero,
+              reverseTransitionDuration: Duration.zero,
+            ),
+          );
+        },
       ),
     );
   }
@@ -2752,3 +2679,318 @@ Future<int?> _calculateSeedColor(String imagePath) async {
     return null;
   }
 }
+
+//endregion
+
+//region New Editor Page
+class GameTxtEditorPage extends StatefulWidget {
+  final String? backgroundImagePath;
+  final double backgroundOpacity;
+  final double backgroundBlur;
+
+  const GameTxtEditorPage({
+    Key? key,
+    required this.backgroundImagePath,
+    required this.backgroundOpacity,
+    required this.backgroundBlur,
+  }) : super(key: key);
+
+  @override
+  _GameTxtEditorPageState createState() => _GameTxtEditorPageState();
+}
+
+class _GameTxtEditorPageState extends State<GameTxtEditorPage> {
+  bool _isLoading = true;
+  bool _isSaving = false;
+  bool _isSearching = false;
+
+  final _textController = TextEditingController();
+  final _searchController = TextEditingController();
+  final _searchFocusNode = FocusNode();
+  final String _gameTxtPath = '/data/ProjectRaco/game.txt';
+
+  final List<int> _searchMatches = [];
+  int _currentMatchIndex = -1;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFileContent();
+    _searchController.addListener(_onSearchChanged);
+  }
+
+  @override
+  void dispose() {
+    _textController.dispose();
+    _searchController.removeListener(_onSearchChanged);
+    _searchController.dispose();
+    _searchFocusNode.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadFileContent() async {
+    if (!await _checkRootAccess()) {
+      if (mounted) setState(() => _isLoading = false);
+      return;
+    }
+    try {
+      final result = await _runRootCommandAndWait('cat $_gameTxtPath');
+      if (mounted) {
+        setState(() {
+          _textController.text = result.exitCode == 0
+              ? result.stdout.toString()
+              : '';
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to read file: $e')));
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _saveContent() async {
+    if (!await _checkRootAccess() || _isSaving) return;
+    if (mounted) setState(() => _isSaving = true);
+
+    final newContent = _textController.text;
+    try {
+      String base64Content = base64Encode(utf8.encode(newContent));
+      final writeCmd = '''echo '$base64Content' | base64 -d > $_gameTxtPath''';
+      final result = await _runRootCommandAndWait(writeCmd);
+
+      if (mounted) {
+        final localization = AppLocalizations.of(context)!;
+        if (result.exitCode == 0) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(localization.file_saved)));
+        } else {
+          throw Exception(result.stderr);
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        final localization = AppLocalizations.of(context)!;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${localization.file_save_failed}: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  void _onSearchChanged() {
+    final query = _searchController.text;
+    if (query.isEmpty) {
+      if (mounted) {
+        setState(() {
+          _searchMatches.clear();
+          _currentMatchIndex = -1;
+        });
+      }
+      return;
+    }
+
+    final text = _textController.text;
+    _searchMatches.clear();
+    int startIndex = 0;
+    while (startIndex < text.length) {
+      final index = text.indexOf(query, startIndex);
+      if (index == -1) break;
+      _searchMatches.add(index);
+      startIndex = index + query.length;
+    }
+
+    if (mounted) {
+      setState(() {
+        _currentMatchIndex = _searchMatches.isEmpty ? -1 : 0;
+        _jumpToMatch(_currentMatchIndex);
+      });
+    }
+  }
+
+  void _jumpToMatch(int index) {
+    if (index < 0 || index >= _searchMatches.length) return;
+    final matchStart = _searchMatches[index];
+    final matchEnd = matchStart + _searchController.text.length;
+
+    _textController.selection = TextSelection(
+      baseOffset: matchStart,
+      extentOffset: matchEnd,
+    );
+  }
+
+  void _findNext() {
+    if (_searchMatches.isEmpty) return;
+    final nextIndex = (_currentMatchIndex + 1) % _searchMatches.length;
+    if (mounted) {
+      setState(() {
+        _currentMatchIndex = nextIndex;
+        _jumpToMatch(_currentMatchIndex);
+      });
+    }
+  }
+
+  void _findPrevious() {
+    if (_searchMatches.isEmpty) return;
+    final prevIndex =
+        (_currentMatchIndex - 1 + _searchMatches.length) %
+        _searchMatches.length;
+    if (mounted) {
+      setState(() {
+        _currentMatchIndex = prevIndex;
+        _jumpToMatch(_currentMatchIndex);
+      });
+    }
+  }
+
+  AppBar _buildAppBar(BuildContext context) {
+    final localization = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    if (_isSearching) {
+      return AppBar(
+        backgroundColor: colorScheme.surface,
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          tooltip: localization.close_search_tooltip,
+          onPressed: () {
+            if (mounted) {
+              setState(() {
+                _isSearching = false;
+                _searchController.clear();
+                final currentOffset = _textController.selection.baseOffset;
+                _textController.selection = TextSelection.fromPosition(
+                  TextPosition(offset: currentOffset),
+                );
+              });
+            }
+          },
+        ),
+        title: TextField(
+          controller: _searchController,
+          focusNode: _searchFocusNode,
+          autofocus: true,
+          decoration: InputDecoration(
+            hintText: localization.search_hint,
+            border: InputBorder.none,
+          ),
+          style: TextStyle(color: colorScheme.onSurface),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.keyboard_arrow_up),
+            onPressed: _searchMatches.isNotEmpty ? _findPrevious : null,
+          ),
+          IconButton(
+            icon: const Icon(Icons.keyboard_arrow_down),
+            onPressed: _searchMatches.isNotEmpty ? _findNext : null,
+          ),
+        ],
+      );
+    } else {
+      return AppBar(
+        title: Text(localization.edit_game_txt_title),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        actions: [
+          if (_isSaving)
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.0),
+              child: Center(
+                child: SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(strokeWidth: 2.5),
+                ),
+              ),
+            )
+          else ...[
+            IconButton(
+              icon: const Icon(Icons.search),
+              tooltip: localization.search_title,
+              onPressed: () {
+                if (mounted) {
+                  setState(() => _isSearching = true);
+                  _searchFocusNode.requestFocus();
+                }
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.save_outlined),
+              tooltip: localization.save_tooltip,
+              onPressed: _saveContent,
+            ),
+          ],
+        ],
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final localization = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    final Widget pageContent = Scaffold(
+      backgroundColor: Colors.transparent,
+      appBar: _buildAppBar(context),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: TextField(
+                  controller: _textController,
+                  maxLines: null,
+                  minLines: null,
+                  expands: true,
+                  keyboardType: TextInputType.multiline,
+                  decoration: InputDecoration(
+                    hintText: localization.game_txt_hint,
+                    border: InputBorder.none,
+                    filled: true,
+                    fillColor: colorScheme.surfaceContainer,
+                    contentPadding: const EdgeInsets.all(12),
+                  ),
+                ),
+              ),
+            ),
+    );
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Container(color: Theme.of(context).colorScheme.background),
+        if (widget.backgroundImagePath != null &&
+            widget.backgroundImagePath!.isNotEmpty)
+          ImageFiltered(
+            imageFilter: ImageFilter.blur(
+              sigmaX: widget.backgroundBlur,
+              sigmaY: widget.backgroundBlur,
+            ),
+            child: Opacity(
+              opacity: widget.backgroundOpacity,
+              child: Image.file(
+                File(widget.backgroundImagePath!),
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(color: Colors.transparent);
+                },
+              ),
+            ),
+          ),
+        pageContent,
+      ],
+    );
+  }
+}
+
+//endregion

@@ -53,7 +53,7 @@
             "resolution": {
                 "type": "String"     
    }
-        }
+       }
     },
     "reset_resolution": "Kembali ke Asli",
     "hamada_ai_toggle_title": "Aktifkan HAMADA AI",
@@ -77,6 +77,10 @@
     "resolution_unavailable_message": "Kontrol resolusi tidak tersedia di perangkat ini.",
     "applying_changes": "Menerapkan perubahan...",
     "applying_new_color": "Menerapkan Warna Baru, Harap Tunggu...",
+    "search_title": "Cari",
+    "save_tooltip": "Simpan",
+    "search_hint": "Cari...",
+    "close_search_tooltip": "Tutup pencarian",
     "dnd_title": "Saklar DND",
     "dnd_description": "Otomatis Nyalakan / Matikan DND",
     "dnd_toggle_title": "Aktifkan Saklar Otomatis DND",

@@ -224,6 +224,18 @@ class AppLocalizationsJa extends AppLocalizations {
   String get applying_new_color => '新しい色を適用しています、お待ちください...';
 
   @override
+  String get search_title => '検索';
+
+  @override
+  String get save_tooltip => '保存';
+
+  @override
+  String get search_hint => '検索...';
+
+  @override
+  String get close_search_tooltip => '検索を閉じる';
+
+  @override
   String get dnd_title => 'DND スイッチ';
 
   @override

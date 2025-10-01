@@ -231,6 +231,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get applying_new_color => 'Applying New Color, Please Wait...';
 
   @override
+  String get search_title => 'Search';
+
+  @override
+  String get save_tooltip => 'Save';
+
+  @override
+  String get search_hint => 'Search...';
+
+  @override
+  String get close_search_tooltip => 'Close search';
+
+  @override
   String get dnd_title => 'DND Switch';
 
   @override
