@@ -11,7 +11,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:process_run/process_run.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../main.dart';
+import '../main.dart'; // Import to access the global themeNotifier
 import '/l10n/app_localizations.dart';
 
 //region Helper Functions
@@ -2286,86 +2286,88 @@ class _GameTxtEditorPageState extends State<GameTxtEditorPage> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          if (_isSearching)
-            Container(
-              padding: const EdgeInsets.all(8.0),
-              color: colorScheme.surfaceContainerHighest,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      autofocus: true,
-                      decoration: InputDecoration(
-                        hintText: localization.search_hint,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
+      body: SafeArea(
+        child: Column(
+          children: [
+            if (_isSearching)
+              Container(
+                padding: const EdgeInsets.all(8.0),
+                color: colorScheme.surfaceContainerHighest,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        autofocus: true,
+                        decoration: InputDecoration(
+                          hintText: localization.search_hint,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          isDense: true,
                         ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                        isDense: true,
+                        onChanged: (value) {
+                          setState(() {
+                            _searchQuery = value;
+                          });
+                          _performSearch(value);
+                        },
                       ),
-                      onChanged: (value) {
+                    ),
+                    const SizedBox(width: 8),
+                    if (_textController._matches.isNotEmpty)
+                      Text(
+                        '${_currentMatchIndex + 1}/${_textController._matches.length}',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    IconButton(
+                      icon: const Icon(Icons.keyboard_arrow_up),
+                      onPressed: _textController._matches.isEmpty
+                          ? null
+                          : _previousMatch,
+                      iconSize: 20,
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.keyboard_arrow_down),
+                      onPressed: _textController._matches.isEmpty
+                          ? null
+                          : _nextMatch,
+                      iconSize: 20,
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      tooltip: localization.close_search_tooltip,
+                      onPressed: () {
                         setState(() {
-                          _searchQuery = value;
+                          _isSearching = false;
+                          _searchQuery = '';
+                          _textController.matches = [];
+                          _currentMatchIndex = -1;
                         });
-                        _performSearch(value);
                       },
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  if (_textController._matches.isNotEmpty)
-                    Text(
-                      '${_currentMatchIndex + 1}/${_textController._matches.length}',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  IconButton(
-                    icon: const Icon(Icons.keyboard_arrow_up),
-                    onPressed: _textController._matches.isEmpty
-                        ? null
-                        : _previousMatch,
-                    iconSize: 20,
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.keyboard_arrow_down),
-                    onPressed: _textController._matches.isEmpty
-                        ? null
-                        : _nextMatch,
-                    iconSize: 20,
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    tooltip: localization.close_search_tooltip,
-                    onPressed: () {
-                      setState(() {
-                        _isSearching = false;
-                        _searchQuery = '';
-                        _textController.matches = [];
-                        _currentMatchIndex = -1;
-                      });
-                    },
-                  ),
-                ],
+                  ],
+                ),
+              ),
+            Expanded(
+              child: TextField(
+                controller: _textController,
+                maxLines: null,
+                expands: true,
+                scrollController: _scrollController,
+                decoration: InputDecoration(
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.all(16),
+                  hintText: localization.game_txt_hint,
+                ),
+                style: const TextStyle(fontFamily: 'monospace', fontSize: 14),
               ),
             ),
-          Expanded(
-            child: TextField(
-              controller: _textController,
-              maxLines: null,
-              expands: true,
-              scrollController: _scrollController,
-              decoration: InputDecoration(
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.all(16),
-                hintText: localization.game_txt_hint,
-              ),
-              style: const TextStyle(fontFamily: 'monospace', fontSize: 14),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
