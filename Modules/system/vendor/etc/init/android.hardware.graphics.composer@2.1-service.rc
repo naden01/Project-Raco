@@ -1,9 +1,0 @@
-service vendor.hwcomposer-2-1 /vendor/bin/hw/android.hardware.graphics.composer@2.1-service
-    class hal animation
-    user system
-    group graphics drmrpc input
-    capabilities SYS_NICE
-    priority -20
-    ioprio rt 4
-    onrestart restart surfaceflinger
-    writepid /dev/cpuset/system-background/tasks

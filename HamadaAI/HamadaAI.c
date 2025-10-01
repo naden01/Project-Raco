@@ -4,79 +4,83 @@
 #include <unistd.h>
 #include <stdbool.h>
 
+// Define constants for file paths and buffer size
 #define GAME_LIST "/data/ProjectRaco/game.txt"
 #define RACO_SCRIPT "/data/adb/modules/ProjectRaco/Scripts/Raco.sh"
-
-#define MAX_PATTERNS 256
-#define MAX_PATTERN_LENGTH 256
 #define BUFFER_SIZE 1024
 
-typedef enum { EXEC_NONE, EXEC_GAME, EXEC_NORMAL } ExecType;
+// Enum to track the last executed state to avoid redundant script calls
+typedef enum {
+    EXEC_NONE,
+    EXEC_GAME,
+    EXEC_NORMAL
+} ExecType;
+
+// Helper function to check if the game list file exists
+bool file_exists(const char *filename) {
+    return access(filename, F_OK) == 0;
+}
 
 int main(void) {
-    FILE *file = fopen(GAME_LIST, "r");
-    if (!file) {
+    // Check for game.txt at startup and exit if it's missing.
+    if (!file_exists(GAME_LIST)) {
         fprintf(stderr, "Error: %s not found\n", GAME_LIST);
         return 1;
     }
-    fclose(file);
 
     bool prev_screen_on = true;
     ExecType last_executed = EXEC_NONE;
     int delay_seconds = 5;
 
     while (1) {
-        char patterns[MAX_PATTERNS][MAX_PATTERN_LENGTH];
-        int num_patterns = 0;
-        file = fopen(GAME_LIST, "r");
-        if (file) {
-            char line[BUFFER_SIZE];
-            while (fgets(line, sizeof(line), file) && num_patterns < MAX_PATTERNS) {
-                line[strcspn(line, "\n")] = '\0';
-                if (line[0] == '\0') continue;
-                if (strchr(line, ' ') != NULL) continue;
-                strncpy(patterns[num_patterns], line, MAX_PATTERN_LENGTH - 1);
-                patterns[num_patterns][MAX_PATTERN_LENGTH - 1] = '\0';
-                num_patterns++;
-            }
-            fclose(file);
-        }
-
+        // --- 1. Screen State Detection ---
         bool current_screen_on = true;
-        FILE *screen_pipe = popen("dumpsys window | grep \"mScreenOn\" | grep false", "r");
+        // A single `grep` is enough to check if the screen is off.
+        FILE *screen_pipe = popen("dumpsys window | grep -q 'mScreenOn=false'", "r");
         if (screen_pipe) {
-            char screen_buffer[BUFFER_SIZE];
-            if (fgets(screen_buffer, sizeof(screen_buffer), screen_pipe)) {
+            // `pclose` returns the exit status. `grep -q` returns 0 if found, 1 if not.
+            // If the command is successful (returns 0), it means "mScreenOn=false" was found.
+            if (pclose(screen_pipe) == 0) {
                 current_screen_on = false;
             }
-            pclose(screen_pipe);
         }
 
+        // Adjust delay based on screen state for power saving.
         if (current_screen_on != prev_screen_on) {
             if (current_screen_on) {
-                printf("Screen turned on - setting delay to 5 seconds\n");
+                printf("Screen turned on - check interval: 5 seconds\n");
                 delay_seconds = 5;
             } else {
-                printf("Screen turned off - setting delay to 10 seconds for power conservation\n");
+                printf("Screen turned off - check interval: 10 seconds\n");
                 delay_seconds = 10;
             }
             prev_screen_on = current_screen_on;
         }
 
-        char matched_package[BUFFER_SIZE] = "";
-        
+        // --- 2. Focused App and Game Detection ---
+        bool is_game_running = false;
         if (current_screen_on) {
-            FILE *pipe_fp = popen("dumpsys window | grep 'mFocusedApp' | sed 's/.*ActivityRecord{[^ ]* [^ ]* \\([^ ]*\\/[^ ]*\\).*/\\1/'", "r");
+            char package_name[BUFFER_SIZE] = "";
+            // This command pipeline efficiently extracts just the package name of the focused app.
+            const char *focused_app_cmd = "dumpsys window | grep 'mFocusedApp' | cut -d' ' -f5 | cut -d'/' -f1";
+
+            FILE *pipe_fp = popen(focused_app_cmd, "r");
             if (pipe_fp) {
-                char buffer[BUFFER_SIZE];
-                if (fgets(buffer, sizeof(buffer), pipe_fp)) {
-                    buffer[strcspn(buffer, "\n")] = '\0';
-                    
-                    for (int i = 0; i < num_patterns; i++) {
-                        if (strstr(buffer, patterns[i]) != NULL) {
-                            strncpy(matched_package, patterns[i], sizeof(matched_package) - 1);
-                            matched_package[sizeof(matched_package) - 1] = '\0';
-                            break;
+                if (fgets(package_name, sizeof(package_name), pipe_fp) != NULL) {
+                    package_name[strcspn(package_name, "\n")] = '\0'; // Remove trailing newline
+
+                    if (strlen(package_name) > 0) {
+                        char grep_command[BUFFER_SIZE];
+                        // We use `grep -qFx` for the most efficient search:
+                        // -q: quiet mode, exits immediately on first match.
+                        // -F: treats the package name as a fixed string, not a pattern (faster).
+                        // -x: matches the whole line to prevent partial matches (e.g., `com.game` matching `com.game.pro`).
+                        snprintf(grep_command, sizeof(grep_command), "grep -qFx \"%s\" %s", package_name, GAME_LIST);
+
+                        // `system` returns the command's exit code. `grep` returns 0 on a successful match.
+                        if (system(grep_command) == 0) {
+                            is_game_running = true;
+                            printf("Game package detected: %s\n", package_name);
                         }
                     }
                 }
@@ -84,9 +88,11 @@ int main(void) {
             }
         }
 
-        if (current_screen_on && strlen(matched_package) > 0) {
+        // --- 3. Execute Control Script ---
+        // This logic remains the same, only executing the script when the state changes.
+        if (is_game_running) {
             if (last_executed != EXEC_GAME) {
-                printf("Game package detected: %s\n", matched_package);
+                printf("Applying game profile...\n");
                 char command[BUFFER_SIZE];
                 snprintf(command, sizeof(command), "sh %s 1", RACO_SCRIPT);
                 system(command);
@@ -94,16 +100,16 @@ int main(void) {
             }
         } else {
             if (last_executed != EXEC_NORMAL) {
-                printf("Non-game package detected\n");
+                printf("Applying normal profile...\n");
                 char command[BUFFER_SIZE];
                 snprintf(command, sizeof(command), "sh %s 2", RACO_SCRIPT);
                 system(command);
                 last_executed = EXEC_NORMAL;
             }
         }
-        
+
         sleep(delay_seconds);
     }
 
-    return 0;
+    return 0; // This part is unreachable in an infinite loop
 }
