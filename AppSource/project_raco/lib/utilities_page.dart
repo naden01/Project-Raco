@@ -2125,7 +2125,6 @@ class _GameTxtEditorPageState extends State<GameTxtEditorPage> {
   bool _isSaving = false;
   bool _isSearching = false;
   String _searchQuery = '';
-  int _currentMatchIndex = -1;
   final String _gameTxtPath = '/data/ProjectRaco/game.txt';
 
   @override
@@ -2159,7 +2158,6 @@ class _GameTxtEditorPageState extends State<GameTxtEditorPage> {
     if (query.isEmpty) {
       setState(() {
         _textController.matches = [];
-        _currentMatchIndex = -1;
       });
       return;
     }
@@ -2178,44 +2176,7 @@ class _GameTxtEditorPageState extends State<GameTxtEditorPage> {
 
     setState(() {
       _textController.matches = matches;
-      _currentMatchIndex = matches.isNotEmpty ? 0 : -1;
     });
-  }
-
-  void _scrollToMatch(int index) {
-    final matches = _textController._matches;
-    if (index < 0 || index >= matches.length) return;
-
-    final match = matches[index];
-    final text = _textController.text.substring(0, match.start);
-    final lines = text.split('\n').length;
-
-    // Approximate scroll position (20.0 is approximate line height)
-    final offset = (lines - 1) * 20.0;
-    _scrollController.animateTo(
-      offset.clamp(0.0, _scrollController.position.maxScrollExtent),
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-    );
-  }
-
-  void _nextMatch() {
-    final matches = _textController._matches;
-    if (matches.isEmpty) return;
-    setState(() {
-      _currentMatchIndex = (_currentMatchIndex + 1) % matches.length;
-    });
-    _scrollToMatch(_currentMatchIndex);
-  }
-
-  void _previousMatch() {
-    final matches = _textController._matches;
-    if (matches.isEmpty) return;
-    setState(() {
-      _currentMatchIndex =
-          (_currentMatchIndex - 1 + matches.length) % matches.length;
-    });
-    _scrollToMatch(_currentMatchIndex);
   }
 
   Future<void> _saveContent() async {
@@ -2313,26 +2274,6 @@ class _GameTxtEditorPageState extends State<GameTxtEditorPage> {
                         },
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    if (_textController._matches.isNotEmpty)
-                      Text(
-                        '${_currentMatchIndex + 1}/${_textController._matches.length}',
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    IconButton(
-                      icon: const Icon(Icons.keyboard_arrow_up),
-                      onPressed: _textController._matches.isEmpty
-                          ? null
-                          : _previousMatch,
-                      iconSize: 20,
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.keyboard_arrow_down),
-                      onPressed: _textController._matches.isEmpty
-                          ? null
-                          : _nextMatch,
-                      iconSize: 20,
-                    ),
                     IconButton(
                       icon: const Icon(Icons.close),
                       tooltip: localization.close_search_tooltip,
@@ -2341,7 +2282,6 @@ class _GameTxtEditorPageState extends State<GameTxtEditorPage> {
                           _isSearching = false;
                           _searchQuery = '';
                           _textController.matches = [];
-                          _currentMatchIndex = -1;
                         });
                       },
                     ),
