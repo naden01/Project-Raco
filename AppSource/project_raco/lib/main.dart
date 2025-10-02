@@ -12,7 +12,7 @@ import '/l10n/app_localizations.dart';
 import 'about_page.dart';
 import 'utilities_page.dart';
 
-// NEW: A simple global notifier to broadcast theme changes instantly.
+// A simple global notifier to broadcast theme changes instantly.
 final themeNotifier = ValueNotifier<Color?>(null);
 
 class ConfigManager {
@@ -81,7 +81,7 @@ class _MyAppState extends State<MyApp> {
     super.dispose();
   }
 
-  // NEW: This method is called whenever a new banner color is set anywhere in the app.
+  // This method is called whenever a new banner color is set anywhere in the app.
   void _onThemeChanged() {
     if (mounted) {
       setState(() {
@@ -464,6 +464,8 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     );
     // Reload settings that aren't handled by the notifier (like background image)
     widget.onSettingsChanged();
+    // **FIX**: Refresh the dynamic state (like HamadaAI status) after returning.
+    _refreshDynamicState();
   }
 
   @override
