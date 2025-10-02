@@ -689,7 +689,6 @@ class AutomationPage extends StatefulWidget {
 class _AutomationPageState extends State<AutomationPage> {
   bool _isLoading = true;
   Map<String, bool>? _hamadaAiState;
-  String? _gameTxtContent;
 
   @override
   void initState() {
@@ -708,23 +707,12 @@ class _AutomationPageState extends State<AutomationPage> {
     };
   }
 
-  Future<String> _loadGameTxtState() async {
-    final result = await _runRootCommandAndWait(
-      'cat /data/ProjectRaco/game.txt',
-    );
-    return result.exitCode == 0 ? result.stdout.toString() : '';
-  }
-
   Future<void> _loadData() async {
-    final results = await Future.wait([
-      _loadHamadaAiState(),
-      _loadGameTxtState(),
-    ]);
+    final hamadaState = await _loadHamadaAiState();
 
     if (!mounted) return;
     setState(() {
-      _hamadaAiState = results[0] as Map<String, bool>;
-      _gameTxtContent = results[1] as String;
+      _hamadaAiState = hamadaState;
       _isLoading = false;
     });
   }
@@ -747,7 +735,7 @@ class _AutomationPageState extends State<AutomationPage> {
             initialHamadaAiEnabled: _hamadaAiState?['enabled'] ?? false,
             initialHamadaStartOnBoot: _hamadaAiState?['onBoot'] ?? false,
           ),
-          GameTxtCard(initialContent: _gameTxtContent ?? ''),
+          const GameTxtCard(),
         ],
       ),
     );
@@ -1984,13 +1972,40 @@ class _ResolutionCardState extends State<ResolutionCard> {
 }
 
 class GameTxtCard extends StatefulWidget {
-  final String initialContent;
-  const GameTxtCard({Key? key, required this.initialContent}) : super(key: key);
+  const GameTxtCard({Key? key}) : super(key: key);
   @override
   _GameTxtCardState createState() => _GameTxtCardState();
 }
 
 class _GameTxtCardState extends State<GameTxtCard> {
+  bool _isOpening = false;
+
+  Future<void> _openFileInEditor() async {
+    if (!await _checkRootAccess()) return;
+    setState(() => _isOpening = true);
+
+    const filePath = '/data/ProjectRaco/game.txt';
+    const command =
+        'am start -a android.intent.action.VIEW -d "file://$filePath" -t "text/plain"';
+
+    try {
+      // We use fire and forget as we are just launching an external app.
+      await _runRootCommandFireAndForget(command);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to open editor: $e')));
+      }
+    } finally {
+      // Add a small delay to give the system time to launch the app
+      await Future.delayed(const Duration(milliseconds: 500));
+      if (mounted) {
+        setState(() => _isOpening = false);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final localization = AppLocalizations.of(context)!;
@@ -2022,284 +2037,15 @@ class _GameTxtCardState extends State<GameTxtCard> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => GameTxtEditorPage(
-                        initialContent: widget.initialContent,
-                      ),
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.edit_note),
+                onPressed: _isOpening ? null : _openFileInEditor,
+                icon: _isOpening
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.edit_note),
                 label: Text(localization.edit_game_txt_title),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// Custom controller to handle search term highlighting
-class _HighlightingTextController extends TextEditingController {
-  List<TextRange> _matches;
-  final Color highlightColor;
-
-  _HighlightingTextController({
-    required this.highlightColor,
-    List<TextRange> matches = const [],
-    String? text,
-  }) : _matches = matches,
-       super(text: text);
-
-  void set matches(List<TextRange> newMatches) {
-    _matches = newMatches;
-    // This call is crucial to trigger a rebuild of the text span.
-    notifyListeners();
-  }
-
-  @override
-  TextSpan buildTextSpan({
-    required BuildContext context,
-    TextStyle? style,
-    required bool withComposing,
-  }) {
-    final List<InlineSpan> children = [];
-    int lastMatchEnd = 0;
-
-    // If there's no search query or no matches, return the plain text.
-    if (_matches.isEmpty || text.isEmpty) {
-      return TextSpan(text: text, style: style);
-    }
-
-    // Sort matches to process them in order.
-    _matches.sort((a, b) => a.start.compareTo(b.start));
-
-    for (final TextRange match in _matches) {
-      // Add the text before the current match
-      if (match.start > lastMatchEnd) {
-        children.add(
-          TextSpan(
-            text: text.substring(lastMatchEnd, match.start),
-            style: style,
-          ),
-        );
-      }
-
-      // Add the highlighted match
-      children.add(
-        TextSpan(
-          text: text.substring(match.start, match.end),
-          style: style?.copyWith(
-            backgroundColor: highlightColor.withOpacity(0.3), // Use theme color
-          ),
-        ),
-      );
-
-      lastMatchEnd = match.end;
-    }
-
-    // Add the remaining text after the last match
-    if (lastMatchEnd < text.length) {
-      children.add(TextSpan(text: text.substring(lastMatchEnd), style: style));
-    }
-
-    return TextSpan(style: style, children: children);
-  }
-}
-
-class GameTxtEditorPage extends StatefulWidget {
-  final String initialContent;
-  const GameTxtEditorPage({Key? key, required this.initialContent})
-    : super(key: key);
-  @override
-  _GameTxtEditorPageState createState() => _GameTxtEditorPageState();
-}
-
-class _GameTxtEditorPageState extends State<GameTxtEditorPage> {
-  late _HighlightingTextController _textController;
-  final ScrollController _scrollController = ScrollController();
-  bool _isSaving = false;
-  bool _isSearching = false;
-  String _searchQuery = '';
-  final String _gameTxtPath = '/data/ProjectRaco/game.txt';
-
-  @override
-  void initState() {
-    super.initState();
-    _textController = _HighlightingTextController(
-      text: widget.initialContent,
-      highlightColor: Colors.transparent, // Placeholder color
-    );
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // Update the highlight color to match the current theme's primary color.
-    _textController = _HighlightingTextController(
-      text: _textController.text,
-      matches: _textController._matches,
-      highlightColor: Theme.of(context).colorScheme.primary,
-    );
-  }
-
-  @override
-  void dispose() {
-    _textController.dispose();
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  void _performSearch(String query) {
-    if (query.isEmpty) {
-      setState(() {
-        _textController.matches = [];
-      });
-      return;
-    }
-
-    final text = _textController.text.toLowerCase();
-    final searchLower = query.toLowerCase();
-    final List<TextRange> matches = <TextRange>[];
-
-    int startIndex = 0;
-    while (true) {
-      final index = text.indexOf(searchLower, startIndex);
-      if (index == -1) break;
-      matches.add(TextRange(start: index, end: index + searchLower.length));
-      startIndex = index + 1;
-    }
-
-    setState(() {
-      _textController.matches = matches;
-    });
-  }
-
-  Future<void> _saveContent() async {
-    if (!await _checkRootAccess()) return;
-    if (mounted) setState(() => _isSaving = true);
-    final newContent = _textController.text;
-    try {
-      String base64Content = base64Encode(utf8.encode(newContent));
-      final writeCmd = '''echo '$base64Content' | base64 -d > $_gameTxtPath''';
-      await _runRootCommandAndWait(writeCmd);
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Saved successfully!')));
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Error saving game.txt')));
-      }
-    } finally {
-      if (mounted) setState(() => _isSaving = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final localization = AppLocalizations.of(context)!;
-    final colorScheme = Theme.of(context).colorScheme;
-
-    if (_textController.highlightColor != colorScheme.primary) {
-      _textController = _HighlightingTextController(
-        text: _textController.text,
-        matches: _textController._matches,
-        highlightColor: colorScheme.primary,
-      );
-    }
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(localization.edit_game_txt_title),
-        actions: [
-          if (!_isSearching)
-            IconButton(
-              icon: const Icon(Icons.search),
-              tooltip: localization.search_title,
-              onPressed: () {
-                setState(() {
-                  _isSearching = true;
-                });
-              },
-            ),
-          IconButton(
-            icon: _isSaving
-                ? const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.save),
-            tooltip: localization.save_tooltip,
-            onPressed: _isSaving ? null : _saveContent,
-          ),
-        ],
-      ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            if (_isSearching)
-              Container(
-                padding: const EdgeInsets.all(8.0),
-                color: colorScheme.surfaceContainerHighest,
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        autofocus: true,
-                        decoration: InputDecoration(
-                          hintText: localization.search_hint,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
-                          isDense: true,
-                        ),
-                        onChanged: (value) {
-                          setState(() {
-                            _searchQuery = value;
-                          });
-                          _performSearch(value);
-                        },
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close),
-                      tooltip: localization.close_search_tooltip,
-                      onPressed: () {
-                        setState(() {
-                          _isSearching = false;
-                          _searchQuery = '';
-                          _textController.matches = [];
-                        });
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            Expanded(
-              child: TextField(
-                controller: _textController,
-                maxLines: null,
-                expands: true,
-                scrollController: _scrollController,
-                decoration: InputDecoration(
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.all(16),
-                  hintText: localization.game_txt_hint,
-                ),
-                style: const TextStyle(fontFamily: 'monospace', fontSize: 14),
               ),
             ),
           ],

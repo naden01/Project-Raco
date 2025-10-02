@@ -52,7 +52,7 @@
         "placeholders": {
             "resolution": {
                 "type": "String"
-    }
+            }
         }
     },
     "reset_resolution": "Reset to Original",
@@ -77,10 +77,6 @@
     "resolution_unavailable_message": "Resolution control is not available on this device.",
     "applying_changes": "Applying changes...",
     "applying_new_color": "Applying New Color, Please Wait...",
-    "search_title": "Search",
-    "save_tooltip": "Save",
-    "search_hint": "Search...",
-    "close_search_tooltip": "Close search",
     "dnd_title": "DND Switch",
     "dnd_description": "Automatically Turn DND on / off",
     "dnd_toggle_title": "Enable DND Auto Switch",

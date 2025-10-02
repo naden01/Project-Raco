@@ -233,18 +233,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get applying_new_color => 'Menerapkan Warna Baru, Harap Tunggu...';
 
   @override
-  String get search_title => 'Cari';
-
-  @override
-  String get save_tooltip => 'Simpan';
-
-  @override
-  String get search_hint => 'Cari...';
-
-  @override
-  String get close_search_tooltip => 'Tutup pencarian';
-
-  @override
   String get dnd_title => 'Saklar DND';
 
   @override

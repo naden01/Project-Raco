@@ -526,30 +526,6 @@ abstract class AppLocalizations {
   /// **'Applying New Color, Please Wait...'**
   String get applying_new_color;
 
-  /// No description provided for @search_title.
-  ///
-  /// In en, this message translates to:
-  /// **'Search'**
-  String get search_title;
-
-  /// No description provided for @save_tooltip.
-  ///
-  /// In en, this message translates to:
-  /// **'Save'**
-  String get save_tooltip;
-
-  /// No description provided for @search_hint.
-  ///
-  /// In en, this message translates to:
-  /// **'Search...'**
-  String get search_hint;
-
-  /// No description provided for @close_search_tooltip.
-  ///
-  /// In en, this message translates to:
-  /// **'Close search'**
-  String get close_search_tooltip;
-
   /// No description provided for @dnd_title.
   ///
   /// In en, this message translates to:
