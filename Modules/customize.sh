@@ -8,7 +8,7 @@ copy_with_retry() {
 
   ui_print "- Copying $FILE_NAME..."
   for i in 1 2 3 4; do
-    su -c cp -f "$SOURCE_FILE" "$DEST_PATH" >/dev/null 2>&1
+    cp "$SOURCE_FILE" "$DEST_PATH" >/dev/null 2>&1
     if [ -s "$DEST_FILE" ]; then
       ui_print "  ...Success."
       return 0
@@ -29,7 +29,7 @@ move_with_retry() {
 
   ui_print "- Moving $(basename "$SOURCE_FILE")..."
   for i in 1 2 3 4; do
-    su -c mv -f "$SOURCE_FILE" "$DEST_FILE" >/dev/null 2>&1
+    mv "$SOURCE_FILE" "$DEST_FILE" >/dev/null 2>&1
     if [ -s "$DEST_FILE" ] && [ ! -f "$SOURCE_FILE" ]; then
       ui_print "  ...Success."
       return 0
