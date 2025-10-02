@@ -32,6 +32,16 @@ debug.gr.numframebuffers=2
 debug.graphics.gpu.profiler.perfetto=0
 debug.egl.force_msaa=false
 
+# GRAPHIC ENHANCED By Kutu Moba
+debug.egl.hw=0
+debug.gralloc.gfx_ubwc_disable=0
+debug.mdpcomp.logs=0
+debug.sf.enable_advanced_sf_phase_offset=1
+debug.sf.enable_hwc_vds=1
+debug.sf.hw=0
+persist.vendor.color.matrix=2
+vendor.gralloc.disable_ubwc=0
+
 # MAKES APPS LOAD FASTER AND FREES MORE RAM / use only one of them
 dalvik.vm.dexopt-flags=m=y,o=v,u=y
 
