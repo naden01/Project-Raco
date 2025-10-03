@@ -1,48 +1,8 @@
 #!/system/bin/sh
-
-copy_with_retry() {
-  local SOURCE_FILE="$1"
-  local DEST_PATH="$2"
-  local FILE_NAME=$(basename "$SOURCE_FILE")
-  local DEST_FILE="$DEST_PATH/$FILE_NAME"
-
-  ui_print "- Copying $FILE_NAME..."
-  for i in 1 2 3 4; do
-    cp "$SOURCE_FILE" "$DEST_PATH" >/dev/null 2>&1
-    if [ -s "$DEST_FILE" ]; then
-      ui_print "  ...Success."
-      return 0
-    fi
-    if [ "$i" -lt 4 ]; then
-      ui_print "  ...Failed. Retrying (Attempt $i/4)"
-      sleep 1
-    fi
-  done
-
-  ui_print "! CRITICAL: Failed to copy $FILE_NAME after 4 attempts."
-  abort "! Aborting installation."
-}
-
-move_with_retry() {
-  local SOURCE_FILE="$1"
-  local DEST_FILE="$2"
-
-  ui_print "- Moving $(basename "$SOURCE_FILE")..."
-  for i in 1 2 3 4; do
-    mv "$SOURCE_FILE" "$DEST_FILE" >/dev/null 2>&1
-    if [ -s "$DEST_FILE" ] && [ ! -f "$SOURCE_FILE" ]; then
-      ui_print "  ...Success."
-      return 0
-    fi
-    if [ "$i" -lt 4 ]; then
-      ui_print "  ...Failed. Retrying (Attempt $i/4)"
-      sleep 1
-    fi
-  done
-
-  ui_print "! CRITICAL: Failed to move $(basename "$SOURCE_FILE") after 4 attempts."
-  abort "! Aborting installation."
-}
+#
+# Functions removed: copy_with_retry, move_with_retry
+# All copy and move operations are now performed once without retries.
+#
 
 check_for_new_addons() {
   local new_config="$1"
@@ -143,7 +103,7 @@ ui_print "------------------------------------"
 ui_print "            MODULE INFO             "
 ui_print "------------------------------------"
 ui_print "Name : Project Raco"
-ui_print "Version : CBT 6.4 FIX"
+ui_print "Version : CBT 6.5"
 ui_print " "
 sleep 1.5
 
@@ -154,14 +114,19 @@ sleep 1.5
 ui_print "- Setting up module files..."
 mkdir -p /data/ProjectRaco
 unzip -o "$ZIPFILE" 'Scripts/*' -d $MODPATH >&2
-copy_with_retry "$MODPATH/logo.png" "/data/local/tmp"
-copy_with_retry "$MODPATH/Anya.png" "/data/local/tmp"
+
+ui_print "- Copying logo.png..."
+cp "$MODPATH/logo.png" "/data/local/tmp" >/dev/null 2>&1
+
+ui_print "- Copying Anya.png..."
+cp "$MODPATH/Anya.png" "/data/local/tmp" >/dev/null 2>&1
 
 if [ -f "/data/ProjectRaco/game.txt" ]; then
     ui_print "- Existing game.txt found, preserving user settings."
 else
     ui_print "- Performing first-time setup for game.txt."
-    copy_with_retry "$MODPATH/game.txt" "/data/ProjectRaco"
+    ui_print "- Copying game.txt..."
+    cp "$MODPATH/game.txt" "/data/ProjectRaco" >/dev/null 2>&1
 fi
 ui_print " "
 
@@ -210,7 +175,8 @@ if [ -f "$RACO_PERSIST_CONFIG" ]; then
       # and the script will proceed to the manual selection.
     else
       ui_print "- Using saved configuration and ignoring new addons."
-      copy_with_retry "$RACO_PERSIST_CONFIG" "$MODPATH"
+      ui_print "- Copying raco.txt..."
+      cp "$RACO_PERSIST_CONFIG" "$MODPATH" >/dev/null 2>&1
       USE_SAVED_CONFIG=true
     fi
   else
@@ -222,7 +188,8 @@ if [ -f "$RACO_PERSIST_CONFIG" ]; then
     ui_print " "
     if choose; then
       ui_print "- Using saved configuration."
-      copy_with_retry "$RACO_PERSIST_CONFIG" "$MODPATH"
+      ui_print "- Copying raco.txt..."
+      cp "$RACO_PERSIST_CONFIG" "$MODPATH" >/dev/null 2>&1
       USE_SAVED_CONFIG=true
     else
       ui_print "- Re-configuring addons."
@@ -269,7 +236,8 @@ if [ "$USE_SAVED_CONFIG" = false ]; then
   ui_print "  Vol+ = Yes  |  Vol- = No"
   if choose; then
     ui_print "- Saving configuration for next time."
-    copy_with_retry "$RACO_MODULE_CONFIG" "/data/ProjectRaco"
+    ui_print "- Copying raco.txt..."
+    cp "$RACO_MODULE_CONFIG" "/data/ProjectRaco" >/dev/null 2>&1
   else
     ui_print "- Choices will not be saved."
     [ -f "$RACO_PERSIST_CONFIG" ] && rm -f "$RACO_PERSIST_CONFIG"
@@ -287,7 +255,8 @@ ui_print " "
 
 PACKAGE_NAME="com.kanagawa.yamada.project.raco"
 
-copy_with_retry "$MODPATH/ProjectRaco.apk" "/data/local/tmp"
+ui_print "- Copying ProjectRaco.apk..."
+cp "$MODPATH/ProjectRaco.apk" "/data/local/tmp" >/dev/null 2>&1
 
 pm install -r -g /data/local/tmp/ProjectRaco.apk >/dev/null 2>&1
 
@@ -342,7 +311,8 @@ fi
 
 if [ -f "$SOURCE_BIN" ]; then
   ui_print "- Installing HamadaAI binary..."
-  move_with_retry "$SOURCE_BIN" "$TARGET_BIN_PATH"
+  ui_print "- Moving $(basename "$SOURCE_BIN")..."
+  mv "$SOURCE_BIN" "$TARGET_BIN_PATH" >/dev/null 2>&1
 
   ui_print "- Setting permissions for $TARGET_BIN_NAME"
   set_perm $TARGET_BIN_PATH 0 0 0755
