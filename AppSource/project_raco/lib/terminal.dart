@@ -258,8 +258,10 @@ class _TerminalPageState extends State<TerminalPage> {
     _inputController.clear();
     _scrollToBottom();
 
+    final commandTrimmed = command.trim().toLowerCase();
+
     // Handle internal commands.
-    if (command.trim().toLowerCase() == 'clear') {
+    if (commandTrimmed == 'clear') {
       setState(() {
         _outputLines.clear();
         _isProcessing = false;
@@ -267,8 +269,30 @@ class _TerminalPageState extends State<TerminalPage> {
       return;
     }
 
-    if (command.trim().toLowerCase() == 'exit') {
+    if (commandTrimmed == 'exit') {
       if (mounted) Navigator.of(context).pop();
+      return;
+    }
+
+    if (commandTrimmed == 'help') {
+      setState(() {
+        const helpText = '''
+Project Raco Terminal Help:
+
+Internal Commands:
+  help      - Show this list of available commands.
+  clear     - Clear all output from the terminal screen.
+  exit      - Close the terminal session.
+
+System Commands:
+  Any other command will be executed as a system shell command
+  with root privileges (e.g., 'ls -l', 'whoami', 'pwd').
+''';
+        _outputLines.add(_buildOutput(helpText.trim()));
+        _isProcessing = false;
+      });
+      _scrollToBottom();
+      FocusScope.of(context).requestFocus(_focusNode);
       return;
     }
 
