@@ -1,7 +1,6 @@
 #!/system/bin/sh
 #
-# Functions removed: copy_with_retry, move_with_retry
-# All copy and move operations are now performed once without retries.
+# All copy and move operations will now abort on failure.
 #
 
 check_for_new_addons() {
@@ -116,17 +115,17 @@ mkdir -p /data/ProjectRaco
 unzip -o "$ZIPFILE" 'Scripts/*' -d $MODPATH >&2
 
 ui_print "- Copying logo.png..."
-cp "$MODPATH/logo.png" "/data/local/tmp" >/dev/null 2>&1
+cp "$MODPATH/logo.png" "/data/local/tmp" >/dev/null 2>&1 || abort "! Failed to copy logo.png"
 
 ui_print "- Copying Anya.png..."
-cp "$MODPATH/Anya.png" "/data/local/tmp" >/dev/null 2>&1
+cp "$MODPATH/Anya.png" "/data/local/tmp" >/dev/null 2>&1 || abort "! Failed to copy Anya.png"
 
 if [ -f "/data/ProjectRaco/game.txt" ]; then
     ui_print "- Existing game.txt found, preserving user settings."
 else
     ui_print "- Performing first-time setup for game.txt."
     ui_print "- Copying game.txt..."
-    cp "$MODPATH/game.txt" "/data/ProjectRaco" >/dev/null 2>&1
+    cp "$MODPATH/game.txt" "/data/ProjectRaco" >/dev/null 2>&1 || abort "! Failed to copy game.txt"
 fi
 ui_print " "
 
@@ -176,7 +175,7 @@ if [ -f "$RACO_PERSIST_CONFIG" ]; then
     else
       ui_print "- Using saved configuration and ignoring new addons."
       ui_print "- Copying raco.txt..."
-      cp "$RACO_PERSIST_CONFIG" "$MODPATH" >/dev/null 2>&1
+      cp "$RACO_PERSIST_CONFIG" "$MODPATH" >/dev/null 2>&1 || abort "! Failed to copy saved configuration"
       USE_SAVED_CONFIG=true
     fi
   else
@@ -189,7 +188,7 @@ if [ -f "$RACO_PERSIST_CONFIG" ]; then
     if choose; then
       ui_print "- Using saved configuration."
       ui_print "- Copying raco.txt..."
-      cp "$RACO_PERSIST_CONFIG" "$MODPATH" >/dev/null 2>&1
+      cp "$RACO_PERSIST_CONFIG" "$MODPATH" >/dev/null 2>&1 || abort "! Failed to copy saved configuration"
       USE_SAVED_CONFIG=true
     else
       ui_print "- Re-configuring addons."
@@ -237,7 +236,7 @@ if [ "$USE_SAVED_CONFIG" = false ]; then
   if choose; then
     ui_print "- Saving configuration for next time."
     ui_print "- Copying raco.txt..."
-    cp "$RACO_MODULE_CONFIG" "/data/ProjectRaco" >/dev/null 2>&1
+    cp "$RACO_MODULE_CONFIG" "/data/ProjectRaco" >/dev/null 2>&1 || abort "! Failed to save new configuration"
   else
     ui_print "- Choices will not be saved."
     [ -f "$RACO_PERSIST_CONFIG" ] && rm -f "$RACO_PERSIST_CONFIG"
@@ -256,7 +255,7 @@ ui_print " "
 PACKAGE_NAME="com.kanagawa.yamada.project.raco"
 
 ui_print "- Copying ProjectRaco.apk..."
-cp "$MODPATH/ProjectRaco.apk" "/data/local/tmp" >/dev/null 2>&1
+cp "$MODPATH/ProjectRaco.apk" "/data/local/tmp" >/dev/null 2>&1 || abort "! Failed to copy ProjectRaco.apk"
 
 pm install -r -g /data/local/tmp/ProjectRaco.apk >/dev/null 2>&1
 
@@ -312,7 +311,7 @@ fi
 if [ -f "$SOURCE_BIN" ]; then
   ui_print "- Installing HamadaAI binary..."
   ui_print "- Moving $(basename "$SOURCE_BIN")..."
-  mv "$SOURCE_BIN" "$TARGET_BIN_PATH" >/dev/null 2>&1
+  mv "$SOURCE_BIN" "$TARGET_BIN_PATH" >/dev/null 2>&1 || abort "! Failed to move HamadaAI binary"
 
   ui_print "- Setting permissions for $TARGET_BIN_NAME"
   set_perm $TARGET_BIN_PATH 0 0 0755
