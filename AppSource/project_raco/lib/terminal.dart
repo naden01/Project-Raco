@@ -3,7 +3,14 @@ import 'dart:io';
 import 'dart:math';
 import 'package:flutter/material.dart';
 
-// A "hacker-style" startup screen that appears before the terminal.
+// --- CYBERPUNK THEME COLORS ---
+const Color cyberpunkBackground = Color(0xFF0A0A1A); // Dark, deep blue
+const Color cyberpunkPrimary = Color(0xFF00FFFF); // Bright Cyan/Aqua
+const Color cyberpunkAccent = Color(0xFFF8E71C); // Neon Yellow
+const Color cyberpunkError = Color(0xFFFF003C); // Aggressive Red
+const Color cyberpunkMuted = Color(0xFFCCCCCC); // Off-white/light grey
+
+// A "netrunner-style" startup screen that appears before the terminal.
 class HackerStartupScreen extends StatefulWidget {
   const HackerStartupScreen({Key? key}) : super(key: key);
 
@@ -17,15 +24,13 @@ class _HackerStartupScreenState extends State<HackerStartupScreen> {
 
   // List of boot-up messages to display sequentially.
   static const List<String> _bootSequence = [
-    'Initializing Project Raco kernel v3.1.4...',
-    'Mounting /dev/root on /...',
-    'Scanning for hardware...',
-    'Bypassing main security protocols...',
-    'Establishing secure connection to mainframe...',
-    'Accessing neural network core...',
-    'DECRYPTION SUCCESSFUL.',
-    'ACCESS GRANTED.',
-    'Loading terminal interface...',
+    'INITIALIZING PROJECT RACO TERM...',
+    'MOUNTING USER AS SUPERUSER...',
+    'DETECTING KERNEL IS...',
+    'MENELPON ADMIN...',
+    'LOGIN IN WITH USER CREDS.',
+    'ACCESS GRANTED. WELCOME, USER.',
+    'LOADING PROJECT RACO TERMINAL...',
   ];
 
   @override
@@ -86,12 +91,15 @@ class _HackerStartupScreenState extends State<HackerStartupScreen> {
     // Use a monospaced font for a classic terminal look.
     const textStyle = TextStyle(
       fontFamily: 'monospace',
-      color: Colors.greenAccent,
-      fontSize: 16,
+      color: cyberpunkPrimary,
+      fontSize: 14,
+      shadows: [
+        Shadow(blurRadius: 4.0, color: cyberpunkPrimary, offset: Offset(0, 0)),
+      ],
     );
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: cyberpunkBackground,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -173,11 +181,11 @@ class _TerminalPageState extends State<TerminalPage> {
       setState(() {
         _outputLines.add(
           const Text(
-            'Project Raco Terminal. Type "help" for a list of commands.',
+            'Project Raco Terminal [1.0]\n(c) 2025 Kanagawa Yamada. All rights reserved.\nType "help" for available commands.',
             style: TextStyle(
               fontFamily: 'monospace',
-              color: Colors.white,
-              fontSize: 14,
+              color: cyberpunkMuted,
+              fontSize: 12,
             ),
           ),
         );
@@ -235,10 +243,10 @@ class _TerminalPageState extends State<TerminalPage> {
       }
       if (output.isEmpty && error.isEmpty) {
         // Add a blank line for commands with no output.
-        _outputLines.add(const SizedBox(height: 14));
+        _outputLines.add(const SizedBox(height: 12)); // Match font size
       }
     } catch (e) {
-      _outputLines.add(_buildError('Error executing command: $e'));
+      _outputLines.add(_buildError('ERROR: Subroutine failed. $e'));
     }
 
     setState(() {
@@ -265,15 +273,18 @@ class _TerminalPageState extends State<TerminalPage> {
   Widget _buildPrompt(String command) {
     return RichText(
       text: TextSpan(
-        style: const TextStyle(fontFamily: 'monospace', fontSize: 14),
+        style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
         children: [
           const TextSpan(
-            text: 'root@raco:~# ',
-            style: TextStyle(color: Colors.greenAccent),
+            text: 'netrunner@localhost:~> ',
+            style: TextStyle(
+              color: cyberpunkAccent,
+              shadows: [Shadow(blurRadius: 3.0, color: cyberpunkAccent)],
+            ),
           ),
           TextSpan(
             text: command,
-            style: const TextStyle(color: Colors.white),
+            style: const TextStyle(color: cyberpunkMuted),
           ),
         ],
       ),
@@ -285,8 +296,8 @@ class _TerminalPageState extends State<TerminalPage> {
       text,
       style: const TextStyle(
         fontFamily: 'monospace',
-        color: Colors.white70,
-        fontSize: 14,
+        color: cyberpunkMuted,
+        fontSize: 12,
       ),
     );
   }
@@ -296,30 +307,44 @@ class _TerminalPageState extends State<TerminalPage> {
       text,
       style: const TextStyle(
         fontFamily: 'monospace',
-        color: Colors.redAccent,
-        fontSize: 14,
+        color: cyberpunkError,
+        fontSize: 12,
+        shadows: [Shadow(blurRadius: 3.0, color: cyberpunkError)],
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     const inputStyle = TextStyle(
       fontFamily: 'monospace',
-      color: Colors.white,
-      fontSize: 14,
+      color: cyberpunkMuted,
+      fontSize: 12,
     );
 
     return Scaffold(
-      backgroundColor: const Color(0xFF1E1E1E), // A dark, terminal-like color.
+      backgroundColor: cyberpunkBackground,
       appBar: AppBar(
-        backgroundColor: Colors.black26,
-        title: const Text('Terminal'),
+        backgroundColor: Colors.transparent,
         elevation: 0,
+        // MODIFICATION: Added fontSize to make the title smaller.
+        title: const Text(
+          'PROJECT RACO SHELL',
+          style: TextStyle(
+            fontFamily: 'monospace',
+            color: cyberpunkAccent,
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+          ),
+        ),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1.0),
+          child: Container(
+            color: cyberpunkAccent.withOpacity(0.5),
+            height: 1.0,
+          ),
+        ),
       ),
-      // MODIFICATION: Wrapped the body with SafeArea.
-      // This ensures the content avoids system UI like the navigation bar.
       body: SafeArea(
         child: GestureDetector(
           onTap: () => FocusScope.of(context).requestFocus(_focusNode),
@@ -346,11 +371,11 @@ class _TerminalPageState extends State<TerminalPage> {
                   child: Row(
                     children: [
                       const Text(
-                        'root@raco:~#',
+                        'netrunner@localhost:~>',
                         style: TextStyle(
                           fontFamily: 'monospace',
-                          color: Colors.greenAccent,
-                          fontSize: 14,
+                          color: cyberpunkAccent,
+                          fontSize: 12,
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -361,7 +386,7 @@ class _TerminalPageState extends State<TerminalPage> {
                           autocorrect: false,
                           enableSuggestions: false,
                           style: inputStyle,
-                          cursorColor: Colors.greenAccent,
+                          cursorColor: cyberpunkAccent,
                           onSubmitted: _runCommand,
                           decoration: const InputDecoration(
                             border: InputBorder.none,
