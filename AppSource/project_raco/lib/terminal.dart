@@ -318,59 +318,63 @@ class _TerminalPageState extends State<TerminalPage> {
         title: const Text('Terminal'),
         elevation: 0,
       ),
-      body: GestureDetector(
-        onTap: () => FocusScope.of(context).requestFocus(_focusNode),
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            children: [
-              // Scrollable output area.
-              Expanded(
-                child: ListView.builder(
-                  controller: _scrollController,
-                  itemCount: _outputLines.length,
-                  itemBuilder: (context, index) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 2.0),
-                      child: _outputLines[index],
-                    );
-                  },
+      // MODIFICATION: Wrapped the body with SafeArea.
+      // This ensures the content avoids system UI like the navigation bar.
+      body: SafeArea(
+        child: GestureDetector(
+          onTap: () => FocusScope.of(context).requestFocus(_focusNode),
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              children: [
+                // Scrollable output area.
+                Expanded(
+                  child: ListView.builder(
+                    controller: _scrollController,
+                    itemCount: _outputLines.length,
+                    itemBuilder: (context, index) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 2.0),
+                        child: _outputLines[index],
+                      );
+                    },
+                  ),
                 ),
-              ),
-              // Input field area.
-              Padding(
-                padding: const EdgeInsets.only(top: 8.0),
-                child: Row(
-                  children: [
-                    const Text(
-                      'root@raco:~#',
-                      style: TextStyle(
-                        fontFamily: 'monospace',
-                        color: Colors.greenAccent,
-                        fontSize: 14,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: TextField(
-                        controller: _inputController,
-                        focusNode: _focusNode,
-                        autocorrect: false,
-                        enableSuggestions: false,
-                        style: inputStyle,
-                        cursorColor: Colors.greenAccent,
-                        onSubmitted: _runCommand,
-                        decoration: const InputDecoration(
-                          border: InputBorder.none,
-                          isDense: true,
-                          contentPadding: EdgeInsets.zero,
+                // Input field area.
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Row(
+                    children: [
+                      const Text(
+                        'root@raco:~#',
+                        style: TextStyle(
+                          fontFamily: 'monospace',
+                          color: Colors.greenAccent,
+                          fontSize: 14,
                         ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: TextField(
+                          controller: _inputController,
+                          focusNode: _focusNode,
+                          autocorrect: false,
+                          enableSuggestions: false,
+                          style: inputStyle,
+                          cursorColor: Colors.greenAccent,
+                          onSubmitted: _runCommand,
+                          decoration: const InputDecoration(
+                            border: InputBorder.none,
+                            isDense: true,
+                            contentPadding: EdgeInsets.zero,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
