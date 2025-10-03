@@ -1,122 +1,111 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
-/// Hacker-style startup screen with typing animation
+// A "hacker-style" startup screen that appears before the terminal.
 class HackerStartupScreen extends StatefulWidget {
   const HackerStartupScreen({Key? key}) : super(key: key);
 
   @override
-  State<HackerStartupScreen> createState() => _HackerStartupScreenState();
+  _HackerStartupScreenState createState() => _HackerStartupScreenState();
 }
 
 class _HackerStartupScreenState extends State<HackerStartupScreen> {
-  final List<String> _startupLines = [
-    '> Initializing secure connection...',
-    '> Loading kernel modules...',
-    '> Mounting system partitions...',
-    '> Establishing root privileges...',
-    '> Starting terminal shell...',
-    '> Ready.',
-  ];
+  final List<String> _startupLines = [];
+  final ScrollController _scrollController = ScrollController();
 
-  final List<String> _displayedLines = [];
-  int _currentLineIndex = 0;
-  bool _isComplete = false;
+  // List of boot-up messages to display sequentially.
+  static const List<String> _bootSequence = [
+    'Initializing Project Raco kernel v3.1.4...',
+    'Mounting /dev/root on /...',
+    'Scanning for hardware...',
+    'Bypassing main security protocols...',
+    'Establishing secure connection to mainframe...',
+    'Accessing neural network core...',
+    'DECRYPTION SUCCESSFUL.',
+    'ACCESS GRANTED.',
+    'Loading terminal interface...',
+  ];
 
   @override
   void initState() {
     super.initState();
-    _startAnimation();
+    // Start the boot sequence animation when the widget is initialized.
+    _startBootSequence();
   }
 
-  void _startAnimation() async {
-    for (int i = 0; i < _startupLines.length; i++) {
-      if (!mounted) return;
-      await Future.delayed(const Duration(milliseconds: 300));
+  /// Displays boot messages with random delays to simulate a startup process.
+  Future<void> _startBootSequence() async {
+    // Wait a moment before starting to ensure the screen is visible.
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    for (final line in _bootSequence) {
+      if (!mounted) return; // Exit if the widget is disposed.
       setState(() {
-        _displayedLines.add(_startupLines[i]);
-        _currentLineIndex = i;
+        _startupLines.add(line);
       });
+      // Scroll to the bottom to keep the latest line visible.
+      _scrollToBottom();
+      // Wait for a variable amount of time before showing the next line.
+      await Future.delayed(Duration(milliseconds: 200 + Random().nextInt(500)));
     }
 
-    await Future.delayed(const Duration(milliseconds: 800));
-    if (!mounted) return;
-    setState(() {
-      _isComplete = true;
-    });
+    // A final pause before transitioning to the terminal.
+    await Future.delayed(const Duration(seconds: 1));
 
-    await Future.delayed(const Duration(milliseconds: 400));
-    if (!mounted) return;
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const TerminalPage()),
-    );
+    if (mounted) {
+      // Replace this screen with the terminal page.
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const TerminalPage()),
+      );
+    }
+  }
+
+  void _scrollToBottom() {
+    // A short delay ensures the list has time to update before scrolling.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    // Use a monospaced font for a classic terminal look.
+    const textStyle = TextStyle(
+      fontFamily: 'monospace',
+      color: Colors.greenAccent,
+      fontSize: 16,
+    );
 
     return Scaffold(
-      backgroundColor: colorScheme.surface,
-      body: Container(
-        color: colorScheme.surface,
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.terminal, color: colorScheme.primary, size: 32),
-                    const SizedBox(width: 12),
-                    Text(
-                      'PROJECT RACO TERMINAL',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: colorScheme.primary,
-                        letterSpacing: 2,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 32),
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: _displayedLines.length,
-                    itemBuilder: (context, index) {
-                      final isLast = index == _displayedLines.length - 1;
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 8.0),
-                        child: Row(
-                          children: [
-                            Text(
-                              _displayedLines[index],
-                              style: TextStyle(
-                                fontFamily: 'monospace',
-                                fontSize: 14,
-                                color: colorScheme.onSurface,
-                              ),
-                            ),
-                            if (isLast && !_isComplete)
-                              Container(
-                                margin: const EdgeInsets.only(left: 4),
-                                width: 8,
-                                height: 16,
-                                color: colorScheme.primary,
-                              ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
+      backgroundColor: Colors.black,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: ListView.builder(
+            controller: _scrollController,
+            itemCount: _startupLines.length + 1, // +1 for the blinking cursor
+            itemBuilder: (context, index) {
+              if (index < _startupLines.length) {
+                return Text(_startupLines[index], style: textStyle);
+              } else {
+                // Simulate a blinking cursor at the end.
+                return const BlinkingCursor(style: textStyle);
+              }
+            },
           ),
         ),
       ),
@@ -124,46 +113,77 @@ class _HackerStartupScreenState extends State<HackerStartupScreen> {
   }
 }
 
-/// Main Terminal Page
+/// A simple widget to create a blinking cursor effect.
+class BlinkingCursor extends StatefulWidget {
+  final TextStyle style;
+  const BlinkingCursor({Key? key, required this.style}) : super(key: key);
+
+  @override
+  _BlinkingCursorState createState() => _BlinkingCursorState();
+}
+
+class _BlinkingCursorState extends State<BlinkingCursor>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _controller,
+      child: Text('_', style: widget.style),
+    );
+  }
+}
+
+// The main terminal interface page.
 class TerminalPage extends StatefulWidget {
   const TerminalPage({Key? key}) : super(key: key);
 
   @override
-  State<TerminalPage> createState() => _TerminalPageState();
+  _TerminalPageState createState() => _TerminalPageState();
 }
 
 class _TerminalPageState extends State<TerminalPage> {
   final TextEditingController _inputController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final FocusNode _focusNode = FocusNode();
-
-  final List<TerminalLine> _lines = [];
-  bool _isExecuting = false;
-  List<String> _commandHistory = [];
-  int _historyIndex = -1;
-  String _currentInput = '';
+  final List<Widget> _outputLines = [];
+  bool _isProcessing = false;
 
   @override
   void initState() {
     super.initState();
-    _lines.add(
-      TerminalLine(
-        text: 'Project Raco Terminal v1.0',
-        isCommand: false,
-        isError: false,
-      ),
-    );
-    _lines.add(
-      TerminalLine(
-        text: 'Type "help" for available commands\n',
-        isCommand: false,
-        isError: false,
-      ),
-    );
-
-    // Auto-focus the input field
+    // Add a welcome message when the terminal opens.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _focusNode.requestFocus();
+      setState(() {
+        _outputLines.add(
+          const Text(
+            'Project Raco Terminal. Type "help" for a list of commands.',
+            style: TextStyle(
+              fontFamily: 'monospace',
+              color: Colors.white,
+              fontSize: 14,
+            ),
+          ),
+        );
+      });
+      // Ensure the input field is focused.
+      FocusScope.of(context).requestFocus(_focusNode);
     });
   }
 
@@ -175,323 +195,185 @@ class _TerminalPageState extends State<TerminalPage> {
     super.dispose();
   }
 
+  /// Executes the entered command using root privileges.
+  Future<void> _runCommand(String command) async {
+    if (command.isEmpty || _isProcessing) return;
+
+    setState(() {
+      _isProcessing = true;
+      // Display the entered command in the output.
+      _outputLines.add(_buildPrompt(command));
+    });
+    _inputController.clear();
+    _scrollToBottom();
+
+    // Handle internal commands.
+    if (command.trim().toLowerCase() == 'clear') {
+      setState(() {
+        _outputLines.clear();
+        _isProcessing = false;
+      });
+      return;
+    }
+
+    if (command.trim().toLowerCase() == 'exit') {
+      Navigator.of(context).pop();
+      return;
+    }
+
+    // Execute the command as a root shell process.
+    try {
+      final result = await Process.run('su', ['-c', command]);
+      final output = (result.stdout as String).trim();
+      final error = (result.stderr as String).trim();
+
+      if (output.isNotEmpty) {
+        _outputLines.add(_buildOutput(output));
+      }
+      if (error.isNotEmpty) {
+        _outputLines.add(_buildError(error));
+      }
+      if (output.isEmpty && error.isEmpty) {
+        // Add a blank line for commands with no output.
+        _outputLines.add(const SizedBox(height: 14));
+      }
+    } catch (e) {
+      _outputLines.add(_buildError('Error executing command: $e'));
+    }
+
+    setState(() {
+      _isProcessing = false;
+    });
+    _scrollToBottom();
+    // Re-focus the input field after command execution.
+    FocusScope.of(context).requestFocus(_focusNode);
+  }
+
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
           _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
+          duration: const Duration(milliseconds: 200),
           curve: Curves.easeOut,
         );
       }
     });
   }
 
-  Future<void> _executeCommand(String command) async {
-    if (command.trim().isEmpty) return;
-
-    setState(() {
-      _lines.add(
-        TerminalLine(text: '\$ $command', isCommand: true, isError: false),
-      );
-      _isExecuting = true;
-    });
-
-    _commandHistory.insert(0, command);
-    _historyIndex = -1;
-    _scrollToBottom();
-
-    final trimmedCommand = command.trim();
-    final parts = trimmedCommand.split(' ');
-    final baseCommand = parts[0].toLowerCase();
-
-    await Future.delayed(const Duration(milliseconds: 100));
-
-    switch (baseCommand) {
-      case 'help':
-        _addOutput(_getHelpText());
-        break;
-      case 'clear':
-        setState(() {
-          _lines.clear();
-        });
-        break;
-      case 'echo':
-        if (parts.length > 1) {
-          _addOutput(parts.sublist(1).join(' '));
-        }
-        break;
-      case 'date':
-        _addOutput(DateTime.now().toString());
-        break;
-      case 'whoami':
-        _addOutput('root');
-        break;
-      case 'pwd':
-        _addOutput('/data/adb/modules/ProjectRaco');
-        break;
-      case 'uname':
-        final args = parts.length > 1 ? parts[1] : '';
-        if (args == '-a') {
-          _addOutput('Linux localhost ${Platform.version}');
-        } else {
-          _addOutput('Linux');
-        }
-        break;
-      case 'exit':
-      case 'quit':
-        Navigator.pop(context);
-        return;
-      default:
-        // Execute actual shell command with root
-        await _executeShellCommand(trimmedCommand);
-    }
-
-    setState(() {
-      _isExecuting = false;
-    });
-    _scrollToBottom();
+  // Helper methods to build styled text widgets.
+  Widget _buildPrompt(String command) {
+    return RichText(
+      text: TextSpan(
+        style: const TextStyle(fontFamily: 'monospace', fontSize: 14),
+        children: [
+          const TextSpan(
+            text: 'root@raco:~# ',
+            style: TextStyle(color: Colors.greenAccent),
+          ),
+          TextSpan(
+            text: command,
+            style: const TextStyle(color: Colors.white),
+          ),
+        ],
+      ),
+    );
   }
 
-  Future<void> _executeShellCommand(String command) async {
-    try {
-      final result = await Process.run('su', ['-c', command]);
-
-      final stdout = (result.stdout as String).trim();
-      final stderr = (result.stderr as String).trim();
-
-      if (stdout.isNotEmpty) {
-        _addOutput(stdout);
-      }
-      if (stderr.isNotEmpty) {
-        _addOutput(stderr, isError: true);
-      }
-      if (stdout.isEmpty && stderr.isEmpty && result.exitCode != 0) {
-        _addOutput(
-          'Command exited with code ${result.exitCode}',
-          isError: true,
-        );
-      }
-    } catch (e) {
-      _addOutput('Error: $e', isError: true);
-    }
+  Widget _buildOutput(String text) {
+    return SelectableText(
+      text,
+      style: const TextStyle(
+        fontFamily: 'monospace',
+        color: Colors.white70,
+        fontSize: 14,
+      ),
+    );
   }
 
-  void _addOutput(String text, {bool isError = false}) {
-    setState(() {
-      _lines.add(TerminalLine(text: text, isCommand: false, isError: isError));
-    });
-  }
-
-  String _getHelpText() {
-    return '''Available Commands:
-  help      - Show this help message
-  clear     - Clear the terminal screen
-  echo      - Display a line of text
-  date      - Display current date and time
-  whoami    - Display current user
-  pwd       - Print working directory
-  uname     - Print system information
-  exit/quit - Exit terminal
-
-You can also execute any shell command with root privileges.''';
-  }
-
-  void _handleKeyEvent(KeyEvent event) {
-    if (event is KeyDownEvent) {
-      if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
-        // Navigate up in history
-        if (_commandHistory.isNotEmpty &&
-            _historyIndex < _commandHistory.length - 1) {
-          if (_historyIndex == -1) {
-            _currentInput = _inputController.text;
-          }
-          setState(() {
-            _historyIndex++;
-            _inputController.text = _commandHistory[_historyIndex];
-            _inputController.selection = TextSelection.fromPosition(
-              TextPosition(offset: _inputController.text.length),
-            );
-          });
-        }
-      } else if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
-        // Navigate down in history
-        if (_historyIndex > -1) {
-          setState(() {
-            _historyIndex--;
-            if (_historyIndex == -1) {
-              _inputController.text = _currentInput;
-            } else {
-              _inputController.text = _commandHistory[_historyIndex];
-            }
-            _inputController.selection = TextSelection.fromPosition(
-              TextPosition(offset: _inputController.text.length),
-            );
-          });
-        }
-      }
-    }
+  Widget _buildError(String text) {
+    return SelectableText(
+      text,
+      style: const TextStyle(
+        fontFamily: 'monospace',
+        color: Colors.redAccent,
+        fontSize: 14,
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    const inputStyle = TextStyle(
+      fontFamily: 'monospace',
+      color: Colors.white,
+      fontSize: 14,
+    );
 
     return Scaffold(
-      backgroundColor: colorScheme.surface,
+      backgroundColor: const Color(0xFF1E1E1E), // A dark, terminal-like color.
       appBar: AppBar(
-        backgroundColor: colorScheme.surface,
+        backgroundColor: Colors.black26,
+        title: const Text('Terminal'),
         elevation: 0,
-        title: Row(
-          children: [
-            Icon(Icons.terminal, color: colorScheme.primary),
-            const SizedBox(width: 8),
-            Text('Terminal', style: TextStyle(color: colorScheme.onSurface)),
-          ],
-        ),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
-          onPressed: () => Navigator.pop(context),
-        ),
       ),
       body: GestureDetector(
-        onTap: () => _focusNode.requestFocus(),
-        child: Column(
-          children: [
-            Expanded(
-              child: Container(
-                color: colorScheme.surface,
-                padding: const EdgeInsets.all(16.0),
+        onTap: () => FocusScope.of(context).requestFocus(_focusNode),
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            children: [
+              // Scrollable output area.
+              Expanded(
                 child: ListView.builder(
                   controller: _scrollController,
-                  itemCount: _lines.length,
+                  itemCount: _outputLines.length,
                   itemBuilder: (context, index) {
-                    final line = _lines[index];
-                    return SelectableText(
-                      line.text,
-                      style: TextStyle(
-                        fontFamily: 'monospace',
-                        fontSize: 13,
-                        color: line.isError
-                            ? colorScheme.error
-                            : line.isCommand
-                            ? colorScheme.primary
-                            : colorScheme.onSurface,
-                        fontWeight: line.isCommand
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                      ),
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 2.0),
+                      child: _outputLines[index],
                     );
                   },
                 ),
               ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16.0,
-                vertical: 12.0,
-              ),
-              decoration: BoxDecoration(
-                color: colorScheme.surfaceContainerHighest,
-                border: Border(
-                  top: BorderSide(
-                    color: colorScheme.outline.withOpacity(0.3),
-                    width: 1,
-                  ),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Text(
-                    '\$ ',
-                    style: TextStyle(
-                      fontFamily: 'monospace',
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: colorScheme.primary,
+              // Input field area.
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: Row(
+                  children: [
+                    const Text(
+                      'root@raco:~#',
+                      style: TextStyle(
+                        fontFamily: 'monospace',
+                        color: Colors.greenAccent,
+                        fontSize: 14,
+                      ),
                     ),
-                  ),
-                  Expanded(
-                    child: KeyboardListener(
-                      focusNode: FocusNode(),
-                      onKeyEvent: _handleKeyEvent,
+                    const SizedBox(width: 8),
+                    Expanded(
                       child: TextField(
                         controller: _inputController,
                         focusNode: _focusNode,
-                        enabled: !_isExecuting,
-                        style: TextStyle(
-                          fontFamily: 'monospace',
-                          fontSize: 14,
-                          color: colorScheme.onSurface,
-                        ),
-                        decoration: InputDecoration(
+                        autocorrect: false,
+                        enableSuggestions: false,
+                        style: inputStyle,
+                        cursorColor: Colors.greenAccent,
+                        onSubmitted: _runCommand,
+                        decoration: const InputDecoration(
                           border: InputBorder.none,
-                          hintText: _isExecuting
-                              ? 'Executing...'
-                              : 'Enter command',
-                          hintStyle: TextStyle(
-                            color: colorScheme.onSurface.withOpacity(0.5),
-                          ),
                           isDense: true,
                           contentPadding: EdgeInsets.zero,
                         ),
-                        onSubmitted: (value) {
-                          if (!_isExecuting) {
-                            _executeCommand(value);
-                            _inputController.clear();
-                            _focusNode.requestFocus();
-                          }
-                        },
                       ),
                     ),
-                  ),
-                  if (_isExecuting)
-                    Padding(
-                      padding: const EdgeInsets.only(left: 8.0),
-                      child: SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            colorScheme.primary,
-                          ),
-                        ),
-                      ),
-                    )
-                  else
-                    IconButton(
-                      icon: Icon(Icons.send, color: colorScheme.primary),
-                      onPressed: () {
-                        if (_inputController.text.isNotEmpty) {
-                          _executeCommand(_inputController.text);
-                          _inputController.clear();
-                          _focusNode.requestFocus();
-                        }
-                      },
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                      iconSize: 20,
-                    ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
-}
-
-/// Model class for terminal lines
-class TerminalLine {
-  final String text;
-  final bool isCommand;
-  final bool isError;
-
-  TerminalLine({
-    required this.text,
-    required this.isCommand,
-    required this.isError,
-  });
 }
