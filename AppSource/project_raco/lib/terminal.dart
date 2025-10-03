@@ -2,13 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 import 'package:flutter/material.dart';
-
-// --- CYBERPUNK THEME COLORS ---
-const Color cyberpunkBackground = Color(0xFF0A0A1A); // Dark, deep blue
-const Color cyberpunkPrimary = Color(0xFF00FFFF); // Bright Cyan/Aqua
-const Color cyberpunkAccent = Color(0xFFF8E71C); // Neon Yellow
-const Color cyberpunkError = Color(0xFFFF003C); // Aggressive Red
-const Color cyberpunkMuted = Color(0xFFCCCCCC); // Off-white/light grey
+import 'package:process_run/process_run.dart';
 
 // A "netrunner-style" startup screen that appears before the terminal.
 class HackerStartupScreen extends StatefulWidget {
@@ -88,18 +82,23 @@ class _HackerStartupScreenState extends State<HackerStartupScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     // Use a monospaced font for a classic terminal look.
-    const textStyle = TextStyle(
+    final textStyle = TextStyle(
       fontFamily: 'monospace',
-      color: cyberpunkPrimary,
+      color: colorScheme.primary,
       fontSize: 14,
       shadows: [
-        Shadow(blurRadius: 4.0, color: cyberpunkPrimary, offset: Offset(0, 0)),
+        Shadow(
+          blurRadius: 4.0,
+          color: colorScheme.primary,
+          offset: Offset(0, 0),
+        ),
       ],
     );
 
     return Scaffold(
-      backgroundColor: cyberpunkBackground,
+      backgroundColor: colorScheme.background,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -111,7 +110,7 @@ class _HackerStartupScreenState extends State<HackerStartupScreen> {
                 return Text(_startupLines[index], style: textStyle);
               } else {
                 // Simulate a blinking cursor at the end.
-                return const BlinkingCursor(style: textStyle);
+                return BlinkingCursor(style: textStyle);
               }
             },
           ),
@@ -180,11 +179,11 @@ class _TerminalPageState extends State<TerminalPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       setState(() {
         _outputLines.add(
-          const Text(
+          Text(
             'Project Raco Terminal [1.0]\n(c) 2025 Kanagawa Yamada. All rights reserved.\nType "help" for available commands.',
             style: TextStyle(
               fontFamily: 'monospace',
-              color: cyberpunkMuted,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
               fontSize: 12,
             ),
           ),
@@ -225,7 +224,7 @@ class _TerminalPageState extends State<TerminalPage> {
     }
 
     if (command.trim().toLowerCase() == 'exit') {
-      Navigator.of(context).pop();
+      if (mounted) Navigator.of(context).pop();
       return;
     }
 
@@ -235,26 +234,36 @@ class _TerminalPageState extends State<TerminalPage> {
       final output = (result.stdout as String).trim();
       final error = (result.stderr as String).trim();
 
-      if (output.isNotEmpty) {
-        _outputLines.add(_buildOutput(output));
-      }
-      if (error.isNotEmpty) {
-        _outputLines.add(_buildError(error));
-      }
-      if (output.isEmpty && error.isEmpty) {
-        // Add a blank line for commands with no output.
-        _outputLines.add(const SizedBox(height: 12)); // Match font size
+      if (mounted) {
+        setState(() {
+          if (output.isNotEmpty) {
+            _outputLines.add(_buildOutput(output));
+          }
+          if (error.isNotEmpty) {
+            _outputLines.add(_buildError(error));
+          }
+          if (output.isEmpty && error.isEmpty) {
+            // Add a blank line for commands with no output.
+            _outputLines.add(const SizedBox(height: 12)); // Match font size
+          }
+        });
       }
     } catch (e) {
-      _outputLines.add(_buildError('ERROR: Subroutine failed. $e'));
+      if (mounted) {
+        setState(() {
+          _outputLines.add(_buildError('ERROR: Subroutine failed. $e'));
+        });
+      }
     }
 
-    setState(() {
-      _isProcessing = false;
-    });
-    _scrollToBottom();
-    // Re-focus the input field after command execution.
-    FocusScope.of(context).requestFocus(_focusNode);
+    if (mounted) {
+      setState(() {
+        _isProcessing = false;
+      });
+      _scrollToBottom();
+      // Re-focus the input field after command execution.
+      FocusScope.of(context).requestFocus(_focusNode);
+    }
   }
 
   void _scrollToBottom() {
@@ -271,20 +280,25 @@ class _TerminalPageState extends State<TerminalPage> {
 
   // Helper methods to build styled text widgets.
   Widget _buildPrompt(String command) {
+    final colorScheme = Theme.of(context).colorScheme;
     return RichText(
       text: TextSpan(
-        style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
+        style: TextStyle(
+          fontFamily: 'monospace',
+          fontSize: 12,
+          color: colorScheme.onSurface,
+        ),
         children: [
-          const TextSpan(
+          TextSpan(
             text: 'netrunner@localhost:~> ',
             style: TextStyle(
-              color: cyberpunkAccent,
-              shadows: [Shadow(blurRadius: 3.0, color: cyberpunkAccent)],
+              color: colorScheme.primary,
+              shadows: [Shadow(blurRadius: 3.0, color: colorScheme.primary)],
             ),
           ),
           TextSpan(
             text: command,
-            style: const TextStyle(color: cyberpunkMuted),
+            style: TextStyle(color: colorScheme.onSurface),
           ),
         ],
       ),
@@ -294,45 +308,46 @@ class _TerminalPageState extends State<TerminalPage> {
   Widget _buildOutput(String text) {
     return SelectableText(
       text,
-      style: const TextStyle(
+      style: TextStyle(
         fontFamily: 'monospace',
-        color: cyberpunkMuted,
+        color: Theme.of(context).colorScheme.onSurface,
         fontSize: 12,
       ),
     );
   }
 
   Widget _buildError(String text) {
+    final colorScheme = Theme.of(context).colorScheme;
     return SelectableText(
       text,
-      style: const TextStyle(
+      style: TextStyle(
         fontFamily: 'monospace',
-        color: cyberpunkError,
+        color: colorScheme.error,
         fontSize: 12,
-        shadows: [Shadow(blurRadius: 3.0, color: cyberpunkError)],
+        shadows: [Shadow(blurRadius: 3.0, color: colorScheme.error)],
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    const inputStyle = TextStyle(
+    final colorScheme = Theme.of(context).colorScheme;
+    final inputStyle = TextStyle(
       fontFamily: 'monospace',
-      color: cyberpunkMuted,
+      color: colorScheme.onSurface,
       fontSize: 12,
     );
 
     return Scaffold(
-      backgroundColor: cyberpunkBackground,
+      backgroundColor: colorScheme.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        // MODIFICATION: Added fontSize to make the title smaller.
-        title: const Text(
+        title: Text(
           'PROJECT RACO SHELL',
           style: TextStyle(
             fontFamily: 'monospace',
-            color: cyberpunkAccent,
+            color: colorScheme.primary,
             fontWeight: FontWeight.bold,
             fontSize: 16,
           ),
@@ -340,7 +355,7 @@ class _TerminalPageState extends State<TerminalPage> {
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1.0),
           child: Container(
-            color: cyberpunkAccent.withOpacity(0.5),
+            color: colorScheme.primary.withOpacity(0.5),
             height: 1.0,
           ),
         ),
@@ -370,11 +385,11 @@ class _TerminalPageState extends State<TerminalPage> {
                   padding: const EdgeInsets.only(top: 8.0),
                   child: Row(
                     children: [
-                      const Text(
+                      Text(
                         'netrunner@localhost:~>',
                         style: TextStyle(
                           fontFamily: 'monospace',
-                          color: cyberpunkAccent,
+                          color: colorScheme.primary,
                           fontSize: 12,
                         ),
                       ),
@@ -386,7 +401,7 @@ class _TerminalPageState extends State<TerminalPage> {
                           autocorrect: false,
                           enableSuggestions: false,
                           style: inputStyle,
-                          cursorColor: cyberpunkAccent,
+                          cursorColor: colorScheme.primary,
                           onSubmitted: _runCommand,
                           decoration: const InputDecoration(
                             border: InputBorder.none,
