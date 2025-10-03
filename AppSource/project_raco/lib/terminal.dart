@@ -4,20 +4,18 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:process_run/process_run.dart';
 
-// A "netrunner-style" startup screen that appears before the terminal.
+/// Cool hacker startup screen before terminal launches
 class HackerStartupScreen extends StatefulWidget {
   const HackerStartupScreen({Key? key}) : super(key: key);
 
   @override
-  _HackerStartupScreenState createState() => _HackerStartupScreenState();
+  State<HackerStartupScreen> createState() => _HackerStartupScreenState();
 }
 
-class _HackerStartupScreenState extends State<HackerStartupScreen> {
-  final List<String> _startupLines = [];
-  final ScrollController _scrollController = ScrollController();
-
-  // List of boot-up messages to display sequentially.
-  static const List<String> _bootSequence = [
+class _HackerStartupScreenState extends State<HackerStartupScreen>
+    with SingleTickerProviderStateMixin {
+  // Updated boot messages
+  final List<String> _bootMessages = [
     'INITIALIZING PROJECT RACO TERM...',
     'MOUNTING USER AS SUPERUSER...',
     'DETECTING KERNEL IS...',
@@ -27,137 +25,183 @@ class _HackerStartupScreenState extends State<HackerStartupScreen> {
     'LOADING PROJECT RACO TERMINAL...',
   ];
 
+  int _currentMessageIndex = 0;
+  late AnimationController _glitchController;
+
   @override
   void initState() {
     super.initState();
-    // Start the boot sequence animation when the widget is initialized.
+    _glitchController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 100),
+    )..repeat(reverse: true);
+
     _startBootSequence();
-  }
-
-  /// Displays boot messages with random delays to simulate a startup process.
-  Future<void> _startBootSequence() async {
-    // Wait a moment before starting to ensure the screen is visible.
-    await Future.delayed(const Duration(milliseconds: 500));
-
-    for (final line in _bootSequence) {
-      if (!mounted) return; // Exit if the widget is disposed.
-      setState(() {
-        _startupLines.add(line);
-      });
-      // Scroll to the bottom to keep the latest line visible.
-      _scrollToBottom();
-      // Wait for a variable amount of time before showing the next line.
-      await Future.delayed(Duration(milliseconds: 200 + Random().nextInt(500)));
-    }
-
-    // A final pause before transitioning to the terminal.
-    await Future.delayed(const Duration(seconds: 1));
-
-    if (mounted) {
-      // Replace this screen with the terminal page.
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const TerminalPage()),
-      );
-    }
-  }
-
-  void _scrollToBottom() {
-    // A short delay ensures the list has time to update before scrolling.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOut,
-        );
-      }
-    });
   }
 
   @override
   void dispose() {
-    _scrollController.dispose();
+    _glitchController.dispose();
     super.dispose();
+  }
+
+  void _startBootSequence() {
+    Timer.periodic(const Duration(milliseconds: 400), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+
+      setState(() {
+        if (_currentMessageIndex < _bootMessages.length) {
+          _currentMessageIndex++;
+        } else {
+          timer.cancel();
+          Future.delayed(const Duration(milliseconds: 500), () {
+            if (mounted) {
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (context) => const TerminalPage()),
+              );
+            }
+          });
+        }
+      });
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    // Use a monospaced font for a classic terminal look.
-    final textStyle = TextStyle(
-      fontFamily: 'monospace',
-      color: colorScheme.primary,
-      fontSize: 14,
-      shadows: [
-        Shadow(
-          blurRadius: 4.0,
-          color: colorScheme.primary,
-          offset: Offset(0, 0),
-        ),
-      ],
-    );
+    final primaryColor = colorScheme.primary;
 
     return Scaffold(
-      backgroundColor: colorScheme.background,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: ListView.builder(
-            controller: _scrollController,
-            itemCount: _startupLines.length + 1, // +1 for the blinking cursor
-            itemBuilder: (context, index) {
-              if (index < _startupLines.length) {
-                return Text(_startupLines[index], style: textStyle);
-              } else {
-                // Simulate a blinking cursor at the end.
-                return BlinkingCursor(style: textStyle);
-              }
-            },
+      backgroundColor: Colors.black,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Colors.black, primaryColor.withOpacity(0.1), Colors.black],
           ),
+        ),
+        child: Stack(
+          children: [
+            // Scanline effect
+            AnimatedBuilder(
+              animation: _glitchController,
+              builder: (context, child) {
+                return Opacity(
+                  opacity: 0.05,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          primaryColor.withOpacity(0.3),
+                          Colors.transparent,
+                        ],
+                        stops: [
+                          _glitchController.value - 0.1,
+                          _glitchController.value,
+                          _glitchController.value + 0.1,
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+            // Content
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.terminal, size: 80, color: primaryColor),
+                    const SizedBox(height: 32),
+                    Text(
+                      '[ PROJECT RACO ]',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: primaryColor,
+                        letterSpacing: 4,
+                        fontFamily: 'monospace',
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'TERMINAL ACCESS',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: primaryColor.withOpacity(0.7),
+                        letterSpacing: 2,
+                        fontFamily: 'monospace',
+                      ),
+                    ),
+                    const SizedBox(height: 48),
+                    SizedBox(
+                      height: 200,
+                      child: ListView.builder(
+                        itemCount: _currentMessageIndex,
+                        itemBuilder: (context, index) {
+                          final isLast = index == _currentMessageIndex - 1;
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4.0),
+                            child: Row(
+                              children: [
+                                Text(
+                                  '> ',
+                                  style: TextStyle(
+                                    color: primaryColor,
+                                    fontFamily: 'monospace',
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Text(
+                                    _bootMessages[index],
+                                    style: TextStyle(
+                                      color: isLast
+                                          ? primaryColor
+                                          : primaryColor.withOpacity(0.5),
+                                      fontFamily: 'monospace',
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                                if (isLast)
+                                  SizedBox(
+                                    width: 12,
+                                    height: 12,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        primaryColor,
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-/// A simple widget to create a blinking cursor effect.
-class BlinkingCursor extends StatefulWidget {
-  final TextStyle style;
-  const BlinkingCursor({Key? key, required this.style}) : super(key: key);
-
-  @override
-  _BlinkingCursorState createState() => _BlinkingCursorState();
-}
-
-class _BlinkingCursorState extends State<BlinkingCursor>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 500),
-    )..repeat(reverse: true);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return FadeTransition(
-      opacity: _controller,
-      child: Text('_', style: widget.style),
-    );
-  }
-}
-
-// The main terminal interface page.
+// The main terminal interface page (Original Implementation).
 class TerminalPage extends StatefulWidget {
   const TerminalPage({Key? key}) : super(key: key);
 
