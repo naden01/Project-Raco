@@ -1,8 +1,3 @@
-#!/system/bin/sh
-#
-# All copy and move operations will now abort on failure.
-#
-
 check_for_new_addons() {
   local new_config="$1"
   local saved_config="$2"
