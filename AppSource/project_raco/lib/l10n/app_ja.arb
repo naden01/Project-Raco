@@ -113,5 +113,21 @@
     "fstrim_description": "Androidパーティションをトリムします。",
     "clear_cache_title": "キャッシュをクリア",
     "better_powersave_title": "より良い省電力",
-    "better_powersave_description": "CPU周波数を最小ではなく半分に制限します（省電力モードのみ）"
+    "better_powersave_description": "CPU周波数を最小ではなく半分に制限します（省電力モードのみ）",
+    "build_version_title": "Project Raco: {buildName} ビルド",
+    "@build_version_title": {
+        "placeholders": {
+            "buildName": {
+                "type": "String"
+            }
+        }
+    },
+    "build_by_title": "作成者: {builderName}",
+    "@build_by_title": {
+        "placeholders": {
+            "builderName": {
+                "type": "String"
+            }
+        }
+    }
 }

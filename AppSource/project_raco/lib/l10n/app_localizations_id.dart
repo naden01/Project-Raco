@@ -351,4 +351,14 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get better_powersave_description =>
       'Batasi Freq CPU ke Setengah, bukan Freq Minimum (Hanya Mode Powersave)';
+
+  @override
+  String build_version_title(String buildName) {
+    return 'Project Raco: Build $buildName';
+  }
+
+  @override
+  String build_by_title(String builderName) {
+    return 'Dibuat Oleh: $builderName';
+  }
 }

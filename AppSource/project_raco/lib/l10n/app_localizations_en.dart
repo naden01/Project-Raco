@@ -348,4 +348,14 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get better_powersave_description =>
       'Cap the CPU Freq to Half instead of Minimum Freq (Powersave Mode Only)';
+
+  @override
+  String build_version_title(String buildName) {
+    return 'Project Raco: $buildName Build';
+  }
+
+  @override
+  String build_by_title(String builderName) {
+    return 'Build By: $builderName';
+  }
 }

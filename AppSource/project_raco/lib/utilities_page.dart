@@ -62,6 +62,8 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
   String? _backgroundImagePath;
   double _backgroundOpacity = 0.2;
   double _backgroundBlur = 0.0;
+  String? _buildType;
+  String? _buildBy;
 
   final TextEditingController _searchController = TextEditingController();
 
@@ -97,7 +99,50 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
     });
   }
 
+  Future<void> _loadBuildInfo() async {
+    const String path = '/data/adb/modules/ProjectRaco/';
+    final List<String> buildFiles = ['Official', 'Canary', 'CBT'];
+    String? foundBuildType;
+    String? foundBuildBy;
+
+    for (String fileName in buildFiles) {
+      final filePath = '$path$fileName';
+      try {
+        // Use root to check if file exists
+        final fileExistsResult = await Process.run('su', [
+          '-c',
+          'test -f $filePath && echo "exists"',
+        ]);
+
+        if (fileExistsResult.exitCode == 0 &&
+            (fileExistsResult.stdout as String).trim() == 'exists') {
+          // If it exists, use root to read the file content
+          final readFileResult = await Process.run('su', [
+            '-c',
+            'cat $filePath',
+          ]);
+          if (readFileResult.exitCode == 0) {
+            foundBuildType = fileName;
+            foundBuildBy = readFileResult.stdout as String;
+            break; // Stop after finding the first valid file
+          }
+        }
+      } catch (e) {
+        // Handle potential errors if 'su' command fails
+        print('Error running root command for $fileName: $e');
+      }
+    }
+
+    if (mounted) {
+      setState(() {
+        _buildType = foundBuildType;
+        _buildBy = foundBuildBy?.trim();
+      });
+    }
+  }
+
   Future<void> _initializePage() async {
+    await _loadBuildInfo(); // Load build info first
     final bool hasRoot = await checkRootAccess();
 
     if (!mounted) return;
@@ -329,6 +374,61 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
               duration: const Duration(milliseconds: 500),
               child: Column(
                 children: [
+                  if (_buildType != null &&
+                      _buildBy != null &&
+                      _buildBy!.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                      child: Card(
+                        elevation: 2.0,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerHighest,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16.0,
+                            vertical: 12.0,
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.verified_user_outlined,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      localization.build_version_title(
+                                        _buildType!,
+                                      ),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleSmall
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      localization.build_by_title(_buildBy!),
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.bodySmall,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                     child: TextField(

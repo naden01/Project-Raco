@@ -113,5 +113,21 @@
     "fstrim_description": "Pangkas partisi Android.",
     "clear_cache_title": "Bersihkan Cache",
     "better_powersave_title": "Powersave Lebih Baik",
-    "better_powersave_description": "Batasi Freq CPU ke Setengah, bukan Freq Minimum (Hanya Mode Powersave)"
+    "better_powersave_description": "Batasi Freq CPU ke Setengah, bukan Freq Minimum (Hanya Mode Powersave)",
+    "build_version_title": "Project Raco: Build {buildName}",
+    "@build_version_title": {
+        "placeholders": {
+            "buildName": {
+                "type": "String"
+            }
+        }
+    },
+    "build_by_title": "Dibuat Oleh: {builderName}",
+    "@build_by_title": {
+        "placeholders": {
+            "builderName": {
+                "type": "String"
+            }
+        }
+    }
 }

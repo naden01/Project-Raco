@@ -747,6 +747,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cap the CPU Freq to Half instead of Minimum Freq (Powersave Mode Only)'**
   String get better_powersave_description;
+
+  /// No description provided for @build_version_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Project Raco: {buildName} Build'**
+  String build_version_title(String buildName);
+
+  /// No description provided for @build_by_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Build By: {builderName}'**
+  String build_by_title(String builderName);
 }
 
 class _AppLocalizationsDelegate

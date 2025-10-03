@@ -113,5 +113,21 @@
     "fstrim_description": "Trim Android partitions.",
     "clear_cache_title": "Clear Cache",
     "better_powersave_title": "Better Powersave",
-    "better_powersave_description": "Cap the CPU Freq to Half instead of Minimum Freq (Powersave Mode Only)"
+    "better_powersave_description": "Cap the CPU Freq to Half instead of Minimum Freq (Powersave Mode Only)",
+    "build_version_title": "Project Raco: {buildName} Build",
+    "@build_version_title": {
+        "placeholders": {
+            "buildName": {
+                "type": "String"
+            }
+        }
+    },
+    "build_by_title": "Build By: {builderName}",
+    "@build_by_title": {
+        "placeholders": {
+            "builderName": {
+                "type": "String"
+            }
+        }
+    }
 }
