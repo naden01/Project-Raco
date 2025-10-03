@@ -170,6 +170,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get edit_game_txt_title => 'game.txt を編集';
 
   @override
+  String get sync_changes => '変更を同期';
+
+  @override
   String get save_button => '保存';
 
   @override

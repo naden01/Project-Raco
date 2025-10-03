@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:open_file/open_file.dart';
+import 'package:path_provider/path_provider.dart';
 import '/l10n/app_localizations.dart';
 import 'utils.dart';
 
@@ -214,10 +216,8 @@ class _HamadaAiCardState extends State<HamadaAiCard> {
         throw Exception('Failed to write to service file');
       }
     } catch (e) {
+      // SnackBar removed from here
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update boot setting: $e')),
-        );
         await _refreshState();
       }
     } finally {
@@ -296,31 +296,114 @@ class GameTxtCard extends StatefulWidget {
 }
 
 class _GameTxtCardState extends State<GameTxtCard> {
-  bool _isOpening = false;
+  // State variables to manage the UI and process
+  bool _isBusy = false;
+  bool _isEditing = false;
+  String? _tempFilePath;
 
-  Future<void> _openFileInEditor() async {
-    if (!await checkRootAccess()) return;
-    setState(() => _isOpening = true);
+  // File paths
+  static const String _originalFilePath = '/data/ProjectRaco/game.txt';
+  static const String _tempFileName = 'game.txt';
 
-    const filePath = '/data/ProjectRaco/game.txt';
-    const command =
-        'am start -a android.intent.action.VIEW -d "file://$filePath" -t "text/plain"';
+  @override
+  void initState() {
+    super.initState();
+    _checkForExistingTempFile();
+  }
+
+  /// Checks if a temp file was left over from a previous session.
+  Future<void> _checkForExistingTempFile() async {
+    try {
+      final cacheDir = await getApplicationCacheDirectory();
+      final tempFile = File('${cacheDir.path}/$_tempFileName');
+      if (await tempFile.exists()) {
+        if (!mounted) return;
+        setState(() {
+          _isEditing = true;
+          _tempFilePath = tempFile.path;
+        });
+      }
+    } catch (e) {
+      // Handle potential errors finding the path
+    }
+  }
+
+  /// Step 1: Copies game.txt to a temp location and opens it.
+  Future<void> _startEditing() async {
+    if (!await checkRootAccess()) {
+      // SnackBar removed from here
+      return;
+    }
+    setState(() => _isBusy = true);
 
     try {
-      // We use fire and forget as we are just launching an external app.
-      await runRootCommandFireAndForget(command);
+      // Read original file using root
+      final result = await runRootCommandAndWait('cat $_originalFilePath');
+      if (result.exitCode != 0) {
+        throw Exception('Failed to read original file: ${result.stderr}');
+      }
+      final originalContent = result.stdout.toString();
+
+      // Create a temporary copy in the app's cache directory
+      final cacheDir = await getApplicationCacheDirectory();
+      final tempFile = File('${cacheDir.path}/$_tempFileName');
+      await tempFile.writeAsString(originalContent);
+      _tempFilePath = tempFile.path;
+
+      // Use open_file to launch an editor for the temp file
+      final openResult = await OpenFile.open(_tempFilePath!);
+      if (openResult.type != ResultType.done) {
+        throw Exception('Could not find an app to open the file.');
+      }
+
+      if (!mounted) return;
+      setState(() => _isEditing = true);
+      // SnackBar removed from here
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to open editor: $e')));
-      }
+      // SnackBar removed from here
     } finally {
-      // Add a small delay to give the system time to launch the app
-      await Future.delayed(const Duration(milliseconds: 500));
-      if (mounted) {
-        setState(() => _isOpening = false);
+      if (mounted) setState(() => _isBusy = false);
+    }
+  }
+
+  /// Step 2: Syncs changes from the temp file back to the original.
+  Future<void> _syncAndFinishEditing() async {
+    if (_tempFilePath == null || !await checkRootAccess()) {
+      // SnackBar removed from here
+      return;
+    }
+    setState(() => _isBusy = true);
+
+    try {
+      // Read the modified content from our temp file
+      final tempFile = File(_tempFilePath!);
+      if (!await tempFile.exists()) {
+        throw Exception('Temporary file not found. Please start again.');
       }
+      final newContent = await tempFile.readAsString();
+
+      // Use Base64 to safely write the content back with root
+      String base64Content = base64Encode(utf8.encode(newContent));
+      final writeCmd = "echo '$base64Content' | base64 -d > $_originalFilePath";
+      final result = await runRootCommandAndWait(writeCmd);
+
+      if (result.exitCode != 0) {
+        throw Exception('Failed to write to original file: ${result.stderr}');
+      }
+
+      // Clean up the temporary file
+      await tempFile.delete();
+
+      if (!mounted) return;
+      setState(() {
+        _isEditing = false;
+        _tempFilePath = null;
+      });
+      // SnackBar removed from here
+    } catch (e) {
+      // SnackBar removed from here
+    } finally {
+      if (mounted) setState(() => _isBusy = false);
     }
   }
 
@@ -329,6 +412,16 @@ class _GameTxtCardState extends State<GameTxtCard> {
     final localization = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+
+    // Determine button state based on whether we're editing
+    final bool isActionSync = _isEditing;
+    final String buttonText = isActionSync
+        ? 'Sync Changes' // Consider adding to your l10n files
+        : localization.edit_game_txt_title;
+    final IconData buttonIcon = isActionSync ? Icons.sync : Icons.edit_note;
+    final VoidCallback? onPressedAction = _isBusy
+        ? null
+        : (isActionSync ? _syncAndFinishEditing : _startEditing);
 
     return Card(
       elevation: 2.0,
@@ -355,15 +448,15 @@ class _GameTxtCardState extends State<GameTxtCard> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: _isOpening ? null : _openFileInEditor,
-                icon: _isOpening
+                onPressed: onPressedAction,
+                icon: _isBusy
                     ? const SizedBox(
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Icon(Icons.edit_note),
-                label: Text(localization.edit_game_txt_title),
+                    : Icon(buttonIcon),
+                label: Text(buttonText),
               ),
             ),
           ],

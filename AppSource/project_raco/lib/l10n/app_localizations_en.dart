@@ -176,6 +176,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get edit_game_txt_title => 'Edit game.txt';
 
   @override
+  String get sync_changes => 'Sync Changes';
+
+  @override
   String get save_button => 'Save';
 
   @override

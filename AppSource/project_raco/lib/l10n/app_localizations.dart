@@ -418,6 +418,12 @@ abstract class AppLocalizations {
   /// **'Edit game.txt'**
   String get edit_game_txt_title;
 
+  /// No description provided for @sync_changes.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync Changes'**
+  String get sync_changes;
+
   /// No description provided for @save_button.
   ///
   /// In en, this message translates to:
