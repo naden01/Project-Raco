@@ -112,15 +112,6 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
         MaterialPageRoute(builder: (context) => const HackerStartupScreen()),
       );
     } else {
-      // Show feedback to the user
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'You are now ${3 - _swipeCount} step(s) away from a secret...',
-          ),
-          duration: const Duration(seconds: 2),
-        ),
-      );
       // Reset the count if the user doesn't swipe again within 2 seconds
       _swipeResetTimer = Timer(const Duration(seconds: 2), () {
         if (mounted) {
