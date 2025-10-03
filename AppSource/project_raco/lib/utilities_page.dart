@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:project_raco/terminal.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '/l10n/app_localizations.dart';
 import 'UtilitiesPage/appearance.dart';
@@ -71,6 +73,10 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
   List<SearchResultItem> _allSearchableItems = [];
   List<SearchResultItem> _filteredSearchResults = [];
 
+  // State for swipe detection
+  int _swipeCount = 0;
+  Timer? _swipeResetTimer;
+
   @override
   void initState() {
     super.initState();
@@ -86,7 +92,44 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
   void dispose() {
     _searchController.removeListener(_updateSearchResults);
     _searchController.dispose();
+    _swipeResetTimer?.cancel(); // Cancel timer on dispose
     super.dispose();
+  }
+
+  /// Handles the logic for the secret swipe gesture on the build info card.
+  void _handleCardSwipe() {
+    _swipeResetTimer?.cancel(); // Cancel any previous timer
+    _swipeCount++;
+
+    ScaffoldMessenger.of(
+      context,
+    ).hideCurrentSnackBar(); // Hide previous snackbar
+
+    if (_swipeCount == 3) {
+      _swipeCount = 0; // Reset for next time
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const HackerStartupScreen()),
+      );
+    } else {
+      // Show feedback to the user
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'You are now ${3 - _swipeCount} step(s) away from a secret...',
+          ),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+      // Reset the count if the user doesn't swipe again within 2 seconds
+      _swipeResetTimer = Timer(const Duration(seconds: 2), () {
+        if (mounted) {
+          setState(() {
+            _swipeCount = 0;
+          });
+        }
+      });
+    }
   }
 
   Future<void> _loadBackgroundPreferences() async {
@@ -377,54 +420,64 @@ class _UtilitiesPageState extends State<UtilitiesPage> {
                   if (_buildType != null &&
                       _buildBy != null &&
                       _buildBy!.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                      child: Card(
-                        elevation: 2.0,
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.surfaceContainerHighest,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16.0,
-                            vertical: 12.0,
+                    GestureDetector(
+                      onHorizontalDragEnd: (details) {
+                        // Detect a swipe from left to right with sufficient velocity
+                        if (details.primaryVelocity != null &&
+                            details.primaryVelocity! > 100) {
+                          _handleCardSwipe();
+                        }
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                        child: Card(
+                          elevation: 2.0,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.surfaceContainerHighest,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.verified_user_outlined,
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      localization.build_version_title(
-                                        _buildType!,
-                                      ),
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleSmall
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      localization.build_by_title(_buildBy!),
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.bodySmall,
-                                    ),
-                                  ],
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16.0,
+                              vertical: 12.0,
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.verified_user_outlined,
+                                  color: Theme.of(context).colorScheme.primary,
                                 ),
-                              ),
-                            ],
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        localization.build_version_title(
+                                          _buildType!,
+                                        ),
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .titleSmall
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        localization.build_by_title(_buildBy!),
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.bodySmall,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
