@@ -201,14 +201,50 @@ build_modules() {
 
     read -p "Enter Version (e.g., V1.0): " VERSION
 
+    echo ""
+    echo "Manage build identifier files (CBT/Canary/Official) in '$MODULES_DIR'?"
+    echo "1. Remove existing files and create a new one"
+    echo "2. Keep existing files"
+    local choice
     while true; do
-        read -p "Enter Build Type (CBT/LAB/RELEASE): " BUILD_TYPE
-        BUILD_TYPE=${BUILD_TYPE^^}
-        if [[ "$BUILD_TYPE" == "CBT" || "$BUILD_TYPE" == "LAB" || "$BUILD_TYPE" == "RELEASE" ]]; then
+        read -p "Enter your choice (1/2): " choice
+        if [[ "$choice" == "1" || "$choice" == "2" ]]; then
             break
         fi
-        echo "Invalid input. Please enter CBT, LAB, or RELEASE."
+        echo "Invalid choice. Please enter 1 or 2."
     done
+    echo ""
+
+    while true; do
+        read -p "Enter Build Type (CBT/Canary/Official): " BUILD_TYPE
+        BUILD_TYPE=${BUILD_TYPE^^}
+        if [[ "$BUILD_TYPE" == "CBT" || "$BUILD_TYPE" == "CANARY" || "$BUILD_TYPE" == "OFFICIAL" ]]; then
+            break
+        fi
+        echo "Invalid input. Please enter CBT, Canary, or Official."
+    done
+
+    if [[ "$choice" == "1" ]]; then
+        echo "Removing existing build identifier files..."
+        rm -f "$MODULES_DIR/CBT" "$MODULES_DIR/Canary" "$MODULES_DIR/Official"
+
+        # Determine proper case for the new filename, as the app expects a specific case
+        local PROPER_CASE_BUILD_TYPE
+        if [[ "$BUILD_TYPE" == "CANARY" ]]; then
+            PROPER_CASE_BUILD_TYPE="Canary"
+        elif [[ "$BUILD_TYPE" == "OFFICIAL" ]]; then
+            PROPER_CASE_BUILD_TYPE="Official"
+        else # CBT
+            PROPER_CASE_BUILD_TYPE="CBT"
+        fi
+
+        echo "Creating new build identifier file: $PROPER_CASE_BUILD_TYPE"
+        touch "$MODULES_DIR/$PROPER_CASE_BUILD_TYPE"
+    else
+        echo "Keeping existing build identifier files."
+    fi
+    echo ""
+
 
     cd "$MODULES_DIR" || exit 1
     MODULE_ID=$(grep "^id=" "module.prop" | cut -d'=' -f2 | tr -d '[:space:]')
@@ -229,7 +265,7 @@ build_modules() {
 
     ZIP_NAME="${MODULE_ID}-${VERSION}-${BUILD_TYPE}.zip"
     ZIP_PATH="../$BUILD_DIR/$ZIP_NAME"
-    zip -q -r "$ZIP_PATH" ./*
+    zip -9 -q -r "$ZIP_PATH" ./*
     echo "Created: $ZIP_NAME"
 
     cd ..
