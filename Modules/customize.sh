@@ -1,3 +1,8 @@
+#!/system/bin/sh
+#
+# All copy and move operations will now abort on failure.
+#
+
 check_for_new_addons() {
   local new_config="$1"
   local saved_config="$2"
@@ -109,9 +114,11 @@ ui_print "- Setting up module files..."
 mkdir -p /data/ProjectRaco
 unzip -o "$ZIPFILE" 'Scripts/*' -d $MODPATH >&2
 
+rm -f "/data/local/tmp/logo.png" >/dev/null 2>&1
 ui_print "- Copying logo.png..."
 cp "$MODPATH/logo.png" "/data/local/tmp" >/dev/null 2>&1 || abort "! Failed to copy logo.png"
 
+rm -f "/data/local/tmp/Anya.png" >/dev/null 2>&1
 ui_print "- Copying Anya.png..."
 cp "$MODPATH/Anya.png" "/data/local/tmp" >/dev/null 2>&1 || abort "! Failed to copy Anya.png"
 
