@@ -32,6 +32,7 @@ ipv4="/proc/sys/net/ipv4"
 ##############################
 # ADDED: Source External Script
 ##############################
+SCRIPT_PATH="/data/adb/modules/ProjectRaco/Scripts"
 MODULE_PATH="/data/adb/modules/ProjectRaco"
 source "$MODULE_PATH/Scripts/corin.sh"
 
