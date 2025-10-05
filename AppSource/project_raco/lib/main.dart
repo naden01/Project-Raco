@@ -412,7 +412,13 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   void _changeLanguage(String language) {
     if (language == _selectedLanguage) return;
 
-    const localeMap = {'EN': 'en', 'ID': 'id', 'JP': 'ja'};
+    const localeMap = {
+      'EN': 'en',
+      'ID': 'id',
+      'JP': 'ja',
+      'ES': 'es',
+      'RU': 'ru',
+    };
     String localeCode = localeMap[language.toUpperCase()] ?? 'en';
     widget.onLocaleChange(Locale(localeCode));
 
@@ -810,7 +816,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
             ),
             DropdownButton<String>(
               value: _selectedLanguage,
-              items: <String>['EN', 'ID', 'JP'].map((String value) {
+              items: <String>['EN', 'ID', 'JP', 'ES', 'RU'].map((String value) {
                 return DropdownMenuItem<String>(
                   value: value,
                   child: Text(value),
