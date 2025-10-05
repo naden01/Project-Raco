@@ -107,6 +107,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get credits_8 => 'И всем тестерам, которых я не могу упомянуть';
 
   @override
+  String get credits_9 => 'KanaDev_IS';
+
+  @override
+  String get credits_10 => 'And All Testers That I Can\'t Mentioned One by One';
+
+  @override
   String get yes => 'Да';
 
   @override

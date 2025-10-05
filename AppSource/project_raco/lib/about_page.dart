@@ -175,6 +175,8 @@ class _AboutPageState extends State<AboutPage> {
       localization.credits_6,
       localization.credits_7,
       localization.credits_8,
+      localization.credits_9,
+      localization.credits_10,
     ];
   }
 

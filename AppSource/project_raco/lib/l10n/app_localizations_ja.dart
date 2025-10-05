@@ -96,10 +96,16 @@ class AppLocalizationsJa extends AppLocalizations {
   String get credits_6 => 'Koneko_dev';
 
   @override
-  String get credits_7 => 'KanaDev_IS';
+  String get credits_7 => 'Not_ValentineSTCV';
 
   @override
-  String get credits_8 => '名前を挙げられなかったすべてのテスター';
+  String get credits_8 => 'Andreyka4_45';
+
+  @override
+  String get credits_9 => 'KanaDev_IS';
+
+  @override
+  String get credits_10 => '名前を挙げられなかったすべてのテスター';
 
   @override
   String get yes => 'はい';

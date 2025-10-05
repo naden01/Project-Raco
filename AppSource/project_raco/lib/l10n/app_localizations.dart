@@ -281,14 +281,26 @@ abstract class AppLocalizations {
   /// No description provided for @credits_7.
   ///
   /// In en, this message translates to:
-  /// **'KanaDev_IS'**
+  /// **'Not_ValentineSTCV'**
   String get credits_7;
 
   /// No description provided for @credits_8.
   ///
   /// In en, this message translates to:
-  /// **'And All Testers That I Can\'t Mentioned One by One'**
+  /// **'Andreyka4_45'**
   String get credits_8;
+
+  /// No description provided for @credits_9.
+  ///
+  /// In en, this message translates to:
+  /// **'KanaDev_IS'**
+  String get credits_9;
+
+  /// No description provided for @credits_10.
+  ///
+  /// In en, this message translates to:
+  /// **'And All Testers That I Can\'t Mentioned One by One'**
+  String get credits_10;
 
   /// No description provided for @yes.
   ///
