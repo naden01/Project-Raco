@@ -101,16 +101,16 @@ class AppLocalizationsRu extends AppLocalizations {
   String get credits_6 => 'Koneko_dev';
 
   @override
-  String get credits_7 => 'KanaDev_IS';
+  String get credits_7 => 'Not_ValentineSTCV';
 
   @override
-  String get credits_8 => 'И всем тестерам, которых я не могу упомянуть';
+  String get credits_8 => 'Andreyka4_45';
 
   @override
   String get credits_9 => 'KanaDev_IS';
 
   @override
-  String get credits_10 => 'And All Testers That I Can\'t Mentioned One by One';
+  String get credits_10 => 'И всем тестерам, которых я не могу упомянуть';
 
   @override
   String get yes => 'Да';
