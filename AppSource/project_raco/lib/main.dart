@@ -15,6 +15,28 @@ import 'utilities_page.dart';
 // A simple global notifier to broadcast theme changes instantly.
 final themeNotifier = ValueNotifier<Color?>(null);
 
+// Data structure for managing supported languages
+class Language {
+  final String code;
+  final String name;
+  final String displayName;
+
+  const Language({
+    required this.code,
+    required this.name,
+    required this.displayName,
+  });
+}
+
+// List of supported languages for the selection menu
+final List<Language> supportedLanguages = [
+  const Language(code: 'en', name: 'English', displayName: 'EN'),
+  const Language(code: 'id', name: 'Bahasa Indonesia', displayName: 'ID'),
+  const Language(code: 'ja', name: '日本語', displayName: 'JP'),
+  const Language(code: 'es', name: 'Español', displayName: 'ES'),
+  const Language(code: 'ru', name: 'Русский', displayName: 'RU'),
+];
+
 class ConfigManager {
   static const String _modeKey = 'current_mode';
   static const String _defaultMode = 'NONE';
@@ -372,9 +394,12 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     final prefs = await SharedPreferences.getInstance();
     if (!mounted) return;
     final languageCode = prefs.getString('language_code') ?? 'en';
-    const codeMap = {'en': 'EN', 'id': 'ID', 'ja': 'JP'};
+    final selectedLang = supportedLanguages.firstWhere(
+      (lang) => lang.code == languageCode,
+      orElse: () => supportedLanguages.first, // Default to English
+    );
     setState(() {
-      _selectedLanguage = codeMap[languageCode] ?? 'EN';
+      _selectedLanguage = selectedLang.displayName;
     });
   }
 
@@ -409,20 +434,22 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     }
   }
 
-  void _changeLanguage(String language) {
-    if (language == _selectedLanguage) return;
+  void _changeLanguage(String newLocaleCode) {
+    final newLanguage = supportedLanguages.firstWhere(
+      (lang) => lang.code == newLocaleCode,
+      orElse: () => supportedLanguages.first,
+    );
+    final currentLanguage = supportedLanguages.firstWhere(
+      (lang) => lang.displayName == _selectedLanguage,
+      orElse: () => supportedLanguages.first,
+    );
+    if (newLocaleCode == currentLanguage.code) return;
 
-    const localeMap = {
-      'EN': 'en',
-      'ID': 'id',
-      'JP': 'ja',
-      'ES': 'es',
-      'RU': 'ru',
-    };
-    String localeCode = localeMap[language.toUpperCase()] ?? 'en';
-    widget.onLocaleChange(Locale(localeCode));
+    widget.onLocaleChange(Locale(newLocaleCode));
 
-    if (mounted) setState(() => _selectedLanguage = language.toUpperCase());
+    if (mounted) {
+      setState(() => _selectedLanguage = newLanguage.displayName);
+    }
   }
 
   Future<void> _launchURL(String url) async {
@@ -797,6 +824,53 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     );
   }
 
+  // --- NEW: Method to show the language selection dialog ---
+  void _showLanguageSelectionDialog(AppLocalizations localization) {
+    final currentLang = supportedLanguages.firstWhere(
+      (lang) => lang.displayName == _selectedLanguage,
+      orElse: () => supportedLanguages.first,
+    );
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(localization.select_language),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.0),
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: supportedLanguages.map((language) {
+                return RadioListTile<String>(
+                  title: Text(language.name),
+                  value: language.code,
+                  groupValue: currentLang.code,
+                  onChanged: (String? newLocaleCode) {
+                    if (newLocaleCode != null) {
+                      _changeLanguage(newLocaleCode);
+                      Navigator.of(context).pop(); // Close the dialog
+                    }
+                  },
+                );
+              }).toList(),
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text(MaterialLocalizations.of(context).cancelButtonLabel),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // --- REFACTORED: Language selector now opens the dialog ---
   Widget _buildLanguageSelector(AppLocalizations localization) {
     final colorScheme = Theme.of(context).colorScheme;
     return Card(
@@ -804,35 +878,38 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
       margin: EdgeInsets.zero,
       color: colorScheme.surfaceContainer,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Container(
-        height: 56.0,
-        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              localization.select_language,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            DropdownButton<String>(
-              value: _selectedLanguage,
-              items: <String>['EN', 'ID', 'JP', 'ES', 'RU'].map((String value) {
-                return DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                );
-              }).toList(),
-              onChanged: (String? newValue) {
-                if (newValue != null) _changeLanguage(newValue);
-              },
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: colorScheme.primary),
-              dropdownColor: colorScheme.surfaceContainer,
-              underline: Container(),
-              iconEnabledColor: colorScheme.primary,
-            ),
-          ],
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => _showLanguageSelectionDialog(localization),
+        child: Container(
+          height: 56.0,
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                localization.select_language,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              Row(
+                children: [
+                  Text(
+                    supportedLanguages
+                        .firstWhere(
+                          (lang) => lang.displayName == _selectedLanguage,
+                          orElse: () => supportedLanguages.first,
+                        )
+                        .name,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.primary,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Icon(Icons.language, color: colorScheme.primary),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
