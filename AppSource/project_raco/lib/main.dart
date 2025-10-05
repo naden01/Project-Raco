@@ -35,6 +35,7 @@ final List<Language> supportedLanguages = [
   const Language(code: 'ja', name: '日本語', displayName: 'JP'),
   const Language(code: 'es', name: 'Español', displayName: 'ES'),
   const Language(code: 'ru', name: 'Русский', displayName: 'RU'),
+  const Language(code: 'enc', name: 'ᒷリᓵ⍑ᔑリℸ ̣', displayName: 'ENC'),
 ];
 
 class ConfigManager {
