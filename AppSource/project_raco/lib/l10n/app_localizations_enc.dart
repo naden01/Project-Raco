@@ -9,7 +9,7 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get app_title => 'Project Raco';
+  String get app_title => '!¡∷𝙹⋮ᒷᓵℸ ̣ Raco';
 
   @override
   String get by => 'By: Kanagawa Yamada';
@@ -45,8 +45,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get clear_desc => 'ᓵꖎᒷᔑ∷  ∷ᔑᒲ  ʖ||  ꖌ╎ꖎꖎ╎リ⊣  ᔑꖎꖎ  ᔑ!¡!¡ᓭ';
 
   @override
-  String get cooldown_desc =>
-      'ᓵ𝙹𝙹ꖎ  ↸𝙹∴リ  ||𝙹⚍∷  ↸ᒷ⍊╎ᓵᒷ\n(ꖎᒷℸ ̣   ╎ℸ ̣   ∷ᒷᓭℸ ̣   ⎓𝙹∷  2  ᒲ╎リ⚍ℸ ̣ ᒷᓭ)';
+  String get cooldown_desc => 'ᓵ𝙹𝙹ꖎ  ↸𝙹∴リ  ||𝙹⚍∷ Device\n(ꖎᒷℸ ̣   ╎ℸ ̣   ∷ᒷᓭℸ ̣   ⎓𝙹∷  2  ᒲ╎リ⚍ℸ ̣ ᒷᓭ)';
 
   @override
   String get gaming_desc => 'ᓭᒷℸ ̣   ℸ ̣ 𝙹  !¡ᒷ∷⎓𝙹∷ᒲᔑリᓵᒷ  ᔑリ↸  ꖌ╎ꖎꖎ  ᔑꖎꖎ  ᔑ!¡!¡ᓭ';
@@ -70,16 +69,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get gaming_pro => '⊣ᔑᒲ╎リ⊣  !¡∷𝙹';
 
   @override
-  String get about_title =>
-      'ℸ ̣ ⍑ᔑリꖌ  ||𝙹⚍  ⎓𝙹∷  ℸ ̣ ⍑ᒷ  ⊣∷ᒷᔑℸ ̣   !¡ᒷ𝙹!¡ꖎᒷ  ∴⍑𝙹  ⍑ᒷꖎ!¡ᒷ↸  ╎ᒲ!¡∷𝙹⍊ᒷ  !¡∷𝙹⋮ᒷᓵℸ ̣   ∷ᔑᓵ𝙹:';
+  String get about_title => 'ℸ ̣ ⍑ᔑリꖌ  ||𝙹⚍  ⎓𝙹∷  ℸ ̣ ⍑ᒷ  ⊣∷ᒷᔑℸ ̣   !¡ᒷ𝙹!¡ꖎᒷ  ∴⍑𝙹  ⍑ᒷꖎ!¡ᒷ↸  ╎ᒲ!¡∷𝙹⍊ᒷ  !¡∷𝙹⋮ᒷᓵℸ ̣   ∷ᔑᓵ𝙹:';
 
   @override
-  String get about_quote =>
-      '\"⊣∷ᒷᔑℸ ̣   ᓵ𝙹ꖎꖎᔑʖ𝙹∷ᔑℸ ̣ ╎𝙹リ  ꖎᒷᔑ↸  ℸ ̣ 𝙹  ⊣∷ᒷᔑℸ ̣   ╎リリ𝙹⍊ᔑℸ ̣ ╎𝙹リ\"\n~ ꖌᔑリᔑ⊣ᔑ∴ᔑ  ||ᔑᒲᔑ↸ᔑ  (ᒲᔑ╎リ  ↸ᒷ⍊)';
+  String get about_quote => '\"⊣∷ᒷᔑℸ ̣   ᓵ𝙹ꖎꖎᔑʖ𝙹∷ᔑℸ ̣ ╎𝙹リ  ꖎᒷᔑ↸  ℸ ̣ 𝙹  ⊣∷ᒷᔑℸ ̣   ╎リリ𝙹⍊ᔑℸ ̣ ╎𝙹リ\"\n~ Kanagawa Yamada (ᒲᔑ╎リ  ↸ᒷ⍊)';
 
   @override
-  String get about_note =>
-      '!¡∷𝙹⋮ᒷᓵℸ ̣   ∷ᔑᓵ𝙹  ╎ᓭ  ᔑꖎ∴ᔑ||ᓭ  ⎓∷ᒷᒷ,  𝙹!¡ᒷリ  ᓭ𝙹⚍∷ᓵᒷ,  ᔑリ↸  𝙹!¡ᒷリ  ⎓𝙹∷  ╎ᒲ!¡∷𝙹⍊ᒷᒲᒷリℸ ̣';
+  String get about_note => '!¡∷𝙹⋮ᒷᓵℸ ̣   ∷ᔑᓵ𝙹  ╎ᓭ  ᔑꖎ∴ᔑ||ᓭ  ⎓∷ᒷᒷ,  𝙹!¡ᒷリ  ᓭ𝙹⚍∷ᓵᒷ,  ᔑリ↸  𝙹!¡ᒷリ  ⎓𝙹∷  ╎ᒲ!¡∷𝙹⍊ᒷᒲᒷリℸ ̣';
 
   @override
   String get credits_1 => 'Rem01 Gaming';
@@ -142,11 +138,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fix_and_tweak_title => '⎓╎ ̇/  ᔑリ↸  ℸ ̣ ∴ᒷᔑꖌ';
 
   @override
-  String get device_mitigation_title => '  String get device_mitigation_title => '↸ᒷ⍊╎ᓵᒷ  ᒲ╎ℸ ̣ ╎⊣ᔑℸ ̣ ╎𝙹リ';';
+  String get device_mitigation_title => '↸ᒷ⍊╎ᓵᒷ  ᒲ╎ℸ ̣ ╎⊣ᔑℸ ̣ ╎𝙹リ';
 
   @override
-  String get device_mitigation_description =>
-      'ℸ ̣ ⚍∷リ  𝙹リ  ╎⎓  ||𝙹⚍  ᒷ ̇/!¡ᒷ∷╎ᒷリᓵᒷ  ᓭᓵ∷ᒷᒷリ  ⎓∷ᒷᒷ⨅ᒷ';
+  String get device_mitigation_description => 'ℸ ̣ ⚍∷リ  𝙹リ  ╎⎓  ||𝙹⚍  ᒷ ̇/!¡ᒷ∷╎ᒷリᓵᒷ  ᓭᓵ∷ᒷᒷリ  ⎓∷ᒷᒷ⨅ᒷ';
 
   @override
   String get lite_mode_title => 'ꖎ╎ℸ ̣ ᒷ  ᒲ𝙹↸ᒷ';
@@ -158,15 +153,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hamada_ai => 'HAMADA AI';
 
   @override
-  String get hamada_ai_description =>
-      'ᔑ⚍ℸ ̣ 𝙹ᒲᔑℸ ̣ ╎ᓵᔑꖎꖎ||  ᓭ∴╎ℸ ̣ ᓵ⍑  ℸ ̣ 𝙹  !¡ᒷ∷⎓𝙹∷ᒲᔑリᓵᒷ  ∴⍑ᒷリ  ᒷリℸ ̣ ᒷ∷╎リ⊣  ⊣ᔑᒲᒷ';
+  String get hamada_ai_description => 'ᔑ⚍ℸ ̣ 𝙹ᒲᔑℸ ̣ ╎ᓵᔑꖎꖎ||  ᓭ∴╎ℸ ̣ ᓵ⍑  ℸ ̣ 𝙹  !¡ᒷ∷⎓𝙹∷ᒲᔑリᓵᒷ  ∴⍑ᒷリ  ᒷリℸ ̣ ᒷ∷╎リ⊣  ⊣ᔑᒲᒷ';
 
   @override
-  String get downscale_resolution => 'Downscale Resolution';
+  String get downscale_resolution => '↸𝙹∴リᓭᓵᔑꖎᒷ  ∷ᒷᓭ𝙹ꖎ⚍ℸ ̣ ╎𝙹リ';
 
   @override
   String selected_resolution(String resolution) {
-    return 'Selected: $resolution';
+    return 'ᓭᒷꖎᒷᓵℸ ̣ ᒷ↸: $resolution';
   }
 
   @override
@@ -179,7 +173,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hamada_ai_start_on_boot => 'ᓭℸ ̣ ᔑ∷ℸ ̣   𝙹リ  ʖ𝙹𝙹ℸ ̣';
 
   @override
-  String get edit_game_txt_title => 'ᒷ↸╎ℸ ̣   ⊣ᔑᒲᒷ.ℸ ̣  ̇/ℸ ̣';
+  String get edit_game_txt_title => 'ᒷ↸╎ℸ ̣ game.txt';
 
   @override
   String get sync_changes => 'ᓭ||リᓵ  ᓵ⍑ᔑリ⊣ᒷᓭ';
@@ -230,8 +224,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get game_txt_hint => 'ᒷリℸ ̣ ᒷ∷  ⊣ᔑᒲᒷ  !¡ᔑᓵꖌᔑ⊣ᒷ  リᔑᒲᒷᓭ,  𝙹リᒷ  !¡ᒷ∷  ꖎ╎リᒷ...';
 
   @override
-  String get resolution_unavailable_message =>
-      '∷ᒷᓭ𝙹ꖎ⚍ℸ ̣ ╎𝙹リ  ᓵ𝙹リℸ ̣ ∷𝙹ꖎ  ╎ᓭ  リ𝙹ℸ ̣   ᔑ⍊ᔑ╎ꖎᔑʖꖎᒷ  𝙹リ  ℸ ̣ ⍑╎ᓭ  ↸ᒷ⍊╎ᓵᒷ.';
+  String get resolution_unavailable_message => '∷ᒷᓭ𝙹ꖎ⚍ℸ ̣ ╎𝙹リ  ᓵ𝙹リℸ ̣ ∷𝙹ꖎ  ╎ᓭ  リ𝙹ℸ ̣   ᔑ⍊ᔑ╎ꖎᔑʖꖎᒷ  𝙹リ  ℸ ̣ ⍑╎ᓭ  ↸ᒷ⍊╎ᓵᒷ.';
 
   @override
   String get applying_changes => 'ᔑ!¡!¡ꖎ||╎リ⊣  ᓵ⍑ᔑリ⊣ᒷᓭ...';
@@ -252,19 +245,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bypass_charging_title => 'ʖ||!¡ᔑᓭᓭ  ᓵ⍑ᔑ∷⊣╎リ⊣';
 
   @override
-  String get bypass_charging_description =>
-      'ᒷリᔑʖꖎᒷ  ʖ||!¡ᔑᓭᓭ  ᓵ⍑ᔑ∷⊣╎リ⊣  ∴⍑╎ꖎᒷ  ╎リ  !¡ᒷ∷⎓𝙹∷ᒲᔑリᓵᒷ  &  ⊣ᔑᒲ╎リ⊣  !¡∷𝙹  𝙹リ  ᓭ⚍!¡!¡𝙹∷ℸ ̣ ᒷ↸  ↸ᒷ⍊╎ᓵᒷ';
+  String get bypass_charging_description => 'ᒷリᔑʖꖎᒷ  ʖ||!¡ᔑᓭᓭ  ᓵ⍑ᔑ∷⊣╎リ⊣  ∴⍑╎ꖎᒷ  ╎リ  !¡ᒷ∷⎓𝙹∷ᒲᔑリᓵᒷ  &  ⊣ᔑᒲ╎リ⊣  !¡∷𝙹  𝙹リ  ᓭ⚍!¡!¡𝙹∷ℸ ̣ ᒷ↸  ↸ᒷ⍊╎ᓵᒷ';
 
   @override
   String get bypass_charging_toggle => 'ᒷリᔑʖꖎᒷ  ʖ||!¡ᔑᓭᓭ  ᓵ⍑ᔑ∷⊣╎リ⊣';
 
   @override
-  String get bypass_charging_unsupported =>
-      'ʖ||!¡ᔑᓭᓭ  ᓵ⍑ᔑ∷⊣╎リ⊣  ╎ᓭ  リ𝙹ℸ ̣   ᓭ⚍!¡!¡𝙹∷ℸ ̣ ᒷ↸  𝙹リ  ||𝙹⚍∷  ↸ᒷ⍊╎ᓵᒷ';
+  String get bypass_charging_unsupported => 'ʖ||!¡ᔑᓭᓭ  ᓵ⍑ᔑ∷⊣╎リ⊣  ╎ᓭ  リ𝙹ℸ ̣   ᓭ⚍!¡!¡𝙹∷ℸ ̣ ᒷ↸  𝙹リ  ||𝙹⚍∷  ↸ᒷ⍊╎ᓵᒷ';
 
   @override
-  String get bypass_charging_supported =>
-      'ʖ||!¡ᔑᓭᓭ  ᓵ⍑ᔑ∷⊣╎リ⊣  ╎ᓭ  ᓭ⚍!¡!¡𝙹∷ℸ ̣ ᒷ↸  𝙹リ  ||𝙹⚍∷  ↸ᒷ⍊╎ᓵᒷ';
+  String get bypass_charging_supported => 'ʖ||!¡ᔑᓭᓭ  ᓵ⍑ᔑ∷⊣╎リ⊣  ╎ᓭ  ᓭ⚍!¡!¡𝙹∷ℸ ̣ ᒷ↸  𝙹リ  ||𝙹⚍∷  ↸ᒷ⍊╎ᓵᒷ';
 
   @override
   String get mode_status_label => 'ᒲ𝙹↸ᒷ:';
@@ -276,14 +266,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mode_hamada_ai => 'HamadaAI';
 
   @override
-  String get please_disable_hamada_ai_first => '!¡ꖎᒷᔑᓭᒷ  ↸╎ᓭᔑʖꖎᒷ  ⍑ᔑᒲᔑ↸ᔑᔑ╎  ⎓╎∷ᓭℸ ̣';
+  String get please_disable_hamada_ai_first => '!¡ꖎᒷᔑᓭᒷ  ↸╎ᓭᔑʖꖎᒷ HamadaAI ⎓╎∷ᓭℸ ̣';
 
   @override
   String get background_settings_title => 'ʖᔑᓵꖌ⊣∷𝙹⚍リ↸  ᓭᒷℸ ̣ ℸ ̣ ╎リ⊣ᓭ';
 
   @override
-  String get background_settings_description =>
-      'ᓵ⚍ᓭℸ ̣ 𝙹ᒲ╎⨅ᒷ  ℸ ̣ ⍑ᒷ  ᔑ!¡!¡\'ᓭ  ʖᔑᓵꖌ⊣∷𝙹⚍リ↸  ╎ᒲᔑ⊣ᒷ,  𝙹!¡ᔑᓵ╎ℸ ̣ ||,  ᔑリ↸  ʖꖎ⚍∷  ᒷ⎓⎓ᒷᓵℸ ̣.';
+  String get background_settings_description => 'ᓵ⚍ᓭℸ ̣ 𝙹ᒲ╎⨅ᒷ  ℸ ̣ ⍑ᒷ  ᔑ!¡!¡\'ᓭ  ʖᔑᓵꖌ⊣∷𝙹⚍リ↸  ╎ᒲᔑ⊣ᒷ,  𝙹!¡ᔑᓵ╎ℸ ̣ ||,  ᔑリ↸  ʖꖎ⚍∷  ᒷ⎓⎓ᒷᓵℸ ̣.';
 
   @override
   String get opacity_slider_label => 'ʖᔑᓵꖌ⊣∷𝙹⚍リ↸  𝙹!¡ᔑᓵ╎ℸ ̣ ||';
@@ -295,8 +284,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get banner_settings_title => 'ʖᔑリリᒷ∷  ᓭᒷℸ ̣ ℸ ̣ ╎リ⊣ᓭ';
 
   @override
-  String get banner_settings_description =>
-      'ᓵ⚍ᓭℸ ̣ 𝙹ᒲ╎⨅ᒷ  ℸ ̣ ⍑ᒷ  ᒲᔑ╎リ  ᓭᓵ∷ᒷᒷリ\'ᓭ  ʖᔑリリᒷ∷  ╎ᒲᔑ⊣ᒷ  (16:9  ᔑᓭ!¡ᒷᓵℸ ̣   ∷ᔑℸ ̣ ╎𝙹).';
+  String get banner_settings_description => 'ᓵ⚍ᓭℸ ̣ 𝙹ᒲ╎⨅ᒷ  ℸ ̣ ⍑ᒷ  ᒲᔑ╎リ  ᓭᓵ∷ᒷᒷリ\'ᓭ  ʖᔑリリᒷ∷  ╎ᒲᔑ⊣ᒷ  (16:9  ᔑᓭ!¡ᒷᓵℸ ̣   ∷ᔑℸ ̣ ╎𝙹).';
 
   @override
   String get device_name => '↸ᒷ⍊╎ᓵᒷ  リᔑᒲᒷ';
@@ -317,8 +305,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get custom_governor_title => 'ᓵ⚍ᓭℸ ̣ 𝙹ᒲ  ⊣𝙹⍊ᒷ∷リ𝙹∷';
 
   @override
-  String get custom_governor_description =>
-      'ᓭᒷℸ ̣   ᓵ⚍ᓭℸ ̣ 𝙹ᒲ  ᓵ!¡⚍  ⊣𝙹⍊ᒷ∷リ𝙹∷,  ℸ ̣ ⍑╎ᓭ  ∴╎ꖎꖎ  ᓭᒷℸ ̣   ℸ ̣ ⍑ᒷ  ⊣𝙹⍊ᒷ∷リ𝙹∷  ╎リ  ʖᔑꖎᔑリᓵᒷ↸  ᒲ𝙹↸ᒷ';
+  String get custom_governor_description => 'ᓭᒷℸ ̣   ᓵ⚍ᓭℸ ̣ 𝙹ᒲ  ᓵ!¡⚍  ⊣𝙹⍊ᒷ∷リ𝙹∷,  ℸ ̣ ⍑╎ᓭ  ∴╎ꖎꖎ  ᓭᒷℸ ̣   ℸ ̣ ⍑ᒷ  ⊣𝙹⍊ᒷ∷リ𝙹∷  ╎リ  ʖᔑꖎᔑリᓵᒷ↸  ᒲ𝙹↸ᒷ';
 
   @override
   String get loading_governors => 'ꖎ𝙹ᔑ↸╎リ⊣  ⊣𝙹⍊ᒷ∷リ𝙹∷ᓭ...';
@@ -327,33 +314,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get no_governor_selected => 'リ𝙹リᒷ';
 
   @override
-  String get anya_thermal_title => 'ᔑリ||ᔑ  ᒲᒷꖎ⎓╎ᓭᓭᔑ  ↸╎ᓭᔑʖꖎᒷ  ℸ ̣ ⍑ᒷ∷ᒲᔑꖎ';
+  String get anya_thermal_title => 'Anya Melfissa Disable Thermal';
 
   @override
-  String get anya_thermal_description =>
-      '↸╎ᓭᔑʖꖎᒷ  ℸ ̣ ⍑ᒷ∷ᒲᔑꖎ  𝙹リ  !¡ᒷ∷⎓𝙹∷ᒲᔑリᓵᒷ  ᔑリ↸  ⊣ᔑᒲ╎リ⊣,  ᒷリᔑʖꖎᒷ  ℸ ̣ ⍑ᒷ∷ᒲᔑꖎ  𝙹リ  !¡𝙹∴ᒷ∷ᓭᔑ⍊ᒷ,  ʖᔑꖎᔑリᓵᒷ↸,  ᓵ𝙹𝙹ꖎ  ↸𝙹∴リ.';
+  String get anya_thermal_description => 'Disable Thermal on Performance and Gaming, Enable Thermal on Powersave, Balanced, Cool Down.';
 
   @override
-  String get anya_thermal_toggle_title => 'ᒷリᔑʖꖎᒷ  ᔑリ||ᔑ  ℸ ̣ ⍑ᒷ∷ᒲᔑꖎ  ⎓ꖎ𝙹∴ᓭℸ ̣ ᔑℸ ̣ ᒷ';
+  String get anya_thermal_toggle_title => 'Enable Anya Thermal Flowstate';
 
   @override
   String get system_actions_title => 'ᓭ||ᓭℸ ̣ ᒷᒲ  ᔑᓵℸ ̣ ╎𝙹リᓭ';
 
   @override
-  String get fstrim_title => '⎓ᓭℸ ̣ ∷╎ᒲ';
+  String get fstrim_title => 'Fstrim';
 
   @override
-  String get fstrim_description => 'ℸ ̣ ∷╎ᒲ  ᔑリ↸∷𝙹╎↸  !¡ᔑ∷ℸ ̣ ╎ℸ ̣ ╎𝙹リᓭ.';
+  String get fstrim_description => 'Trim Android partitions.';
 
   @override
-  String get clear_cache_title => 'ᓵꖎᒷᔑ∷  ᓵᔑᓵ⍑ᒷ';
+  String get clear_cache_title => 'ᓵꖎᒷᔑ∷ Cache';
 
   @override
   String get better_powersave_title => 'ʖᒷℸ ̣ ℸ ̣ ᒷ∷  !¡𝙹∴ᒷ∷ᓭᔑ⍊ᒷ';
 
   @override
-  String get better_powersave_description =>
-      'ᓵᔑ!¡  ℸ ̣ ⍑ᒷ  ᓵ!¡⚍  ⎓∷ᒷᑑ  ℸ ̣ 𝙹  ⍑ᔑꖎ⎓  ╎リᓭℸ ̣ ᒷᔑ↸  𝙹⎓  ᒲ╎リ╎ᒲ⚍ᒲ  ⎓∷ᒷᑑ  (!¡𝙹∴ᒷ∷ᓭᔑ⍊ᒷ  ᒲ𝙹↸ᒷ  𝙹リꖎ||)';
+  String get better_powersave_description => 'ᓵᔑ!¡  ℸ ̣ ⍑ᒷ  ᓵ!¡⚍  ⎓∷ᒷᑑ  ℸ ̣ 𝙹  ⍑ᔑꖎ⎓  ╎リᓭℸ ̣ ᒷᔑ↸  𝙹⎓  ᒲ╎リ╎ᒲ⚍ᒲ  ⎓∷ᒷᑑ (Powersave ᒲ𝙹↸ᒷ  𝙹リꖎ||)';
 
   @override
   String build_version_title(String buildName) {
@@ -362,6 +347,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String build_by_title(String builderName) {
-    return 'ʖ⚍╎ꖎ↸  ʖ||: $builderName';
+    return 'Build By: $builderName';
   }
 }
